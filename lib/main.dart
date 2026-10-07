@@ -10,13 +10,14 @@ import 'theme/app_colors.dart';
 import 'services/audio_service.dart';
 import 'screens/home_screen.dart';
 import 'screens/search_screen.dart';
+import 'screens/music_screen.dart';
 import 'screens/library_screen.dart';
 import 'screens/now_playing_screen.dart';
-import 'screens/local_screen.dart';
 import 'widgets/bottom_nav.dart';
 import 'widgets/mini_player.dart';
 import 'widgets/motion.dart';
 import 'models/song.dart';
+import 'models/youtube_video.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -132,64 +133,59 @@ class _MainContainerState extends State<MainContainer> {
 
   late final List<Widget> _pages;
   final _searchKey = GlobalKey<SearchScreenState>();
+  final _libraryKey = GlobalKey<LibraryScreenState>();
 
   @override
   void initState() {
     super.initState();
     _audioService = widget.audioService ?? AudioService();
     _pageController = PageController();
-    unawaited(_scanIfAllowed());
 
     _pages = [
       HomeScreen(
-        onLocalTap: () => _onTabTap(3),
+        onLocalTap: _openLocalMusic,
         onSearchTap: _openSearch,
+        onVideoTap: _playYoutube,
+        onVideoQueueTap: _playYoutubeQueue,
         audioService: _audioService,
         onSongTap: (song, [queue]) =>
             _playSong(song, contextQueue: queue ?? _audioService.songs),
         onPlaylistPlayTap: (playlist) {
-          final local = playlist.songs
-              .where((song) => song.source != SongSource.legacy)
-              .toList();
-          if (local.isNotEmpty) _playSong(local.first, contextQueue: local);
+          if (playlist.songs.isNotEmpty) {
+            _playSong(playlist.songs[0], contextQueue: playlist.songs);
+          }
         },
       ),
       SearchScreen(
         key: _searchKey,
+        onVideoTap: _playYoutube,
+        onVideoQueueTap: _playYoutubeQueue,
         audioService: _audioService,
-        onQueueTap: (song, queue) => _playSong(song, contextQueue: queue),
         onSongTap: (song) => _playSong(song, contextQueue: _audioService.songs),
         onFavoriteTap: _audioService.toggleFavorite,
       ),
+      MusicScreen(
+        audioService: _audioService,
+        onSongTap: (song, [queue]) =>
+            _playSong(song, contextQueue: queue ?? _audioService.songs),
+        onFavoriteTap: _audioService.toggleFavorite,
+        onSearchTap: _openSearch,
+      ),
       LibraryScreen(
+        key: _libraryKey,
         audioService: _audioService,
         onSongTap: (song) => _playSong(song, contextQueue: _audioService.songs),
         onFavoriteTap: _audioService.toggleFavorite,
         onCreatePlaylist: _audioService.createPlaylist,
       ),
-      LocalScreen(
-        audioService: _audioService,
-        onSongTap: (song) =>
-            _playSong(song, contextQueue: _audioService.localSongs),
-        onFavoriteTap: _audioService.toggleFavorite,
-        onScanTap: _audioService.scanLocalSongs,
-      ),
     ];
   }
 
-  Future<void> _scanIfAllowed() async {
-    try {
-      const channel = MethodChannel('com.example.harmoniq/local_music');
-      final allowed =
-          await channel.invokeMethod<bool>('checkPermission') ?? false;
-      if (mounted && allowed && _audioService.localSongs.isEmpty) {
-        await _audioService.scanLocalSongs();
-      }
-    } on PlatformException {
-      // Permissions can still be requested explicitly from the Local tab.
-    } on MissingPluginException {
-      // Device scanning is available on Android only.
-    }
+  void _openLocalMusic() {
+    _onTabTap(3);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _libraryKey.currentState?.selectCategory(3);
+    });
   }
 
   @override
@@ -219,15 +215,14 @@ class _MainContainerState extends State<MainContainer> {
         SnackBar(
           content: const Text('This saved track is from the previous source.'),
           action: SnackBarAction(
-            label: 'Search device',
+            label: 'Search Track',
             onPressed: () => _openSearch('${song.title} ${song.artist}'),
           ),
         ),
       );
       return;
     }
-    unawaited(_audioService.playSong(song, contextQueue: contextQueue));
-    _openNowPlaying();
+    await _audioService.playSong(song, contextQueue: contextQueue);
   }
 
   void _openSearch(String query) {
@@ -235,6 +230,19 @@ class _MainContainerState extends State<MainContainer> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _searchKey.currentState?.setQuery(query);
     });
+  }
+
+  void _playYoutube(YoutubeVideo video) => _playYoutubeQueue(video, [video]);
+
+  void _playYoutubeQueue(YoutubeVideo video, List<YoutubeVideo> videos) {
+    final song = Song.fromYoutube(video);
+    unawaited(
+      _audioService.playSong(
+        song,
+        contextQueue: videos.map(Song.fromYoutube).toList(),
+      ),
+    );
+    _openNowPlaying();
   }
 
   void _openNowPlaying() {

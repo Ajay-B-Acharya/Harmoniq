@@ -23,12 +23,7 @@ class AlbumArt extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.getGradientForId(gradientId);
-    final uri = Uri.tryParse(imageUrl?.trim() ?? '');
-    final hasSecureImage =
-        uri != null && uri.scheme == 'https' && uri.host.isNotEmpty;
-    final media = MediaQuery.of(context);
-    final reduceMotion = media.disableAnimations || media.accessibleNavigation;
-    final cacheWidth = (size * media.devicePixelRatio).clamp(1, 1200).round();
+    final hasNetworkImage = imageUrl != null && imageUrl!.trim().isNotEmpty;
 
     return Container(
       width: size,
@@ -99,23 +94,30 @@ class AlbumArt extends StatelessWidget {
               ),
             ),
 
-            if (hasSecureImage)
+            // High-res Online Network Artwork
+            if (hasNetworkImage)
               Image.network(
-                uri.toString(),
-                key: ValueKey(uri.toString()),
+                imageUrl!,
+                width: size,
+                height: size,
                 fit: BoxFit.cover,
-                cacheWidth: cacheWidth,
+                cacheWidth: (size * MediaQuery.devicePixelRatioOf(context))
+                    .ceil()
+                    .clamp(1, 1200),
+                filterQuality: FilterQuality.low,
                 excludeFromSemantics: true,
-                errorBuilder: (context, error, stackTrace) =>
-                    const SizedBox.shrink(),
+                errorBuilder: (context, error, stackTrace) {
+                  // Gracefully falls back to gradient underneath
+                  return const SizedBox.shrink();
+                },
                 frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
-                  if (wasSynchronouslyLoaded || reduceMotion) {
-                    return frame == null ? const SizedBox.shrink() : child;
+                  if (wasSynchronouslyLoaded ||
+                      MediaQuery.disableAnimationsOf(context)) {
+                    return child;
                   }
                   return AnimatedOpacity(
                     opacity: frame == null ? 0 : 1,
-                    duration: const Duration(milliseconds: 220),
-                    curve: Curves.easeOut,
+                    duration: const Duration(milliseconds: 240),
                     child: child,
                   );
                 },

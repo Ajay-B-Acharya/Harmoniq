@@ -11,8 +11,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/song.dart';
 import '../models/playlist.dart';
+import '../data/sample_data.dart';
 import 'playback_failure.dart';
-import 'online_music_service.dart';
+import 'youtube_audio_stream_resolver.dart' as youtube;
+import 'yt_dlp_channel.dart';
 
 class AudioService extends ChangeNotifier {
   // ── Song registry ──────────────────────────────────────────────────────────
@@ -37,6 +39,29 @@ class AudioService extends ChangeNotifier {
   List<Song> _favorites = [];
   List<Song> get favorites => _favorites;
 
+  // ── Persistent Recently Played ────────────────────────────────────────────────
+  static const String _prefsKeyRecentlyPlayed = 'harmoniq_recently_played_v1';
+  List<Song> _recentlyPlayed = [];
+  List<Song> get recentlyPlayed => _recentlyPlayed;
+
+  List<Song> get allAvailableSongs {
+    final seen = <String>{};
+    final result = <Song>[];
+    final base = [
+      ..._localSongs,
+      ..._songs,
+      ..._favorites,
+      ..._recentlyPlayed,
+    ];
+    final source = base.isNotEmpty ? base : SampleData.songs;
+    for (final s in source) {
+      if (seen.add(s.identity)) {
+        result.add(s);
+      }
+    }
+    return result;
+  }
+
   // ── Local storage scanning ───────────────────────────────────────────────────
   static const _platform = MethodChannel('com.example.harmoniq/local_music');
   List<Song> _localSongs = [];
@@ -46,10 +71,11 @@ class AudioService extends ChangeNotifier {
 
   // ── Real audio player ────────────────────────────────────────────────────────
   final AudioPlayer _player;
-  final Future<Uri> Function(String) _resolveOnlineAudio;
+  final Future<YoutubeAudioStream> Function(String) _resolveYoutubeAudio;
   Future<void> _playerMutations = Future<void>.value();
   int _generation = 0;
   int? _readyGeneration;
+  bool _retryAttempted = false;
   bool _isLoading = false;
   bool get isLoading => _isLoading;
   String? _playbackError;
@@ -61,7 +87,7 @@ class AudioService extends ChangeNotifier {
       _currentSong != null &&
       !_isLoading &&
       _playbackError == null &&
-      _readyGeneration == _generation;
+      (_isSimulated(_currentSong!) || _readyGeneration == _generation);
 
   // ── Playback state (driven by the real player) ───────────────────────────────
   Song? _currentSong;
@@ -96,11 +122,16 @@ class AudioService extends ChangeNotifier {
   StreamSubscription<PlaybackEvent>? _playbackErrorSub;
 
   AudioService({
+    Future<Uri> Function(String videoId)? resolveYoutubeAudio,
+    Future<YoutubeAudioStream> Function(String videoId)? resolveYoutubeStream,
     AudioPlayer? audioPlayer,
-    Future<Uri> Function(String)? resolveOnlineAudio,
   }) : _player = audioPlayer ?? AudioPlayer(),
-       _resolveOnlineAudio =
-           resolveOnlineAudio ?? OnlineMusicService.instance.streamUri {
+       _resolveYoutubeAudio =
+           resolveYoutubeStream ??
+           (resolveYoutubeAudio == null
+               ? youtube.resolveYoutubeStream
+               : (id) async =>
+                     YoutubeAudioStream(await resolveYoutubeAudio(id))) {
     _playlists = [
       Playlist(id: 0, name: "Favorites", songs: [], gradientId: 0),
       Playlist(id: 1, name: "Chill Vibes", songs: [], gradientId: 1),
@@ -110,6 +141,7 @@ class AudioService extends ChangeNotifier {
 
     _attachPlayerListeners();
     _loadFavorites();
+    _loadRecentlyPlayed();
   }
 
   // ── Persistent Favorites Loading & Saving ────────────────────────────────────
@@ -145,6 +177,43 @@ class AudioService extends ChangeNotifier {
     }
   }
 
+  // ── Persistent Recently Played Loading & Saving ─────────────────────────────
+  Future<void> _loadRecentlyPlayed() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (_disposed) return;
+      final jsonList = prefs.getStringList(_prefsKeyRecentlyPlayed) ?? [];
+      _recentlyPlayed = jsonList.map((str) {
+        final map = json.decode(str) as Map<String, dynamic>;
+        return Song.fromJson(map);
+      }).toList();
+      _syncFavoriteStates();
+      notifyListeners();
+    } catch (e) {
+      debugPrint('[AUDIO_SERVICE] Error loading recently played: $e');
+    }
+  }
+
+  Future<void> _saveRecentlyPlayed() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final jsonList =
+          _recentlyPlayed.take(30).map((s) => json.encode(s.toJson())).toList();
+      await prefs.setStringList(_prefsKeyRecentlyPlayed, jsonList);
+    } catch (e) {
+      debugPrint('[AUDIO_SERVICE] Error saving recently played: $e');
+    }
+  }
+
+  void _recordRecentlyPlayed(Song song) {
+    _recentlyPlayed.removeWhere((s) => s.identity == song.identity);
+    _recentlyPlayed.insert(0, song.copyWith(isFavorite: isSongFavorite(song)));
+    if (_recentlyPlayed.length > 30) {
+      _recentlyPlayed.removeLast();
+    }
+    _saveRecentlyPlayed();
+  }
+
   bool isSongFavorite(Song song) =>
       _favorites.any((s) => s.identity == song.identity);
 
@@ -169,6 +238,11 @@ class AudioService extends ChangeNotifier {
     if (_currentSong != null) {
       _currentSong = _currentSong!.copyWith(
         isFavorite: favIds.contains(_currentSong!.identity),
+      );
+    }
+    for (int i = 0; i < _recentlyPlayed.length; i++) {
+      _recentlyPlayed[i] = _recentlyPlayed[i].copyWith(
+        isFavorite: favIds.contains(_recentlyPlayed[i].identity),
       );
     }
     for (final playlist in _playlists.where((p) => p.id != 0)) {
@@ -234,7 +308,7 @@ class AudioService extends ChangeNotifier {
     _playbackErrorSub = _player.playbackEventStream.listen(
       (_) {},
       onError: (Object error) {
-        if (_acceptPlayerEvents) _failPlayback(_generation, error: error);
+        if (_acceptPlayerEvents) _handlePlaybackError(_generation, error);
       },
     );
     _positionSub = _player.positionStream.listen((pos) {
@@ -256,20 +330,25 @@ class AudioService extends ChangeNotifier {
 
   bool _isCurrent(int generation) => !_disposed && generation == _generation;
 
-  // Serialize source installs and controls; stale generations cannot start play.
+  // Only player mutations are serialized. A slow resolver never holds this lock.
   Future<void> _mutatePlayer(Future<void> Function() action) {
     final result = _playerMutations.then((_) => action());
     _playerMutations = result.catchError((Object _) {});
     return result;
   }
 
+  bool _isSimulated(Song song) =>
+      song.source == SongSource.local &&
+      (song.audioPath.isEmpty || song.audioPath.startsWith('simulated_'));
+
   bool _canPlay(Song song) {
-    if (song.source == SongSource.online) {
-      return Song.isValidProviderId(song.providerId);
+    if (song.source == SongSource.youtube) {
+      return RegExp(r'^[a-zA-Z0-9_-]{11}$').hasMatch(song.videoId ?? '');
     }
     if (song.source != SongSource.local) return false;
     final path = song.audioPath;
-    return path.startsWith('content://') ||
+    return _isSimulated(song) ||
+        path.startsWith('content://') ||
         path.startsWith('file://') ||
         path.startsWith('/') ||
         RegExp(r'^[A-Za-z]:[\\/]').hasMatch(path);
@@ -301,19 +380,25 @@ class AudioService extends ChangeNotifier {
     await _selectSong(_queue[index]);
   }
 
-  Future<void> _selectSong(Song song) async {
+  Future<void> _selectSong(
+    Song song, {
+    Duration resumeAt = Duration.zero,
+    bool retry = false,
+  }) async {
     final generation = ++_generation;
     _readyGeneration = null;
+    _retryAttempted = retry;
     _currentSong = song.copyWith(isFavorite: isSongFavorite(song));
+    _recordRecentlyPlayed(song);
     _isPlaying = false;
-    _wantsToPlay = true;
-    _isLoading = true;
+    _wantsToPlay = !_isSimulated(song);
+    _isLoading = !_isSimulated(song);
     _playbackError = null;
-    _playbackPosition = Duration.zero;
-    playbackPositionNotifier.value = Duration.zero;
+    _playbackPosition = resumeAt;
+    playbackPositionNotifier.value = resumeAt;
     notifyListeners();
 
-    // Stop the previous source while resolving this generation's next source.
+    // Stop the previous source immediately, even while resolution is pending.
     final stopped =
         _mutatePlayer(() async {
           if (_isCurrent(generation)) await _player.stop();
@@ -321,17 +406,25 @@ class AudioService extends ChangeNotifier {
           _failPlayback(generation, error: error);
         });
     try {
-      final path = song.audioPath;
+      if (_isSimulated(song)) {
+        await stopped;
+        return;
+      }
       final Uri uri;
-      if (song.source == SongSource.online) {
-        uri = await _resolveOnlineAudio(song.providerId!)
-            .timeout(const Duration(seconds: 10));
+      Map<String, String> headers = const {};
+      if (song.source == SongSource.youtube) {
+        final stream = await _resolveYoutubeAudio(song.videoId!)
+            .timeout(const Duration(seconds: 20));
+        if (!_isCurrent(generation)) return;
+        uri = stream.uri;
+        headers = stream.headers;
         if (uri.scheme != 'https' ||
             uri.host.isEmpty ||
             uri.userInfo.isNotEmpty) {
-          throw const OnlineMusicException(OnlineMusicFailure.invalidTrack);
+          throw StateError('Invalid audio stream.');
         }
       } else {
+        final path = song.audioPath;
         uri = path.startsWith('content://') || path.startsWith('file://')
             ? Uri.parse(path)
             : Uri.file(path, windows: RegExp(r'^[A-Za-z]:').hasMatch(path));
@@ -346,14 +439,24 @@ class AudioService extends ChangeNotifier {
           title: song.title,
           artist: song.artist,
           duration: song.duration > Duration.zero ? song.duration : null,
-          artUri: _artworkUri(song),
+          artUri: song.albumArtUrl?.isNotEmpty == true
+              ? Uri.tryParse(song.albumArtUrl!)
+              : null,
         );
         final duration = await _player.setAudioSource(
-          AudioSource.uri(uri, tag: mediaItem),
+          AudioSource.uri(
+            uri,
+            headers: headers.isEmpty ? null : headers,
+            tag: mediaItem,
+          ),
         );
         if (!_isCurrent(generation)) return;
         if (duration != null && duration > Duration.zero) {
           _updateDuration(song.identity, duration);
+        }
+        if (resumeAt > Duration.zero) {
+          await _player.seek(resumeAt);
+          if (!_isCurrent(generation)) return;
         }
         _readyGeneration = generation;
         _isLoading = false;
@@ -363,19 +466,6 @@ class AudioService extends ChangeNotifier {
     } catch (error) {
       _failPlayback(generation, error: error);
     }
-  }
-
-  Uri? _artworkUri(Song song) {
-    final uri = Uri.tryParse(song.albumArtUrl ?? '');
-    if (uri == null) return null;
-    if (song.source == SongSource.online) {
-      return uri.scheme == 'https' &&
-              uri.host.isNotEmpty &&
-              uri.userInfo.isEmpty
-          ? uri
-          : null;
-    }
-    return uri.scheme == 'file' || uri.scheme == 'content' ? uri : null;
   }
 
   void _updateDuration(String identity, Duration duration) {
@@ -401,8 +491,23 @@ class AudioService extends ChangeNotifier {
     for (final playlist in _playlists) {
       update(playlist.songs);
     }
-    // Use current metadata, not the snapshot from before loading/favoriting.
+    // Use current metadata, not the snapshot from before resolution/favoriting.
     _currentSong = _currentSong!.copyWith(duration: duration);
+  }
+
+  void _handlePlaybackError(int generation, Object error) {
+    if (!_isCurrent(generation) || _readyGeneration != generation) return;
+    if (!_retryAttempted &&
+        _wantsToPlay &&
+        _currentSong?.source == SongSource.youtube &&
+        classifyPlaybackFailure(error) != PlaybackFailure.forbidden) {
+      _retryAttempted = true;
+      final song = _currentSong!;
+      final position = _playbackPosition;
+      unawaited(_selectSong(song, resumeAt: position, retry: true));
+      return;
+    }
+    _failPlayback(generation, error: error);
   }
 
   void _failPlayback(int generation, {Object? error}) {
@@ -411,14 +516,12 @@ class AudioService extends ChangeNotifier {
     _isLoading = false;
     _isPlaying = false;
     _wantsToPlay = false;
-    _playbackError = error is OnlineMusicException
-        ? error.message
-        : classifyPlaybackFailure(
-            error,
-            online: _currentSong?.source == SongSource.online,
-          ).message();
+    final isYoutube = _currentSong?.source == SongSource.youtube;
+    _playbackError = isYoutube && kIsWeb
+        ? 'YouTube audio is not supported on the web.'
+        : classifyPlaybackFailure(error).message(isYoutube: isYoutube);
     notifyListeners();
-    // Never print exceptions: platform errors can include private file paths.
+    // Never print exceptions: player/network errors can include signed URLs.
     unawaited(
       _mutatePlayer(() async {
         if (_isCurrent(generation)) await _player.stop();
@@ -450,11 +553,16 @@ class AudioService extends ChangeNotifier {
 
   Future<void> retryPlayback() async {
     if (_disposed || _currentSong == null || !_canPlay(_currentSong!)) return;
-    await _selectSong(_currentSong!);
+    await _selectSong(_currentSong!, resumeAt: _playbackPosition);
   }
 
   Future<void> togglePlay() async {
     if (_disposed || _currentSong == null || !_canPlay(_currentSong!)) return;
+    if (_isSimulated(_currentSong!)) {
+      _wantsToPlay = _isPlaying = !_isPlaying;
+      notifyListeners();
+      return;
+    }
     if (_playbackError != null) {
       await retryPlayback();
       return;
@@ -509,6 +617,10 @@ class AudioService extends ChangeNotifier {
     final generation = _generation;
     _playbackPosition = position;
     playbackPositionNotifier.value = position;
+    if (_isSimulated(_currentSong!)) {
+      notifyListeners();
+      return;
+    }
     try {
       await _mutatePlayer(() async {
         if (_isCurrent(generation) && canSeek) await _player.seek(position);

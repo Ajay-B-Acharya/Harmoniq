@@ -55,13 +55,13 @@ class MiniPlayer extends StatelessWidget {
             }
           },
           child: GlassCard(
-            borderRadius: 18,
+            borderRadius: 12,
             blurSigma: 0, // no BackdropFilter — sits over scrolling content
             padding: const EdgeInsets.fromLTRB(10, 8, 10, 6),
-            color: const Color(0xFF25232C),
+            color: AppColors.backgroundSurface,
             borderColor: isPlaying
-                ? AppColors.accent.withValues(alpha: 0.28)
-                : Colors.white.withValues(alpha: 0.12),
+                ? AppColors.accent.withValues(alpha: 0.35)
+                : AppColors.surfaceBorder,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -72,12 +72,10 @@ class MiniPlayer extends StatelessWidget {
                       tag: 'album-art-${song.identity}',
                       child: AlbumArt(
                         gradientId: song.gradientId,
-                        imageUrl: song.source == SongSource.online
-                            ? song.albumArtUrl
-                            : null,
                         size: 44,
                         borderRadius: 10,
                         showShadow: false,
+                        imageUrl: song.albumArtUrl,
                       ),
                     ),
                     const SizedBox(width: 12),
