@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:harmoniq/models/song.dart';
+import 'package:harmoniq/models/youtube_video.dart';
 import 'package:harmoniq/services/youtube_service.dart';
 import 'package:harmoniq/services/yt_dlp_channel.dart';
 
@@ -17,6 +19,28 @@ void main() {
   tearDown(() {
     messenger.setMockMethodCallHandler(channel, null);
     debugDefaultTargetPlatformOverride = null;
+  });
+
+  test('online persistence stores only the canonical stable source URL', () {
+    const video = YoutubeVideo(
+      id: 'abcdefghijk',
+      title: 'Title',
+      artist: 'Artist',
+      thumbnailUrl: '',
+    );
+    final song = Song.fromYoutube(video);
+    expect(video.sourceUrl, 'https://www.youtube.com/watch?v=abcdefghijk');
+    expect(song.toJson()['sourceUrl'], video.sourceUrl);
+    final restored = Song.fromJson({
+      ...song.toJson(),
+      'sourceUrl': 'https://audio.example/expired?token=secret',
+      'audioPath': 'https://audio.example/expired?token=secret',
+    });
+    expect(restored.sourceUrl, video.sourceUrl);
+    expect(restored.toJson().toString(), isNot(contains('secret')));
+    final local = song.copyWith(source: SongSource.local);
+    expect(local.sourceUrl, isNull);
+    expect(local.toJson().containsKey('sourceUrl'), isFalse);
   });
 
   test('search maps bounded metadata and omits invalid identities', () async {

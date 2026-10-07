@@ -4,19 +4,59 @@ import android.content.Context
 import com.chaquo.python.Python
 import dev.ffmpegkit_maintained.ytdlp.YtDlp
 import org.json.JSONObject
+import java.io.File
+import java.util.concurrent.TimeUnit
 
 internal class YtDlpAdapter(private val context: Context) {
     companion object {
         private val videoIdPattern = Regex("^[A-Za-z0-9_-]{11}$")
         private val safeAudioExtensions = setOf("m4a", "mp4", "webm", "mp3", "opus")
         private val safeHeaders = setOf("User-Agent", "Referer")
+        private const val runtimeVersion = "2026.08.19"
+        private val runtimeLock = Any()
+        private var runtimeReady = false
     }
 
-    fun isAvailable(): Boolean = true
+    private val quickJs: File
+        get() = File(context.applicationInfo.nativeLibraryDir, "libharmoniq_quickjs.so")
 
-    fun initialize(): String {
-        YtDlp.init(context.applicationContext)
-        return Python.getInstance().getModule("yt_dlp.version").get("__version__").toString()
+    fun isAvailable(): Boolean = quickJs.canExecute()
+
+    fun initialize(): String = synchronized(runtimeLock) {
+        check(isAvailable()) { "No supported JavaScript runtime for this ABI" }
+        if (!runtimeReady) {
+            val directory = File(context.noBackupFilesDir, "youtube-runtime")
+            check(directory.isDirectory || directory.mkdirs()) { "Runtime directory unavailable" }
+            val bundle = File(directory, "yt-dlp-$runtimeVersion.zip")
+            val temporary = File(directory, "yt-dlp.tmp")
+            context.assets.open("yt-dlp/yt-dlp.zip").use { input ->
+                temporary.outputStream().use { output -> input.copyTo(output) }
+            }
+            check(temporary.renameTo(bundle)) { "Runtime installation failed" }
+            YtDlp.init(context.applicationContext)
+            val python = Python.getInstance()
+            python.getModule("sys").get("path")!!.callAttr("insert", 0, bundle.absolutePath)
+            check(python.getModule("yt_dlp.version").get("__version__").toString() == runtimeVersion) {
+                "Unexpected yt-dlp runtime"
+            }
+            check(python.getModule("yt_dlp_ejs.version").get("__version__").toString() == "0.8.0") {
+                "Unexpected EJS runtime"
+            }
+            val probe = ProcessBuilder(quickJs.absolutePath, "-e", "console.log(1 + 1)")
+                .redirectErrorStream(true).start()
+            try {
+                check(probe.waitFor(5, TimeUnit.SECONDS) && probe.exitValue() == 0) {
+                    "JavaScript runtime unavailable"
+                }
+                check(probe.inputStream.bufferedReader().use { it.readText().trim() } == "2") {
+                    "JavaScript runtime self-test failed"
+                }
+            } finally {
+                probe.destroy()
+            }
+            runtimeReady = true
+        }
+        runtimeVersion
     }
 
     fun smoke(): Map<String, Any?> {
@@ -53,8 +93,9 @@ internal class YtDlpAdapter(private val context: Context) {
                     "id" to id,
                     "title" to video.optString("title", "Untitled video"),
                     "artist" to video.optString("channel", video.optString("uploader", "Unknown channel")),
-                    "thumbnail" to safeHttps(video.optString("thumbnail")),
+                    "thumbnail" to thumbnail(video),
                     "duration" to video.optDouble("duration", 0.0).takeIf { it.isFinite() && it > 0 },
+                    "sourceUrl" to "https://www.youtube.com/watch?v=$id",
                     "source" to "youtube"
                 )
             )
@@ -66,26 +107,16 @@ internal class YtDlpAdapter(private val context: Context) {
         require(videoIdPattern.matches(videoId)) { "Invalid YouTube video ID" }
         val info = extract("https://www.youtube.com/watch?v=$videoId", flat = false)
         require(info.optString("id") == videoId) { "Unexpected video identity" }
-        val formats = info.optJSONArray("formats") ?: throw IllegalStateException("No audio formats")
-        val candidates = ArrayList<JSONObject>()
-        for (index in 0 until formats.length()) {
-            val format = formats.optJSONObject(index) ?: continue
-            if (format.optString("vcodec") != "none" || format.optString("acodec") == "none") continue
-            if (format.optString("ext") !in safeAudioExtensions) continue
-            val url = format.optString("url")
-            if (safeHttps(url) == null || format.optBoolean("has_drm")) continue
-            if (format.optString("protocol") !in setOf("https", "http")) continue
-            candidates.add(format)
+        val format = info
+        check(format.optString("vcodec") == "none" &&
+            format.optString("acodec").let { it.isNotBlank() && it != "none" } &&
+            format.optString("ext") in safeAudioExtensions &&
+            safeHttps(format.optString("url")) != null &&
+            !format.optBoolean("has_drm") &&
+            format.optString("protocol") == "https") {
+            "No directly playable audio-only stream"
         }
-        if (candidates.isEmpty()) throw IllegalStateException("No directly playable audio-only stream")
-        candidates.sortWith(compareBy<JSONObject> {
-            if (it.optString("ext") == "m4a") 0 else 1
-        }.thenBy {
-            val bitrate = it.optDouble("abr", it.optDouble("tbr", 0.0))
-            if (bitrate.isFinite() && bitrate > 0) kotlin.math.abs(bitrate - 144.0) else 1000.0
-        })
-        val format = candidates.first()
-        val headers = format.optJSONObject("http_headers") ?: info.optJSONObject("http_headers")
+        val headers = format.optJSONObject("http_headers")
         val playbackHeaders = mutableMapOf<String, String>()
         if (headers != null) {
             for (name in safeHeaders) {
@@ -98,6 +129,8 @@ internal class YtDlpAdapter(private val context: Context) {
             "streamUrl" to format.getString("url"),
             "headers" to playbackHeaders,
             "format" to format.optString("format_id"),
+            "duration" to info.optDouble("duration", 0.0).takeIf { it.isFinite() && it > 0 },
+            "sourceUrl" to "https://www.youtube.com/watch?v=$videoId",
             "source" to "youtube"
         )
     }
@@ -131,7 +164,12 @@ internal class YtDlpAdapter(private val context: Context) {
         .put("quiet", true)
         .put("no_warnings", true)
         .put("ignoreerrors", false)
+        .put("simulate", true)
         .put("skip_download", true)
+        .put("check_formats", false)
+        .put("format", "bestaudio[ext=m4a][protocol=https]/bestaudio[protocol=https]")
+        .put("js_runtimes", JSONObject().put("quickjs", JSONObject().put("path", quickJs.absolutePath)))
+        .put("remote_components", org.json.JSONArray())
         .put("cachedir", false)
         .put("socket_timeout", 12)
         .put("retries", 0)
@@ -139,6 +177,15 @@ internal class YtDlpAdapter(private val context: Context) {
         .put("fragment_retries", 0)
         .put("noplaylist", !flat)
         .put("extract_flat", flat)
+
+    private fun thumbnail(video: JSONObject): String? {
+        safeHttps(video.optString("thumbnail"))?.let { return it }
+        val thumbnails = video.optJSONArray("thumbnails") ?: return null
+        for (index in thumbnails.length() - 1 downTo 0) {
+            safeHttps(thumbnails.optJSONObject(index)?.optString("url") ?: "")?.let { return it }
+        }
+        return null
+    }
 
     private fun safeHttps(raw: String): String? {
         val uri = android.net.Uri.parse(raw)

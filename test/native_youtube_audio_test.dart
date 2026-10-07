@@ -501,6 +501,7 @@ void main() {
       expect(service.canSeek, isFalse);
       expect(service.isLoading, isFalse);
       expect(player.plays, isEmpty);
+      expect(calls, 1, reason: 'Resolver failures do not auto-retry');
       await service.retryPlayback();
       expect(calls, 2);
       expect(service.playbackError, isNull);
@@ -527,7 +528,7 @@ void main() {
     expect(service.isPlaying, isTrue);
   });
 
-  test('Exo 403 load failure is shown without automatic retries', () async {
+  test('Exo 403 load failure refreshes once before showing failure', () async {
     var calls = 0;
     resolve = (id) async {
       calls++;
@@ -555,10 +556,48 @@ void main() {
     expect(service.wantsToPlay, isFalse);
     expect(service.isLoading, isFalse);
     expect(service.canSeek, isFalse);
-    expect(calls, 1);
-    expect(player.sources, hasLength(1));
+    expect(calls, 2);
+    expect(player.sources, hasLength(2));
     expect(player.plays, isEmpty);
   });
+
+  for (final paused in [false, true]) {
+    test('load failure refreshes the URL with paused intent $paused', () async {
+      final ids = <String>[];
+      resolve = (id) async {
+        ids.add(id);
+        return streamUri('$id-${ids.length}');
+      };
+      final gate = Completer<Duration?>();
+      player.loadGate = gate;
+      final song = youtubeSong();
+      final selected = service.playSong(song);
+      await flush();
+      if (paused) await service.togglePlay();
+      player.loadGate = null;
+      gate.completeError(
+        PlayerException(0, 'Source error: Response code: 403'),
+      );
+      await selected;
+      expect(ids, [song.videoId, song.videoId]);
+      expect(player.sources.map((source) => source.uri), [
+        streamUri('${song.videoId}-1'),
+        streamUri('${song.videoId}-2'),
+      ]);
+      expect(service.currentSong, song);
+      expect(service.playbackError, isNull);
+      expect(service.isLoading, isFalse);
+      expect(service.wantsToPlay, !paused);
+      expect(service.isPlaying, !paused);
+      expect(service.canSeek, isTrue);
+      expect(player.plays, hasLength(paused ? 0 : 1));
+      player.events.addError(PlayerException(403, 'Response code: 403'));
+      await flush();
+      expect(ids, [song.videoId, song.videoId]);
+      expect(player.sources, hasLength(2));
+      expect(service.playbackError, isNotNull);
+    });
+  }
 
   test('source error without HTTP evidence stays generic', () async {
     // Cached just_audio sends only type/message/index, not the logged cause.
@@ -586,6 +625,11 @@ void main() {
   });
 
   test('local source failures never claim YouTube', () async {
+    var calls = 0;
+    resolve = (id) async {
+      calls++;
+      return streamUri(id);
+    };
     final local = localSong().copyWith(audioPath: 'file:///music/track.mp3');
     player.failLoad = PlayerException(0, 'Source error: Response code: 403');
     await service.playSong(local);
@@ -605,7 +649,41 @@ void main() {
       service.playbackError,
       'Unable to play this audio. Please try again.',
     );
+    expect(calls, 0);
+    expect(player.sources, hasLength(3));
+    expect(player.plays, isEmpty);
   });
+
+  for (final viaEvent in [false, true]) {
+    test('local playback failure never retries (event: $viaEvent)', () async {
+      var calls = 0;
+      resolve = (id) async {
+        calls++;
+        return streamUri(id);
+      };
+      await service.playSong(
+        localSong().copyWith(
+          audioPath: 'content://media/external/audio/media/7',
+        ),
+      );
+      final error = PlayerException(0, 'Source error: Response code: 403');
+      if (viaEvent) {
+        player.events.addError(error);
+      } else {
+        player.plays.single.completeError(error);
+      }
+      await flush();
+      expect(calls, 0);
+      expect(player.sources, hasLength(1));
+      expect(player.plays, hasLength(1));
+      expect(service.isPlaying, isFalse);
+      expect(service.wantsToPlay, isFalse);
+      expect(
+        service.playbackError,
+        'Unable to access this audio (403). Choose another track.',
+      );
+    });
+  }
 
   test('stale source and stream errors cannot fail newer selection', () async {
     final a = youtubeSong();
@@ -631,39 +709,61 @@ void main() {
     expect(player.plays, hasLength(1));
   });
 
-  test('playback event errors preserve HTTP evidence without retry', () async {
-    var calls = 0;
-    resolve = (id) async {
-      calls++;
-      return streamUri(id);
-    };
-    await service.playSong(youtubeSong());
-    player.events.addError(
-      PlatformException(
+  test(
+    'playback event 403 refreshes once then preserves HTTP evidence',
+    () async {
+      final ids = <String>[];
+      resolve = (id) async {
+        ids.add(id);
+        return streamUri('$id-${ids.length}');
+      };
+      final song = youtubeSong();
+      await service.playSong(song);
+      player.positions.add(const Duration(seconds: 23));
+      final error = PlatformException(
         code: '0',
         message:
             'Source error: Response code: 403 '
             'https://secret.example/?token=secret',
-      ),
-    );
-    await flush();
-    expect(
-      service.playbackError,
-      'YouTube refused this audio stream (403). Retrying may not help. '
-      'Choose another track.',
-    );
-    expect(service.isPlaying, isFalse);
-    expect(service.isLoading, isFalse);
-    expect(service.wantsToPlay, isFalse);
-    expect(service.canSeek, isFalse);
-    expect(calls, 1);
-    expect(player.sources, hasLength(1));
-    expect(player.plays, hasLength(1));
-  });
+      );
+      player.events.addError(error);
+      player.events.addError(error);
+      await flush();
+      expect(ids, [song.videoId, song.videoId]);
+      expect(player.sources.map((source) => source.uri), [
+        streamUri('${song.videoId}-1'),
+        streamUri('${song.videoId}-2'),
+      ]);
+      expect(player.seeks, [const Duration(seconds: 23)]);
+      expect(service.playbackPosition, const Duration(seconds: 23));
+      expect(service.playbackError, isNull);
+      expect(service.isPlaying, isTrue);
+      player.events.addError(error);
+      player.events.addError(error);
+      await flush();
+      expect(
+        service.playbackError,
+        'YouTube refused this audio stream (403). Retrying may not help. '
+        'Choose another track.',
+      );
+      expect(service.isPlaying, isFalse);
+      expect(service.isLoading, isFalse);
+      expect(service.wantsToPlay, isFalse);
+      expect(service.canSeek, isFalse);
+      expect(ids, [song.videoId, song.videoId]);
+      expect(player.sources, hasLength(2));
+      expect(player.plays, hasLength(2));
+    },
+  );
 
   test(
     'late play errors from old generation do not fail new playback',
     () async {
+      final ids = <String>[];
+      resolve = (id) async {
+        ids.add(id);
+        return streamUri('$id-${ids.length}');
+      };
       await service.playSong(youtubeSong());
       final oldPlay = player.plays.single;
       await service.playSong(youtubeSong('lmnopqrstuv'));
@@ -673,10 +773,22 @@ void main() {
       await flush();
       expect(service.playbackError, isNull);
       expect(service.isPlaying, isTrue);
+      expect(ids, ['abcdefghijk', 'lmnopqrstuv']);
+      player.positions.add(const Duration(seconds: 18));
       player.plays.last.completeError(
         PlayerException(0, 'Source error: Response code: 403'),
       );
       await flush();
+      expect(service.playbackError, isNull);
+      expect(service.isPlaying, isTrue);
+      expect(ids, ['abcdefghijk', 'lmnopqrstuv', 'lmnopqrstuv']);
+      expect(player.sources.last.uri, streamUri('lmnopqrstuv-3'));
+      expect(player.seeks, [const Duration(seconds: 18)]);
+      player.plays.last.completeError(
+        PlayerException(0, 'Source error: Response code: 403'),
+      );
+      await flush();
+      expect(ids, hasLength(3));
       expect(
         service.playbackError,
         'YouTube refused this audio stream (403). Retrying may not help. '
@@ -705,8 +817,18 @@ void main() {
       player.emit(false, ProcessingState.ready);
       expect(service.isLoading, isFalse);
       expect(service.canSeek, isTrue);
+      player.positions.add(const Duration(seconds: 31));
       player.events.addError(StateError('https://secret.example?token=secret'));
-      expect(player.sources, hasLength(1));
+      await flush();
+      expect(player.sources, hasLength(2));
+      expect(player.plays, hasLength(1));
+      expect(player.seeks, [const Duration(seconds: 31)]);
+      expect(service.wantsToPlay, isFalse);
+      expect(service.isPlaying, isFalse);
+      expect(service.canSeek, isTrue);
+      expect(service.playbackError, isNull);
+      player.events.addError(StateError('https://secret.example?token=secret'));
+      expect(player.sources, hasLength(2));
       expect(service.playbackError, isNotNull);
       expect(service.playbackError, isNot(contains('secret')));
     },
@@ -730,6 +852,104 @@ void main() {
     expect(service.playbackError, isNotNull);
     expect(calls, 2);
   });
+
+  test('duplicate event and play failures share one paused recovery', () async {
+    final gate = Completer<Uri>();
+    var calls = 0;
+    resolve = (id) {
+      calls++;
+      return calls == 1 ? Future.value(streamUri('$id-1')) : gate.future;
+    };
+    await service.playSong(youtubeSong());
+    final oldPlay = player.plays.single;
+    player.positions.add(const Duration(seconds: 42));
+    final error = PlayerException(0, 'Source error: Response code: 403');
+    player.events.addError(error);
+    player.events.addError(error);
+    oldPlay.completeError(error);
+    await service.togglePlay();
+    await flush();
+    expect(calls, 2);
+    expect(service.isLoading, isTrue);
+    expect(service.wantsToPlay, isFalse);
+    player.positions.add(const Duration(seconds: 99));
+    player.emit(true, ProcessingState.completed);
+    expect(service.playbackPosition, const Duration(seconds: 42));
+    gate.complete(streamUri('abcdefghijk-2'));
+    await flush();
+    expect(calls, 2);
+    expect(player.sources, hasLength(2));
+    expect(player.plays, hasLength(1));
+    expect(player.seeks, [const Duration(seconds: 42)]);
+    expect(service.wantsToPlay, isFalse);
+    expect(service.isPlaying, isFalse);
+    expect(service.playbackError, isNull);
+    await service.togglePlay();
+    expect(calls, 2);
+    expect(service.isPlaying, isTrue);
+    player.events.addError(error);
+    await flush();
+    expect(calls, 2);
+    expect(service.playbackError, isNotNull);
+  });
+
+  test(
+    'resolver failure during recovery does not trigger a third attempt',
+    () async {
+      var calls = 0;
+      resolve = (id) async {
+        if (++calls == 2) throw StateError('resolver secret');
+        return streamUri(id);
+      };
+      await service.playSong(youtubeSong());
+      player.events.addError(PlayerException(403, 'Response code: 403'));
+      await flush();
+      player.events.addError(PlayerException(403, 'Response code: 403'));
+      await flush();
+      expect(calls, 2);
+      expect(player.sources, hasLength(1));
+      expect(service.isLoading, isFalse);
+      expect(service.isPlaying, isFalse);
+      expect(service.playbackError, isNotNull);
+      expect(service.playbackError, isNot(contains('secret')));
+    },
+  );
+
+  for (final fails in [false, true]) {
+    test(
+      'stale recovery resolution cannot affect a newer source (fails: $fails)',
+      () async {
+        final gate = Completer<Uri>();
+        final ids = <String>[];
+        resolve = (id) {
+          ids.add(id);
+          return ids.length == 2 ? gate.future : Future.value(streamUri(id));
+        };
+        final a = youtubeSong();
+        final b = youtubeSong('lmnopqrstuv');
+        await service.playSong(a);
+        final oldPlay = player.plays.single;
+        player.events.addError(PlayerException(403, 'Response code: 403'));
+        await service.playSong(b);
+        oldPlay.completeError(PlayerException(403, 'Response code: 403'));
+        if (fails) {
+          gate.completeError(StateError('stale resolver secret'));
+        } else {
+          gate.complete(streamUri('abcdefghijk-refreshed'));
+        }
+        await flush();
+        expect(ids, [a.videoId, a.videoId, b.videoId]);
+        expect(player.sources.map((source) => (source.tag as MediaItem).id), [
+          a.identity,
+          b.identity,
+        ]);
+        expect(player.plays, hasLength(2));
+        expect(service.currentSong, b);
+        expect(service.playbackError, isNull);
+        expect(service.isPlaying, isTrue);
+      },
+    );
+  }
 
   test(
     'queue navigation uses YouTube identity and rejects legacy and HTTP local',
