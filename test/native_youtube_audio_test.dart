@@ -6,8 +6,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:harmoniq/models/song.dart';
 import 'package:harmoniq/models/youtube_video.dart';
 import 'package:harmoniq/services/audio_service.dart';
-import 'package:harmoniq/services/youtube_audio_native.dart' as native;
-import 'package:harmoniq/services/youtube_audio_stub.dart' as web;
+import 'package:harmoniq/services/youtube_audio_stream_native.dart' as native;
+import 'package:harmoniq/services/yt_dlp_channel.dart';
+import 'package:harmoniq/services/youtube_audio_other.dart' as web;
 import 'package:just_audio/just_audio.dart';
 import 'package:just_audio_background/just_audio_background.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -204,11 +205,11 @@ void main() {
 
   test('resolver rejects invalid IDs offline and web is unsupported', () async {
     await expectLater(
-      native.resolveYoutubeAudio('invalid'),
+      native.resolveYoutubeStream('invalid'),
       throwsFormatException,
     );
     await expectLater(
-      web.resolveYoutubeAudio('abcdefghijk'),
+      web.resolveYoutubeStream('abcdefghijk'),
       throwsUnsupportedError,
     );
   });
@@ -295,6 +296,42 @@ void main() {
       expect(service.currentSong!.audioPath, isEmpty);
       await service.seek(const Duration(seconds: 45));
       expect(player.seeks, [const Duration(seconds: 45)]);
+    },
+  );
+
+  test(
+    'audio-only stream headers reach the shared player, not Song JSON',
+    () async {
+      service.dispose();
+      await flush();
+      player = TestAudioPlayer();
+      service = AudioService(
+        audioPlayer: player,
+        resolveYoutubeStream: (id) async => YoutubeAudioStream(
+          streamUri(id),
+          headers: const {'User-Agent': 'Harmoniq test'},
+        ),
+      );
+      await service.playSong(youtubeSong());
+      expect(player.sources.single.headers, {'User-Agent': 'Harmoniq test'});
+      expect(
+        service.currentSong!.toJson().toString(),
+        isNot(contains('Harmoniq test')),
+      );
+    },
+  );
+
+  test(
+    'MediaStore content URI is sent directly without HTTP proxy headers',
+    () async {
+      final song = localSong().copyWith(
+        audioPath: 'content://media/external/audio/media/1000004372',
+      );
+      await service.playSong(song);
+      expect(player.sources, hasLength(1));
+      expect(player.sources.single.uri, Uri.parse(song.audioPath));
+      expect(player.sources.single.headers, isNull);
+      expect(service.currentSong!.identity, song.identity);
     },
   );
 
@@ -669,10 +706,30 @@ void main() {
       expect(service.isLoading, isFalse);
       expect(service.canSeek, isTrue);
       player.events.addError(StateError('https://secret.example?token=secret'));
+      expect(player.sources, hasLength(1));
       expect(service.playbackError, isNotNull);
       expect(service.playbackError, isNot(contains('secret')));
     },
   );
+
+  test('stale online stream re-resolves once and restores position', () async {
+    var calls = 0;
+    resolve = (id) async {
+      calls++;
+      return streamUri(id);
+    };
+    await service.playSong(youtubeSong());
+    player.positions.add(const Duration(seconds: 37));
+    player.events.addError(StateError('expired stream'));
+    await flush();
+    expect(calls, 2);
+    expect(player.sources, hasLength(2));
+    expect(player.seeks, contains(const Duration(seconds: 37)));
+    expect(service.playbackError, isNull);
+    player.events.addError(StateError('expired stream'));
+    expect(service.playbackError, isNotNull);
+    expect(calls, 2);
+  });
 
   test(
     'queue navigation uses YouTube identity and rejects legacy and HTTP local',

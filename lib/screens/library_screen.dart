@@ -12,6 +12,7 @@ class LibraryScreen extends StatefulWidget {
   final Function(Song) onSongTap;
   final Function(Song) onFavoriteTap;
   final Function(String) onCreatePlaylist;
+  final int initialCategoryIndex;
 
   const LibraryScreen({
     super.key,
@@ -19,21 +20,24 @@ class LibraryScreen extends StatefulWidget {
     required this.onSongTap,
     required this.onFavoriteTap,
     required this.onCreatePlaylist,
+    this.initialCategoryIndex = 0,
   });
 
   @override
-  State<LibraryScreen> createState() => _LibraryScreenState();
+  State<LibraryScreen> createState() => LibraryScreenState();
 }
 
-class _LibraryScreenState extends State<LibraryScreen> {
-  int _selectedCategoryIndex = 0;
-  int _favoriteFilterIndex =
-      0; // 0 = All, 1 = Local, 2 = Previous source, 3 = YouTube
+class LibraryScreenState extends State<LibraryScreen> {
+  late int _selectedCategoryIndex;
+  int _favoriteFilterIndex = 0; // 0 = All, 1 = Local, 2 = Legacy, 3 = YouTube
+
   final List<String> _categories = [
     'Songs',
     'Playlists',
     'Albums',
     'Favorites',
+    'Recently Played',
+    'Local',
   ];
 
   AudioService? _cachedService;
@@ -42,6 +46,12 @@ class _LibraryScreenState extends State<LibraryScreen> {
   List<Song> _librarySongs = [];
   Map<String, List<Song>> _albumMap = {};
   List<String> _albumKeys = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedCategoryIndex = widget.initialCategoryIndex;
+  }
 
   void _refreshLibraryCache() {
     final service = widget.audioService;
@@ -54,10 +64,8 @@ class _LibraryScreenState extends State<LibraryScreen> {
     _cachedCatalogRevision = service.catalogRevision;
     _cachedLocalRevision = service.localSongsRevision;
 
-    // Local metadata takes precedence, matching the existing library order.
-    final localIdentities = service.localSongs
-        .map((song) => song.identity)
-        .toSet();
+    final localIdentities =
+        service.localSongs.map((song) => song.identity).toSet();
     _librarySongs = [
       ...service.localSongs,
       ...service.songs.where(
@@ -71,112 +79,124 @@ class _LibraryScreenState extends State<LibraryScreen> {
     _albumKeys = _albumMap.keys.toList();
   }
 
+  void selectCategory(int index) {
+    if (index >= 0 && index < _categories.length) {
+      setState(() => _selectedCategoryIndex = index);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    // The scaffold chrome (title, category chips) is pure local state.
-    // Only the Expanded content list needs AudioService — listener is scoped there.
     return Scaffold(
-      body: Material(
-        color: AppColors.background,
-        child: SafeArea(
-          bottom: false,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 24),
+      body: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 20),
 
-                // ── Title + add button ────────────────────────────────────────
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Your Library',
-                      style: Theme.of(context).textTheme.headlineMedium
-                          ?.copyWith(
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: -0.6,
-                          ),
-                    ),
-                    if (_selectedCategoryIndex == 1)
-                      IconButton(
-                        icon: const Icon(
-                          Icons.add_rounded,
-                          color: Colors.white,
-                          size: 28,
+              // ── Title + add button ────────────────────────────────────────
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Your Library',
+                    style: Theme.of(context)
+                        .textTheme
+                        .headlineMedium
+                        ?.copyWith(
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -0.6,
                         ),
-                        onPressed: _showCreatePlaylistDialog,
-                        splashRadius: 24,
+                  ),
+                  if (_selectedCategoryIndex == 1)
+                    IconButton(
+                      tooltip: 'New playlist',
+                      icon: const Icon(
+                        Icons.add_rounded,
+                        color: AppColors.textPrimary,
+                        size: 26,
                       ),
-                  ],
-                ),
-                const SizedBox(height: 20),
+                      onPressed: _showCreatePlaylistDialog,
+                      splashRadius: 24,
+                    )
+                  else if (_selectedCategoryIndex == 5)
+                    IconButton(
+                      tooltip: 'Scan device',
+                      icon: const Icon(
+                        Icons.refresh_rounded,
+                        color: AppColors.textPrimary,
+                        size: 24,
+                      ),
+                      onPressed: widget.audioService.scanLocalSongs,
+                      splashRadius: 24,
+                    ),
+                ],
+              ),
+              const SizedBox(height: 16),
 
-                // ── Category chips — local setState only ──────────────────────
-                SizedBox(
-                  height: 38,
-                  child: ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    physics: const BouncingScrollPhysics(),
-                    itemCount: _categories.length,
-                    itemBuilder: (context, index) {
-                      final isSelected = _selectedCategoryIndex == index;
-                      return GestureDetector(
-                        onTap: () =>
-                            setState(() => _selectedCategoryIndex = index),
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 220),
-                          curve: Curves.easeOutCubic,
-                          margin: const EdgeInsets.only(right: 12),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 18,
-                            vertical: 8,
-                          ),
-                          decoration: BoxDecoration(
+              // ── Category chips ────────────────────────────────────────────
+              SizedBox(
+                height: 36,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  physics: const BouncingScrollPhysics(),
+                  itemCount: _categories.length,
+                  itemBuilder: (context, index) {
+                    final isSelected = _selectedCategoryIndex == index;
+                    return GestureDetector(
+                      onTap: () =>
+                          setState(() => _selectedCategoryIndex = index),
+                      child: Container(
+                        margin: const EdgeInsets.only(right: 8),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 7,
+                        ),
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? AppColors.accent
+                              : AppColors.surfaceHigh,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
                             color: isSelected
-                                ? AppColors.accent
-                                : Colors.white.withValues(alpha: 0.05),
-                            borderRadius: BorderRadius.circular(18),
-                            border: Border.all(
-                              color: isSelected
-                                  ? Colors.transparent
-                                  : Colors.white.withValues(alpha: 0.08),
-                              width: 1,
-                            ),
-                          ),
-                          child: Text(
-                            _categories[index],
-                            style: TextStyle(
-                              color: isSelected
-                                  ? Colors.white
-                                  : AppColors.textSecondary,
-                              fontSize: 12.5,
-                              fontWeight: isSelected
-                                  ? FontWeight.bold
-                                  : FontWeight.w500,
-                            ),
+                                ? Colors.transparent
+                                : AppColors.surfaceBorder,
+                            width: 1,
                           ),
                         ),
-                      );
-                    },
-                  ),
+                        child: Text(
+                          _categories[index],
+                          style: TextStyle(
+                            color: isSelected
+                                ? AppColors.background
+                                : AppColors.textSecondary,
+                            fontSize: 12,
+                            fontWeight:
+                                isSelected ? FontWeight.w700 : FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    );
+                  },
                 ),
-                const SizedBox(height: 20),
+              ),
+              const SizedBox(height: 18),
 
-                // ── Content — only this rebuilds on AudioService changes ───────
-                Expanded(
-                  child: ListenableBuilder(
-                    listenable: widget.audioService,
-                    builder: (context, child) => _buildCategoryContent(
-                      playlists: widget.audioService.playlists,
-                      currentSong: widget.audioService.currentSong,
-                      isPlaying: widget.audioService.isPlaying,
-                    ),
+              // ── Content ───────────────────────────────────────────────────
+              Expanded(
+                child: ListenableBuilder(
+                  listenable: widget.audioService,
+                  builder: (context, child) => _buildCategoryContent(
+                    playlists: widget.audioService.playlists,
+                    currentSong: widget.audioService.currentSong,
+                    isPlaying: widget.audioService.isPlaying,
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
@@ -199,6 +219,18 @@ class _LibraryScreenState extends State<LibraryScreen> {
       case 3:
         return _buildFavoritesList(
           widget.audioService.favorites,
+          currentSong,
+          isPlaying,
+        );
+      case 4:
+        return _buildRecentlyPlayedView(
+          widget.audioService.recentlyPlayed,
+          currentSong,
+          isPlaying,
+        );
+      case 5:
+        return _buildLocalSongsView(
+          widget.audioService.localSongs,
           currentSong,
           isPlaying,
         );
@@ -232,14 +264,14 @@ class _LibraryScreenState extends State<LibraryScreen> {
       return _buildEmptyState(
         Icons.music_note_rounded,
         'Your library is empty',
-        subtitle: 'Scan your device in the Local tab to add music',
+        subtitle: 'Scan your device to add music',
       );
     }
     return ListView.builder(
       physics: const BouncingScrollPhysics(),
       itemCount: allSongs.length + 1,
       itemBuilder: (context, index) {
-        if (index == allSongs.length) return const SizedBox(height: 130);
+        if (index == allSongs.length) return const SizedBox(height: 120);
         final song = allSongs[index];
         final isActive = currentSong?.identity == song.identity;
         return SongTile(
@@ -258,6 +290,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
       return _buildEmptyState(
         Icons.playlist_add_rounded,
         'No playlists created yet',
+        subtitle: 'Tap the plus icon above to create one',
       );
     }
     return GridView.builder(
@@ -265,8 +298,8 @@ class _LibraryScreenState extends State<LibraryScreen> {
       itemCount: playlists.length,
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
-        crossAxisSpacing: 16,
-        mainAxisSpacing: 16,
+        crossAxisSpacing: 14,
+        mainAxisSpacing: 14,
         childAspectRatio: 0.82,
       ),
       itemBuilder: (context, index) {
@@ -278,46 +311,57 @@ class _LibraryScreenState extends State<LibraryScreen> {
             } else {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
-                  content: Text(
-                    'This playlist is empty! Add songs from the catalog.',
-                  ),
+                  content: Text('This playlist is empty.'),
                   behavior: SnackBarBehavior.floating,
                 ),
               );
             }
           },
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: LayoutBuilder(
-                  builder: (context, constraints) => AlbumArt(
-                    gradientId: playlist.gradientId,
-                    size: constraints.biggest.shortestSide,
-                    borderRadius: 12,
-                    overlayIcon: Icons.playlist_play_rounded,
+          child: Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: AppColors.backgroundSurface,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.05),
+                width: 1,
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: LayoutBuilder(
+                    builder: (context, constraints) => AlbumArt(
+                      gradientId: playlist.gradientId,
+                      size: constraints.biggest.shortestSide,
+                      borderRadius: 8,
+                      showShadow: false,
+                      overlayIcon: Icons.playlist_play_rounded,
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                playlist.name,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 13.5,
+                const SizedBox(height: 8),
+                Text(
+                  playlist.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13.5,
+                    color: AppColors.textPrimary,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                '${playlist.songs.length} songs',
-                style: const TextStyle(
-                  color: AppColors.textSecondary,
-                  fontSize: 11.5,
+                const SizedBox(height: 2),
+                Text(
+                  '${playlist.songs.length} songs',
+                  style: const TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 11.5,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         );
       },
@@ -335,8 +379,8 @@ class _LibraryScreenState extends State<LibraryScreen> {
       itemCount: albumKeys.length,
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
-        crossAxisSpacing: 16,
-        mainAxisSpacing: 16,
+        crossAxisSpacing: 14,
+        mainAxisSpacing: 14,
         childAspectRatio: 0.82,
       ),
       itemBuilder: (context, index) {
@@ -344,40 +388,53 @@ class _LibraryScreenState extends State<LibraryScreen> {
         final albumSongs = albums[albumName]!;
         return GestureDetector(
           onTap: () => _onSongTap(albumSongs[0]),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: LayoutBuilder(
-                  builder: (context, constraints) => AlbumArt(
-                    gradientId: albumSongs[0].gradientId,
-                    size: constraints.biggest.shortestSide,
-                    borderRadius: 12,
-                    overlayIcon: Icons.album_rounded,
+          child: Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: AppColors.backgroundSurface,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.05),
+                width: 1,
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: LayoutBuilder(
+                    builder: (context, constraints) => AlbumArt(
+                      gradientId: albumSongs[0].gradientId,
+                      size: constraints.biggest.shortestSide,
+                      borderRadius: 8,
+                      showShadow: false,
+                      overlayIcon: Icons.album_rounded,
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                albumName,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 13.5,
+                const SizedBox(height: 8),
+                Text(
+                  albumName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13.5,
+                    color: AppColors.textPrimary,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                albumSongs[0].artist,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  color: AppColors.textSecondary,
-                  fontSize: 11.5,
+                const SizedBox(height: 2),
+                Text(
+                  albumSongs[0].artist,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 11.5,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         );
       },
@@ -397,15 +454,12 @@ class _LibraryScreenState extends State<LibraryScreen> {
       );
     }
 
-    final localFavs = allFavorites
-        .where((s) => s.source == SongSource.local)
-        .toList();
-    final youtubeFavs = allFavorites
-        .where((s) => s.source == SongSource.youtube)
-        .toList();
-    final legacyFavs = allFavorites
-        .where((s) => s.source == SongSource.legacy)
-        .toList();
+    final localFavs =
+        allFavorites.where((s) => s.source == SongSource.local).toList();
+    final youtubeFavs =
+        allFavorites.where((s) => s.source == SongSource.youtube).toList();
+    final legacyFavs =
+        allFavorites.where((s) => s.source == SongSource.legacy).toList();
     if (legacyFavs.isEmpty && _favoriteFilterIndex == 2) {
       _favoriteFilterIndex = 0;
     }
@@ -413,10 +467,10 @@ class _LibraryScreenState extends State<LibraryScreen> {
     final filtered = _favoriteFilterIndex == 1
         ? localFavs
         : _favoriteFilterIndex == 2
-        ? legacyFavs
-        : _favoriteFilterIndex == 3
-        ? youtubeFavs
-        : allFavorites;
+            ? legacyFavs
+            : _favoriteFilterIndex == 3
+                ? youtubeFavs
+                : allFavorites;
 
     return Column(
       children: [
@@ -457,15 +511,15 @@ class _LibraryScreenState extends State<LibraryScreen> {
                   _favoriteFilterIndex == 1
                       ? 'No local favorite songs'
                       : _favoriteFilterIndex == 3
-                      ? 'No YouTube favorite songs'
-                      : 'No previous-source favorite songs',
+                          ? 'No YouTube favorite songs'
+                          : 'No previous-source favorite songs',
                 )
               : ListView.builder(
                   physics: const BouncingScrollPhysics(),
                   itemCount: filtered.length + 1,
                   itemBuilder: (context, index) {
                     if (index == filtered.length) {
-                      return const SizedBox(height: 130);
+                      return const SizedBox(height: 120);
                     }
                     final song = filtered[index];
                     final isActive = currentSong?.identity == song.identity;
@@ -491,25 +545,113 @@ class _LibraryScreenState extends State<LibraryScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
           color: isSelected
-              ? AppColors.accent.withValues(alpha: 0.25)
-              : Colors.white.withValues(alpha: 0.05),
-          borderRadius: BorderRadius.circular(14),
+              ? AppColors.accent.withValues(alpha: 0.20)
+              : AppColors.surfaceHigh,
+          borderRadius: BorderRadius.circular(6),
           border: Border.all(
             color: isSelected
-                ? AppColors.accentLight.withValues(alpha: 0.5)
-                : Colors.white.withValues(alpha: 0.08),
+                ? AppColors.accent
+                : AppColors.surfaceBorder,
             width: 1,
           ),
         ),
         child: Text(
           label,
           style: TextStyle(
-            color: isSelected ? Colors.white : AppColors.textSecondary,
+            color: isSelected ? AppColors.accentLight : AppColors.textSecondary,
             fontSize: 10.5,
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildRecentlyPlayedView(
+    List<Song> recentlyPlayed,
+    Song? currentSong,
+    bool isPlaying,
+  ) {
+    if (recentlyPlayed.isEmpty) {
+      return _buildEmptyState(
+        Icons.history_rounded,
+        'No recently played tracks',
+        subtitle: 'Start listening to songs to see your playback history',
+      );
+    }
+    return ListView.builder(
+      physics: const BouncingScrollPhysics(),
+      itemCount: recentlyPlayed.length + 1,
+      itemBuilder: (context, index) {
+        if (index == recentlyPlayed.length) return const SizedBox(height: 120);
+        final song = recentlyPlayed[index];
+        final isActive = currentSong?.identity == song.identity;
+        return SongTile(
+          song: song,
+          isActive: isActive,
+          isPlaying: isActive && isPlaying,
+          onTap: () => _onSongTap(song),
+          onFavoriteTap: () => widget.onFavoriteTap(song),
+        );
+      },
+    );
+  }
+
+  Widget _buildLocalSongsView(
+    List<Song> localSongs,
+    Song? currentSong,
+    bool isPlaying,
+  ) {
+    if (localSongs.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.audio_file_outlined,
+              size: 48,
+              color: AppColors.textMuted.withValues(alpha: 0.4),
+            ),
+            const SizedBox(height: 14),
+            const Text(
+              'No local tracks found',
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 6),
+            const Text(
+              'Scan your storage to add on-device music files',
+              style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+            ),
+            const SizedBox(height: 16),
+            FilledButton.icon(
+              onPressed: widget.audioService.scanLocalSongs,
+              icon: const Icon(Icons.refresh_rounded, size: 18),
+              label: const Text('Scan Storage'),
+            ),
+            const SizedBox(height: 80),
+          ],
+        ),
+      );
+    }
+    return ListView.builder(
+      physics: const BouncingScrollPhysics(),
+      itemCount: localSongs.length + 1,
+      itemBuilder: (context, index) {
+        if (index == localSongs.length) return const SizedBox(height: 120);
+        final song = localSongs[index];
+        final isActive = currentSong?.identity == song.identity;
+        return SongTile(
+          song: song,
+          isActive: isActive,
+          isPlaying: isActive && isPlaying,
+          onTap: () => _onSongTap(song),
+          onFavoriteTap: () => widget.onFavoriteTap(song),
+        );
+      },
     );
   }
 
@@ -520,25 +662,30 @@ class _LibraryScreenState extends State<LibraryScreen> {
         children: [
           Icon(
             icon,
-            size: 52,
-            color: AppColors.textMuted.withValues(alpha: 0.4),
+            size: 48,
+            color: AppColors.textMuted.withValues(alpha: 0.35),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 14),
           Text(
             message,
-            style: Theme.of(context).textTheme.titleLarge
-                ?.copyWith(color: AppColors.textSecondary, fontSize: 14.5),
+            style: const TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 14.5,
+              fontWeight: FontWeight.w600,
+            ),
           ),
           if (subtitle != null) ...[
             const SizedBox(height: 4),
             Text(
               subtitle,
               textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyMedium
-                  ?.copyWith(color: AppColors.textMuted, fontSize: 12),
+              style: const TextStyle(
+                color: AppColors.textMuted,
+                fontSize: 12,
+              ),
             ),
           ],
-          const SizedBox(height: 100),
+          const SizedBox(height: 80),
         ],
       ),
     );
@@ -551,12 +698,12 @@ class _LibraryScreenState extends State<LibraryScreen> {
       builder: (context) => AlertDialog(
         backgroundColor: AppColors.backgroundSurface,
         surfaceTintColor: Colors.transparent,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         title: const Text(
           'New Playlist',
           style: TextStyle(
-            color: Colors.white,
-            fontSize: 18,
+            color: AppColors.textPrimary,
+            fontSize: 17,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -568,7 +715,7 @@ class _LibraryScreenState extends State<LibraryScreen> {
             hintText: 'Playlist name',
             hintStyle: const TextStyle(
               color: AppColors.textMuted,
-              fontSize: 14,
+              fontSize: 13,
             ),
             enabledBorder: UnderlineInputBorder(
               borderSide: BorderSide(
@@ -598,14 +745,16 @@ class _LibraryScreenState extends State<LibraryScreen> {
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.accent,
-              foregroundColor: Colors.white,
-              elevation: 0,
+              foregroundColor: AppColors.background,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             ),
-            child: const Text('Create', style: TextStyle(fontSize: 13)),
+            child: const Text(
+              'Create',
+              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+            ),
           ),
         ],
       ),

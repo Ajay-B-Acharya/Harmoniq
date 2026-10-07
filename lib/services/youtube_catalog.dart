@@ -2,7 +2,7 @@ import 'dart:async';
 
 import '../models/youtube_video.dart';
 import 'youtube_metadata_stub.dart'
-    if (dart.library.io) 'youtube_metadata_native.dart'
+    if (dart.library.io) 'youtube_metadata_android.dart'
     as metadata;
 import 'youtube_service.dart';
 
@@ -12,7 +12,7 @@ typedef YoutubeMetadataSearch = Future<List<YoutubeVideo>> Function(
   String query,
 );
 
-/// Metadata discovery only. Playback remains with the official YouTube player.
+/// Metadata discovery only; playback resolves the selected video separately.
 class YoutubeCatalog {
   static final YoutubeCatalog instance = YoutubeCatalog();
   static const discoveryQuery = 'music official video';
@@ -43,16 +43,16 @@ class YoutubeCatalog {
   String get sourceDescription => _officialService.isConfigured
       ? 'YouTube Data API · Public music discovery'
       : _platformSupported
-      ? 'YouTube public search · Music discovery'
+      ? 'On-device YouTube search · Music discovery'
       : 'YouTube discovery on web requires YOUTUBE_API_KEY';
 
   Future<List<YoutubeVideo>> search(String query) async {
     _requireAvailable();
     final normalized = query.trim().replaceAll(RegExp(r'\s+'), ' ');
     if (normalized.isEmpty) return const [];
-    if (normalized.length > 500) {
+    if (normalized.length > (_officialService.isConfigured ? 500 : 200)) {
       throw const YoutubeSourceException(
-        'Please shorten your YouTube search to 500 characters or fewer.',
+        'Please shorten your YouTube search to 200 characters or fewer.',
       );
     }
     final official = _officialService.isConfigured;

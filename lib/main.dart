@@ -10,9 +10,9 @@ import 'theme/app_colors.dart';
 import 'services/audio_service.dart';
 import 'screens/home_screen.dart';
 import 'screens/search_screen.dart';
+import 'screens/music_screen.dart';
 import 'screens/library_screen.dart';
 import 'screens/now_playing_screen.dart';
-import 'screens/local_screen.dart';
 import 'widgets/bottom_nav.dart';
 import 'widgets/mini_player.dart';
 import 'widgets/motion.dart';
@@ -133,6 +133,7 @@ class _MainContainerState extends State<MainContainer> {
 
   late final List<Widget> _pages;
   final _searchKey = GlobalKey<SearchScreenState>();
+  final _libraryKey = GlobalKey<LibraryScreenState>();
 
   @override
   void initState() {
@@ -142,7 +143,7 @@ class _MainContainerState extends State<MainContainer> {
 
     _pages = [
       HomeScreen(
-        onLocalTap: () => _onTabTap(3),
+        onLocalTap: _openLocalMusic,
         onSearchTap: _openSearch,
         onVideoTap: _playYoutube,
         onVideoQueueTap: _playYoutubeQueue,
@@ -163,20 +164,28 @@ class _MainContainerState extends State<MainContainer> {
         onSongTap: (song) => _playSong(song, contextQueue: _audioService.songs),
         onFavoriteTap: _audioService.toggleFavorite,
       ),
+      MusicScreen(
+        audioService: _audioService,
+        onSongTap: (song, [queue]) =>
+            _playSong(song, contextQueue: queue ?? _audioService.songs),
+        onFavoriteTap: _audioService.toggleFavorite,
+        onSearchTap: _openSearch,
+      ),
       LibraryScreen(
+        key: _libraryKey,
         audioService: _audioService,
         onSongTap: (song) => _playSong(song, contextQueue: _audioService.songs),
         onFavoriteTap: _audioService.toggleFavorite,
         onCreatePlaylist: _audioService.createPlaylist,
       ),
-      LocalScreen(
-        audioService: _audioService,
-        onSongTap: (song) =>
-            _playSong(song, contextQueue: _audioService.localSongs),
-        onFavoriteTap: _audioService.toggleFavorite,
-        onScanTap: _audioService.scanLocalSongs,
-      ),
     ];
+  }
+
+  void _openLocalMusic() {
+    _onTabTap(3);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _libraryKey.currentState?.selectCategory(3);
+    });
   }
 
   @override
@@ -206,7 +215,7 @@ class _MainContainerState extends State<MainContainer> {
         SnackBar(
           content: const Text('This saved track is from the previous source.'),
           action: SnackBarAction(
-            label: 'Find on YouTube',
+            label: 'Search Track',
             onPressed: () => _openSearch('${song.title} ${song.artist}'),
           ),
         ),

@@ -5,7 +5,6 @@ import '../services/audio_service.dart';
 import '../models/song.dart';
 import '../theme/app_colors.dart';
 import '../widgets/song_tile.dart';
-import '../widgets/glass_card.dart';
 
 class LocalScreen extends StatefulWidget {
   final AudioService audioService;
@@ -215,27 +214,11 @@ class _LocalScreenState extends State<LocalScreen> {
                   ),
                 ),
               ),
-              const SizedBox(height: 24),
-              GestureDetector(
-                onTap: widget.onScanTap,
-                child: GlassCard(
-                  borderRadius: 12,
-                  blurSigma: 6,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 22,
-                    vertical: 12,
-                  ),
-                  color: AppColors.accent.withValues(alpha: 0.12),
-                  borderColor: AppColors.accent.withValues(alpha: 0.25),
-                  child: const Text(
-                    'Scan Storage / Grant Access',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 13,
-                    ),
-                  ),
-                ),
+              const SizedBox(height: 20),
+              FilledButton.icon(
+                onPressed: widget.onScanTap,
+                icon: const Icon(Icons.refresh_rounded, size: 18),
+                label: const Text('Scan Storage / Grant Access'),
               ),
               const SizedBox(height: 100),
             ],

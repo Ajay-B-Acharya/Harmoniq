@@ -3,9 +3,9 @@
     "short_name": "Harmoniq",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#101113",
-    "theme_color": "#101113",
-    "description": "Harmoniq — Your music. Your rhythm.",
+    "background_color": "#0C0D10",
+    "theme_color": "#0C0D10",
+    "description": "Harmoniq music player",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

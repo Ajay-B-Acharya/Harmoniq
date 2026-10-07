@@ -26,8 +26,15 @@ class MainActivity : AudioServiceActivity() {
     private val pendingPermissionResults = mutableListOf<MethodChannel.Result>()
     private val pendingScanResults = mutableSetOf<MethodChannel.Result>()
     private val scanExecutor = Executors.newSingleThreadExecutor()
+    private val ytDlpExecutor = java.util.concurrent.ThreadPoolExecutor(
+        1, 1, 0L, java.util.concurrent.TimeUnit.MILLISECONDS,
+        java.util.concurrent.ArrayBlockingQueue(4)
+    )
+    private val ytDlpAdapter by lazy { YtDlpAdapter(applicationContext) }
     private val mainHandler = Handler(Looper.getMainLooper())
     private var musicChannel: MethodChannel? = null
+    private var ytDlpChannel: MethodChannel? = null
+    private var ytDlpActive = true
 
     override fun configureFlutterEngine(@NonNull flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
@@ -54,6 +61,37 @@ class MainActivity : AudioServiceActivity() {
                 else -> {
                     result.notImplemented()
                 }
+            }
+        }
+        ytDlpChannel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "com.example.harmoniq/yt_dlp")
+        ytDlpChannel?.setMethodCallHandler { call, result ->
+            when (call.method) {
+                "isAvailable" -> result.success(ytDlpAdapter.isAvailable())
+                "getVersion", "initialize", "smoke", "search", "resolve" -> try {
+                    ytDlpExecutor.execute {
+                    try {
+                        val response: Any = when (call.method) {
+                            "smoke" -> ytDlpAdapter.smoke()
+                            "search" -> ytDlpAdapter.search(
+                                call.argument<String>("query") ?: "",
+                                call.argument<Int>("limit") ?: 10
+                            )
+                            "resolve" -> ytDlpAdapter.resolve(call.argument<String>("id") ?: "")
+                            else -> ytDlpAdapter.initialize()
+                        }
+                        mainHandler.post { if (ytDlpActive) result.success(response) }
+                    } catch (error: Exception) {
+                        android.util.Log.e("YtDlpAdapter", "Extraction failed: ${error.javaClass.simpleName}")
+                        val code = if (error is IllegalArgumentException) "INVALID_INPUT" else "EXTRACTION_FAILED"
+                        mainHandler.post {
+                            if (ytDlpActive) result.error(code, "Online music is unavailable right now.", null)
+                        }
+                    }
+                    }
+                } catch (_: java.util.concurrent.RejectedExecutionException) {
+                    result.error("BUSY", "Online extraction is busy. Please try again.", null)
+                }
+                else -> result.notImplemented()
             }
         }
     }
@@ -150,6 +188,10 @@ class MainActivity : AudioServiceActivity() {
     }
 
     override fun onDestroy() {
+        ytDlpActive = false
+        ytDlpChannel?.setMethodCallHandler(null)
+        ytDlpChannel = null
+        ytDlpExecutor.shutdownNow()
         musicChannel?.setMethodCallHandler(null)
         musicChannel = null
         pendingScanResults.forEach {

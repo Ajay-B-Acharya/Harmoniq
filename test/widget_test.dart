@@ -85,26 +85,7 @@ void main() {
     await tester.pump(const Duration(seconds: 21));
     await tester.pumpAndSettle();
     expect(find.byType(HomeScreen), findsOneWidget);
-    expect(find.textContaining('next obsession.'), findsOneWidget);
-    expect(tester.takeException(), isNull);
-    await tester.scrollUntilVisible(
-      find.text('After hours'),
-      200,
-      scrollable: find
-          .descendant(
-            of: find.byType(HomeScreen),
-            matching: find.byType(Scrollable),
-          )
-          .first,
-    );
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('After hours'));
-    await tester.pumpAndSettle();
-    expect(find.byType(TextField), findsOneWidget);
-    expect(
-      tester.widget<TextField>(find.byType(TextField)).controller!.text,
-      'Late night R&B',
-    );
+    expect(find.text('Harmoniq'), findsOneWidget);
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox.shrink());
   });
@@ -182,7 +163,7 @@ void main() {
             same(service),
           );
           expect(find.text('NOW PLAYING'), findsOneWidget);
-          expect(find.text('YOUTUBE · AUDIO'), findsOneWidget);
+          expect(find.text('ONLINE STREAM'), findsOneWidget);
           expect(find.text(_secondTrack.title), findsOneWidget);
           expect(find.byTooltip('Pause'), findsOneWidget);
           expect(find.byType(Slider), findsOneWidget);
@@ -195,7 +176,12 @@ void main() {
             tester.widget<MiniPlayer>(find.byType(MiniPlayer)).song,
             service.currentSong,
           );
-          await tester.tap(find.text(_secondTrack.title));
+          await tester.tap(
+            find.descendant(
+              of: find.byType(MiniPlayer),
+              matching: find.text(_secondTrack.title),
+            ),
+          );
           await tester.pumpAndSettle();
           expect(find.byType(NowPlayingScreen), findsOneWidget);
           expect(

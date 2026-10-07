@@ -213,16 +213,16 @@ void main() {
         );
         await tester.pumpAndSettle();
         expect(tester.takeException(), isNull);
-        expect(find.textContaining('next obsession.'), findsOneWidget);
+        expect(find.text('Harmoniq'), findsOneWidget);
         await tester.scrollUntilVisible(
-          find.text('The offline collection'),
+          find.text('Offline collection'),
           200,
           scrollable: find.byType(Scrollable).first,
         );
         await tester.pumpAndSettle();
-        await tester.ensureVisible(find.text('The offline collection'));
+        await tester.ensureVisible(find.text('Offline collection'));
         await tester.pumpAndSettle();
-        await tester.tap(find.text('The offline collection'));
+        await tester.tap(find.text('Offline collection'));
         await tester.pumpAndSettle();
         expect(localTaps, 1);
         expect(tester.takeException(), isNull);
@@ -257,7 +257,7 @@ void main() {
           textScale: 1.5,
         ),
       );
-      const labels = ['Home', 'Search', 'Library', 'Local'];
+      const labels = ['Home', 'Search', 'Music', 'Library'];
       for (var index = 0; index < labels.length; index++) {
         final target = find.bySemanticsLabel(labels[index]);
         expect(target, findsOneWidget);
@@ -425,7 +425,7 @@ void main() {
     await tester.pumpWidget(
       _app(NowPlayingScreen(audioService: service, onClose: () {})),
     );
-    expect(find.text('YOUTUBE · AUDIO'), findsOneWidget);
+    expect(find.text('ONLINE STREAM'), findsOneWidget);
     expect(find.text('Loading audio…'), findsOneWidget);
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
     expect(tester.widget<Slider>(find.byType(Slider)).onChanged, isNull);
@@ -635,6 +635,12 @@ void main() {
         find.textContaining('Previous source unavailable.'),
         findsOneWidget,
       );
+      await tester.scrollUntilVisible(
+        find.text('Playlists'),
+        -100,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Playlists'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Online playlist'));

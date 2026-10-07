@@ -49,6 +49,7 @@ class SearchScreenState extends State<SearchScreen> {
   int _localRevision = -1;
   String? _localQuery;
   final List<String> _recent = [];
+
   bool get _configured =>
       widget.youtubeConfigured ??
       (widget.searchVideos != null || YoutubeCatalog.instance.isAvailable);
@@ -95,13 +96,13 @@ class SearchScreenState extends State<SearchScreen> {
     _local = lower.isEmpty
         ? []
         : widget.audioService.localSongs
-              .where(
-                (song) =>
-                    song.title.toLowerCase().contains(lower) ||
-                    song.artist.toLowerCase().contains(lower) ||
-                    song.album.toLowerCase().contains(lower),
-              )
-              .toList();
+            .where(
+              (song) =>
+                  song.title.toLowerCase().contains(lower) ||
+                  song.artist.toLowerCase().contains(lower) ||
+                  song.album.toLowerCase().contains(lower),
+            )
+            .toList();
   }
 
   Future<void> _submit() async {
@@ -144,7 +145,7 @@ class SearchScreenState extends State<SearchScreen> {
         _loading = false;
         _error = error is YoutubeSourceException
             ? error.message
-            : 'Could not load YouTube results. Please try again.';
+            : 'Could not load search results. Please try again.';
       });
     }
   }
@@ -162,7 +163,7 @@ class SearchScreenState extends State<SearchScreen> {
     body: SafeArea(
       bottom: false,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+        padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -171,44 +172,50 @@ class SearchScreenState extends State<SearchScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Chase that sound.',
-                    style: Theme.of(context).textTheme.headlineMedium,
+                    'Search',
+                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -0.6,
+                        ),
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 4),
                   const Text(
-                    'YouTube discoveries. Your offline favorites.',
-                    style: TextStyle(color: AppColors.textMuted, fontSize: 12),
+                    'Find songs, artists, and music links',
+                    style: TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 12.5,
+                    ),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 22),
+            const SizedBox(height: 18),
             TextField(
               controller: _controller,
               textInputAction: TextInputAction.search,
               onSubmitted: (_) => _submit(),
-              style: const TextStyle(fontSize: 14),
+              style: const TextStyle(fontSize: 14, color: AppColors.textPrimary),
               decoration: InputDecoration(
-                hintText: 'Songs, artists, or a YouTube link',
+                hintText: 'Search songs, artists, or audio links',
                 hintStyle: const TextStyle(
                   fontSize: 13,
                   color: AppColors.textMuted,
                 ),
-                prefixIcon: const Icon(Icons.search_rounded, size: 21),
+                prefixIcon: const Icon(Icons.search_rounded, size: 20),
                 suffixIcon: _query.isNotEmpty
                     ? IconButton(
                         tooltip: 'Clear search',
                         onPressed: _controller.clear,
-                        icon: const Icon(Icons.close_rounded, size: 19),
+                        icon: const Icon(Icons.close_rounded, size: 18),
                       )
                     : null,
                 contentPadding: const EdgeInsets.symmetric(
                   horizontal: 16,
-                  vertical: 18,
+                  vertical: 14,
                 ),
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 14),
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
@@ -217,7 +224,7 @@ class SearchScreenState extends State<SearchScreen> {
                   const SizedBox(width: 8),
                   _chip('Local', SearchFilter.local),
                   const SizedBox(width: 8),
-                  _chip('YouTube', SearchFilter.online),
+                  _chip('Online', SearchFilter.online),
                 ],
               ),
             ),
@@ -244,7 +251,15 @@ class SearchScreenState extends State<SearchScreen> {
     selectedColor: AppColors.accent,
     labelStyle: TextStyle(
       color: _filter == filter ? AppColors.background : AppColors.textSecondary,
-      fontWeight: FontWeight.w600,
+      fontWeight: _filter == filter ? FontWeight.w700 : FontWeight.w500,
+      fontSize: 12,
+    ),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(8),
+    ),
+    side: BorderSide(
+      color: _filter == filter ? Colors.transparent : AppColors.surfaceBorder,
+      width: 1,
     ),
     onSelected: (_) => setState(() {
       _filter = filter;
@@ -253,80 +268,142 @@ class SearchScreenState extends State<SearchScreen> {
         _loading = false;
       }
     }),
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-    side: BorderSide.none,
   );
 
-  Widget _empty() => ListView(
-    children: [
-      _youtubeBridge(),
-      const SizedBox(height: 28),
-      if (_recent.isNotEmpty) ...[
-        const Text(
-          'Recent searches',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+  Widget _empty() {
+    final heading = 'Play here. Stay here.';
+    final subtext = _configured
+        ? 'Start somewhere good.'
+        : 'No external app will be opened.';
+    return ListView(
+      children: [
+        Text(
+          heading,
+          style: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+            letterSpacing: -0.3,
+            color: AppColors.textPrimary,
+          ),
         ),
-        ..._recent.map(
-          (query) => ListTile(
-            contentPadding: EdgeInsets.zero,
-            leading: const Icon(Icons.history_rounded, size: 18),
-            title: Text(query),
-            trailing: const Icon(Icons.north_west_rounded, size: 17),
-            onTap: () => setQuery(query),
+        const SizedBox(height: 4),
+        Text(
+          subtext,
+          style: const TextStyle(
+            fontSize: 13,
+            color: AppColors.textSecondary,
           ),
         ),
         const SizedBox(height: 20),
-      ],
-      const Text(
-        'Start somewhere good.',
-        style: TextStyle(fontSize: 19, fontWeight: FontWeight.w600),
-      ),
-      const SizedBox(height: 14),
-      Wrap(
-        spacing: 8,
-        runSpacing: 8,
-        children:
-            [
-                  'Indie discoveries',
-                  'Live sessions',
-                  'Lo-fi beats',
-                  'Hindi hits',
-                  'Jazz after dark',
-                  'Electronic',
-                ]
-                .map(
-                  (tag) => ActionChip(
-                    label: Text(tag),
-                    onPressed: () => setQuery(tag),
-                    side: const BorderSide(color: Colors.white12),
-                    backgroundColor: Colors.transparent,
+        if (_recent.isNotEmpty) ...[
+          const Text(
+            'Recent searches',
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 6),
+          ..._recent.map(
+            (query) => ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.history_rounded, size: 18, color: AppColors.textMuted),
+              title: Text(
+                query,
+                style: const TextStyle(fontSize: 13.5, color: AppColors.textPrimary),
+              ),
+              trailing: const Icon(Icons.north_west_rounded, size: 16, color: AppColors.textMuted),
+              onTap: () => setQuery(query),
+            ),
+          ),
+          const SizedBox(height: 20),
+        ],
+        const Text(
+          'Browse by genre',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            'Acoustic',
+            'Electronic',
+            'Instrumental',
+            'Chill',
+            'Rock',
+            'Jazz',
+            'Ambient',
+            'Lo-Fi',
+          ]
+              .map(
+                (tag) => ActionChip(
+                  label: Text(tag),
+                  labelStyle: const TextStyle(
+                    fontSize: 12,
+                    color: AppColors.textSecondary,
                   ),
-                )
-                .toList(),
-      ),
-      const SizedBox(height: 32),
-      const Text(
-        'Have a link? Paste a YouTube or YouTube Music URL above to load its audio in Harmoniq.',
-        style: TextStyle(color: AppColors.textMuted, fontSize: 12, height: 1.5),
-      ),
-      const SizedBox(height: 28),
-    ],
-  );
+                  onPressed: () => setQuery(tag),
+                  side: const BorderSide(color: AppColors.surfaceBorder),
+                  backgroundColor: AppColors.surfaceHigh,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              )
+              .toList(),
+        ),
+        const SizedBox(height: 30),
+        Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: AppColors.backgroundSurface,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.05),
+              width: 1,
+            ),
+          ),
+          child: const Row(
+            children: [
+              Icon(Icons.link_rounded, size: 18, color: AppColors.accent),
+              SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  'Paste any audio or video link in search to play it directly.',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 30),
+      ],
+    );
+  }
+
 
   Widget _results() {
     final showLocal = _filter != SearchFilter.online;
     final showOnline = _filter != SearchFilter.local;
     final id = YoutubeLinks.videoIdFromInput(_query);
+
     return CustomScrollView(
       slivers: [
         if (showOnline) ...[
-          if (!_configured && id == null)
-            SliverToBoxAdapter(child: _youtubeBridge()),
           if (id != null)
             SliverToBoxAdapter(
               child: FilledButton.icon(
                 onPressed: _submit,
-                icon: const Icon(Icons.play_circle_outline_rounded),
+                icon: const Icon(Icons.play_arrow_rounded, size: 18),
                 label: const Text('Play this song'),
               ),
             )
@@ -336,14 +413,14 @@ class SearchScreenState extends State<SearchScreen> {
                 alignment: Alignment.centerLeft,
                 child: FilledButton.icon(
                   onPressed: _loading ? null : _submit,
-                  icon: const Icon(Icons.search_rounded, size: 18),
+                  icon: const Icon(Icons.search_rounded, size: 17),
                   label: Text(
-                    _error != null ? 'Retry YouTube search' : 'Search YouTube',
+                    _error != null ? 'Retry search' : 'Search online',
                   ),
                 ),
               ),
             ),
-          const SliverToBoxAdapter(child: SizedBox(height: 18)),
+          const SliverToBoxAdapter(child: SizedBox(height: 16)),
           if (_loading)
             const SliverToBoxAdapter(
               child: Center(
@@ -356,10 +433,10 @@ class SearchScreenState extends State<SearchScreen> {
           if (_error != null)
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.only(bottom: 18),
+                padding: const EdgeInsets.only(bottom: 16),
                 child: Text(
                   _error!,
-                  style: const TextStyle(color: AppColors.textSecondary),
+                  style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
                 ),
               ),
             ),
@@ -367,7 +444,7 @@ class SearchScreenState extends State<SearchScreen> {
             SliverList.builder(
               itemCount: _videos.length,
               itemBuilder: (context, index) => Padding(
-                padding: const EdgeInsets.only(bottom: 24),
+                padding: const EdgeInsets.only(bottom: 10),
                 child: YoutubeCard(
                   video: _videos[index],
                   onTap: () => _playResult(_videos[index]),
@@ -380,10 +457,10 @@ class SearchScreenState extends State<SearchScreen> {
               _videos.isEmpty)
             const SliverToBoxAdapter(
               child: Padding(
-                padding: EdgeInsets.only(bottom: 20),
+                padding: EdgeInsets.only(bottom: 16),
                 child: Text(
-                  'No YouTube tracks found. Try a different artist or song.',
-                  style: TextStyle(color: AppColors.textSecondary),
+                  'No tracks found. Try a different query.',
+                  style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
                 ),
               ),
             ),
@@ -391,21 +468,25 @@ class SearchScreenState extends State<SearchScreen> {
         if (showLocal) ...[
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.only(top: 8, bottom: 10),
               child: Text(
                 'On your device · ${_local.length}',
                 style: const TextStyle(
                   fontWeight: FontWeight.w600,
-                  fontSize: 16,
+                  fontSize: 15,
+                  color: AppColors.textPrimary,
                 ),
               ),
             ),
           ),
           if (_local.isEmpty)
             const SliverToBoxAdapter(
-              child: Text(
-                'No local results found',
-                style: TextStyle(color: AppColors.textMuted),
+              child: Padding(
+                padding: EdgeInsets.only(bottom: 12),
+                child: Text(
+                  'No local results found',
+                  style: TextStyle(color: AppColors.textMuted, fontSize: 13),
+                ),
               ),
             ),
           SliverList.builder(
@@ -425,57 +506,8 @@ class SearchScreenState extends State<SearchScreen> {
             },
           ),
         ],
-        const SliverToBoxAdapter(child: SizedBox(height: 32)),
+        const SliverToBoxAdapter(child: SizedBox(height: 100)),
       ],
     );
   }
-
-  Widget _youtubeBridge() => Container(
-    padding: const EdgeInsets.all(20),
-    decoration: BoxDecoration(
-      color: const Color(0xFF292125),
-      borderRadius: BorderRadius.circular(20),
-      border: Border.all(color: const Color(0xFF493137)),
-    ),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Row(
-          children: [
-            Icon(
-              Icons.play_circle_fill_rounded,
-              color: Color(0xFFFF777B),
-              size: 24,
-            ),
-            SizedBox(width: 9),
-            Expanded(
-              child: Text(
-                'Play here. Stay here.',
-                style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 10),
-        Text(
-          _configured
-              ? 'Search above, choose a track, and listen with artwork, queue, and native audio controls.'
-              : 'Android supports no-key search and native online audio. The browser preview cannot resolve audio streams.',
-          style: const TextStyle(
-            fontSize: 13,
-            color: AppColors.textSecondary,
-            height: 1.5,
-          ),
-        ),
-        if (!_configured)
-          const Padding(
-            padding: EdgeInsets.only(top: 8),
-            child: Text(
-              'No external app will be opened.',
-              style: TextStyle(fontSize: 11, color: AppColors.textMuted),
-            ),
-          ),
-      ],
-    ),
-  );
 }

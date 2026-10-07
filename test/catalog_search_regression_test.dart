@@ -375,8 +375,8 @@ void main() {
       await tester.testTextInput.receiveAction(TextInputAction.search);
       await tester.pump();
       await tester.pump();
-      expect(find.text('Retry YouTube search'), findsOneWidget);
-      await tester.tap(find.text('Retry YouTube search'));
+      expect(find.text('Retry search'), findsOneWidget);
+      await tester.tap(find.text('Retry search'));
       await tester.pump();
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
       await tester.enterText(find.byType(TextField), '');

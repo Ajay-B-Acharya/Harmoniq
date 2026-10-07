@@ -144,7 +144,7 @@ void main() {
         await tester.enterText(find.byType(TextField), '  $query  ');
         await tester.pump(const Duration(seconds: 1));
         expect(searches, isEmpty, reason: 'Typing must not start discovery');
-        expect(find.text('Search YouTube'), findsOneWidget);
+        expect(find.text('Search online'), findsOneWidget);
         _expectNoExternalControls();
         await tester.testTextInput.receiveAction(TextInputAction.search);
         await tester.pumpAndSettle();
@@ -217,7 +217,7 @@ void main() {
           if (onlineOnly) {
             await _tapVisible(
               tester,
-              find.widgetWithText(ChoiceChip, 'YouTube'),
+              find.widgetWithText(ChoiceChip, 'Online'),
             );
           }
           await tester.testTextInput.receiveAction(TextInputAction.search);
@@ -226,13 +226,6 @@ void main() {
             (widget) => widget is YoutubeCard && widget.video == _video,
           );
           expect(firstCard, findsOneWidget);
-          expect(
-            find.descendant(
-              of: firstCard,
-              matching: find.text('YOUTUBE · AUDIO'),
-            ),
-            findsOneWidget,
-          );
           expect(tester.getSize(firstCard).height, lessThan(180));
           expect(find.byType(AspectRatio), findsNothing);
           await tester.scrollUntilVisible(
@@ -294,7 +287,6 @@ void main() {
             scrollable: find.byType(Scrollable).first,
           );
           await _tapVisible(tester, find.text(_nextVideo.title));
-          expect(find.text('YOUTUBE · AUDIO'), findsNWidgets(2));
           if (withQueue) {
             expect(selected, [_nextVideo]);
             expect(queues, [
@@ -433,30 +425,16 @@ void main() {
         _expectNoExternalControls();
         await _tapVisible(tester, find.byTooltip('Search music'));
         expect(searchOpens, ['']);
-        await _tapVisible(tester, find.text('Find your next song'));
-        expect(searchOpens, ['', '']);
         _expectNoExternalControls();
-        await tester.scrollUntilVisible(
-          find.text('YouTube · in-app'),
-          180,
-          scrollable: find.byType(Scrollable).first,
-        );
-        expect(find.text('YouTube · in-app'), findsOneWidget);
-
         await tester.scrollUntilVisible(
           find.text('After hours'),
           180,
           scrollable: find.byType(Scrollable).first,
         );
         await _tapVisible(tester, find.text('After hours'));
-        expect(searchOpens, ['', '', 'Late night R&B']);
-        await tester.scrollUntilVisible(
-          find.text('Find a song'),
-          180,
-          scrollable: find.byType(Scrollable).first,
-        );
+        expect(searchOpens, ['', 'Late night R&B']);
         await _tapVisible(tester, find.text('Find a song'));
-        expect(searchOpens, ['', '', 'Late night R&B', '']);
+        expect(searchOpens, ['', 'Late night R&B', '']);
         _expectNoExternalControls();
         expect(loads, 0);
         expect(videoTaps, isEmpty);
@@ -492,12 +470,12 @@ void main() {
         await tester.pump(const Duration(seconds: 1));
         expect(searches, isEmpty);
         expect(find.text('Local music track'), findsOneWidget);
-        await _tapVisible(tester, find.text('Search YouTube'));
+        await _tapVisible(tester, find.text('Search online'));
         expect(searches, ['music']);
         expect(find.text(_video.title), findsOneWidget);
         expect(find.text('Local music track'), findsOneWidget);
 
-        await _tapVisible(tester, find.widgetWithText(ChoiceChip, 'YouTube'));
+        await _tapVisible(tester, find.widgetWithText(ChoiceChip, 'Online'));
         expect(find.text(_video.title), findsOneWidget);
         expect(find.byType(SongTile), findsNothing);
         await _tapVisible(tester, find.text(_video.title));
@@ -506,7 +484,7 @@ void main() {
 
         await _tapVisible(tester, find.widgetWithText(ChoiceChip, 'Local'));
         expect(find.byType(YoutubeCard), findsNothing);
-        expect(find.text('Search YouTube'), findsNothing);
+        expect(find.text('Search online'), findsNothing);
         _expectNoExternalControls();
         expect(find.text('Local music track'), findsOneWidget);
         await tester.testTextInput.receiveAction(TextInputAction.search);
@@ -557,17 +535,17 @@ void main() {
             pending.complete([_video]);
           }
           await tester.pumpAndSettle();
-          await _tapVisible(tester, find.widgetWithText(ChoiceChip, 'YouTube'));
+          await _tapVisible(tester, find.widgetWithText(ChoiceChip, 'Online'));
           expect(searches, ['music']);
           expect(find.byType(YoutubeCard), findsNothing);
           expect(find.text(_video.title), findsNothing);
           expect(find.byType(CircularProgressIndicator), findsNothing);
-          expect(find.text('Retry YouTube search'), findsNothing);
+          expect(find.text('Retry search'), findsNothing);
           expect(
-            find.textContaining('Could not load YouTube results'),
+            find.textContaining('Could not load search results'),
             findsNothing,
           );
-          expect(find.text('Search YouTube'), findsOneWidget);
+          expect(find.text('Search online'), findsOneWidget);
           await _tapVisible(tester, find.byTooltip('Clear search'));
           expect(find.text('Recent searches'), findsNothing);
           expect(videoTaps, isEmpty);

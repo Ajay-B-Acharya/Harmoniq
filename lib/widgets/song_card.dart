@@ -8,62 +8,89 @@ import 'motion.dart';
 class SongCard extends StatelessWidget {
   final Song song;
   final VoidCallback onTap;
+  final double width;
 
-  const SongCard({super.key, required this.song, required this.onTap});
+  const SongCard({
+    super.key,
+    required this.song,
+    required this.onTap,
+    this.width = 150,
+  });
 
   @override
   Widget build(BuildContext context) {
     return RepaintBoundary(
       child: Padding(
-        padding: const EdgeInsets.only(right: 16),
+        padding: const EdgeInsets.only(right: 14),
         child: SizedBox(
-          width: 154,
+          width: width,
           child: Pressable(
             onTap: onTap,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Stack(
-                  children: [
-                    AlbumArt(
-                      gradientId: song.gradientId,
-                      size: 154,
-                      borderRadius: 12,
-                      imageUrl: song.albumArtUrl,
-                      showShadow: false,
-                    ),
-                    const Positioned(
-                      right: 10,
-                      bottom: 10,
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          color: Color(0xE6F4F2EE),
-                          shape: BoxShape.circle,
+                Flexible(
+                  fit: FlexFit.loose,
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final artSize = constraints.maxHeight.isFinite
+                          ? constraints.maxHeight.clamp(0.0, width)
+                          : width;
+                      return SizedBox(
+                        width: artSize,
+                        height: artSize,
+                        child: Stack(
+                          children: [
+                            AlbumArt(
+                              gradientId: song.gradientId,
+                              size: artSize,
+                              borderRadius: 10,
+                              imageUrl: song.albumArtUrl,
+                              showShadow: false,
+                            ),
+                            Positioned(
+                              right: 8,
+                              bottom: 8,
+                              child: Container(
+                                width: 32,
+                                height: 32,
+                                decoration: BoxDecoration(
+                                  color: AppColors.background.withValues(
+                                    alpha: 0.85,
+                                  ),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                    color: Colors.white.withValues(alpha: 0.15),
+                                    width: 1,
+                                  ),
+                                ),
+                                child: const Icon(
+                                  Icons.play_arrow_rounded,
+                                  color: AppColors.textPrimary,
+                                  size: 18,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                        child: Padding(
-                          padding: EdgeInsets.all(6),
-                          child: Icon(
-                            Icons.play_arrow_rounded,
-                            color: AppColors.background,
-                            size: 20,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
+                      );
+                    },
+                  ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 10),
                 Text(
                   song.title,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
-                    fontSize: 14,
+                    fontSize: 13.5,
                     fontWeight: FontWeight.w600,
                     letterSpacing: -0.2,
+                    color: AppColors.textPrimary,
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 3),
                 Text(
                   song.artist,
                   maxLines: 1,

@@ -11,8 +11,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/song.dart';
 import '../models/playlist.dart';
+import '../data/sample_data.dart';
 import 'playback_failure.dart';
-import 'youtube_audio_resolver.dart' as youtube;
+import 'youtube_audio_stream_resolver.dart' as youtube;
+import 'yt_dlp_channel.dart';
 
 class AudioService extends ChangeNotifier {
   // ── Song registry ──────────────────────────────────────────────────────────
@@ -37,6 +39,29 @@ class AudioService extends ChangeNotifier {
   List<Song> _favorites = [];
   List<Song> get favorites => _favorites;
 
+  // ── Persistent Recently Played ────────────────────────────────────────────────
+  static const String _prefsKeyRecentlyPlayed = 'harmoniq_recently_played_v1';
+  List<Song> _recentlyPlayed = [];
+  List<Song> get recentlyPlayed => _recentlyPlayed;
+
+  List<Song> get allAvailableSongs {
+    final seen = <String>{};
+    final result = <Song>[];
+    final base = [
+      ..._localSongs,
+      ..._songs,
+      ..._favorites,
+      ..._recentlyPlayed,
+    ];
+    final source = base.isNotEmpty ? base : SampleData.songs;
+    for (final s in source) {
+      if (seen.add(s.identity)) {
+        result.add(s);
+      }
+    }
+    return result;
+  }
+
   // ── Local storage scanning ───────────────────────────────────────────────────
   static const _platform = MethodChannel('com.example.harmoniq/local_music');
   List<Song> _localSongs = [];
@@ -46,10 +71,11 @@ class AudioService extends ChangeNotifier {
 
   // ── Real audio player ────────────────────────────────────────────────────────
   final AudioPlayer _player;
-  final Future<Uri> Function(String) _resolveYoutubeAudio;
+  final Future<YoutubeAudioStream> Function(String) _resolveYoutubeAudio;
   Future<void> _playerMutations = Future<void>.value();
   int _generation = 0;
   int? _readyGeneration;
+  bool _retryAttempted = false;
   bool _isLoading = false;
   bool get isLoading => _isLoading;
   String? _playbackError;
@@ -97,10 +123,15 @@ class AudioService extends ChangeNotifier {
 
   AudioService({
     Future<Uri> Function(String videoId)? resolveYoutubeAudio,
+    Future<YoutubeAudioStream> Function(String videoId)? resolveYoutubeStream,
     AudioPlayer? audioPlayer,
   }) : _player = audioPlayer ?? AudioPlayer(),
        _resolveYoutubeAudio =
-           resolveYoutubeAudio ?? youtube.resolveYoutubeAudio {
+           resolveYoutubeStream ??
+           (resolveYoutubeAudio == null
+               ? youtube.resolveYoutubeStream
+               : (id) async =>
+                     YoutubeAudioStream(await resolveYoutubeAudio(id))) {
     _playlists = [
       Playlist(id: 0, name: "Favorites", songs: [], gradientId: 0),
       Playlist(id: 1, name: "Chill Vibes", songs: [], gradientId: 1),
@@ -110,6 +141,7 @@ class AudioService extends ChangeNotifier {
 
     _attachPlayerListeners();
     _loadFavorites();
+    _loadRecentlyPlayed();
   }
 
   // ── Persistent Favorites Loading & Saving ────────────────────────────────────
@@ -145,6 +177,43 @@ class AudioService extends ChangeNotifier {
     }
   }
 
+  // ── Persistent Recently Played Loading & Saving ─────────────────────────────
+  Future<void> _loadRecentlyPlayed() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (_disposed) return;
+      final jsonList = prefs.getStringList(_prefsKeyRecentlyPlayed) ?? [];
+      _recentlyPlayed = jsonList.map((str) {
+        final map = json.decode(str) as Map<String, dynamic>;
+        return Song.fromJson(map);
+      }).toList();
+      _syncFavoriteStates();
+      notifyListeners();
+    } catch (e) {
+      debugPrint('[AUDIO_SERVICE] Error loading recently played: $e');
+    }
+  }
+
+  Future<void> _saveRecentlyPlayed() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final jsonList =
+          _recentlyPlayed.take(30).map((s) => json.encode(s.toJson())).toList();
+      await prefs.setStringList(_prefsKeyRecentlyPlayed, jsonList);
+    } catch (e) {
+      debugPrint('[AUDIO_SERVICE] Error saving recently played: $e');
+    }
+  }
+
+  void _recordRecentlyPlayed(Song song) {
+    _recentlyPlayed.removeWhere((s) => s.identity == song.identity);
+    _recentlyPlayed.insert(0, song.copyWith(isFavorite: isSongFavorite(song)));
+    if (_recentlyPlayed.length > 30) {
+      _recentlyPlayed.removeLast();
+    }
+    _saveRecentlyPlayed();
+  }
+
   bool isSongFavorite(Song song) =>
       _favorites.any((s) => s.identity == song.identity);
 
@@ -169,6 +238,11 @@ class AudioService extends ChangeNotifier {
     if (_currentSong != null) {
       _currentSong = _currentSong!.copyWith(
         isFavorite: favIds.contains(_currentSong!.identity),
+      );
+    }
+    for (int i = 0; i < _recentlyPlayed.length; i++) {
+      _recentlyPlayed[i] = _recentlyPlayed[i].copyWith(
+        isFavorite: favIds.contains(_recentlyPlayed[i].identity),
       );
     }
     for (final playlist in _playlists.where((p) => p.id != 0)) {
@@ -234,7 +308,7 @@ class AudioService extends ChangeNotifier {
     _playbackErrorSub = _player.playbackEventStream.listen(
       (_) {},
       onError: (Object error) {
-        if (_acceptPlayerEvents) _failPlayback(_generation, error: error);
+        if (_acceptPlayerEvents) _handlePlaybackError(_generation, error);
       },
     );
     _positionSub = _player.positionStream.listen((pos) {
@@ -306,16 +380,22 @@ class AudioService extends ChangeNotifier {
     await _selectSong(_queue[index]);
   }
 
-  Future<void> _selectSong(Song song) async {
+  Future<void> _selectSong(
+    Song song, {
+    Duration resumeAt = Duration.zero,
+    bool retry = false,
+  }) async {
     final generation = ++_generation;
     _readyGeneration = null;
+    _retryAttempted = retry;
     _currentSong = song.copyWith(isFavorite: isSongFavorite(song));
+    _recordRecentlyPlayed(song);
     _isPlaying = false;
     _wantsToPlay = !_isSimulated(song);
     _isLoading = !_isSimulated(song);
     _playbackError = null;
-    _playbackPosition = Duration.zero;
-    playbackPositionNotifier.value = Duration.zero;
+    _playbackPosition = resumeAt;
+    playbackPositionNotifier.value = resumeAt;
     notifyListeners();
 
     // Stop the previous source immediately, even while resolution is pending.
@@ -331,10 +411,13 @@ class AudioService extends ChangeNotifier {
         return;
       }
       final Uri uri;
+      Map<String, String> headers = const {};
       if (song.source == SongSource.youtube) {
-        uri = await _resolveYoutubeAudio(song.videoId!)
+        final stream = await _resolveYoutubeAudio(song.videoId!)
             .timeout(const Duration(seconds: 20));
         if (!_isCurrent(generation)) return;
+        uri = stream.uri;
+        headers = stream.headers;
         if (uri.scheme != 'https' ||
             uri.host.isEmpty ||
             uri.userInfo.isNotEmpty) {
@@ -361,11 +444,19 @@ class AudioService extends ChangeNotifier {
               : null,
         );
         final duration = await _player.setAudioSource(
-          AudioSource.uri(uri, tag: mediaItem),
+          AudioSource.uri(
+            uri,
+            headers: headers.isEmpty ? null : headers,
+            tag: mediaItem,
+          ),
         );
         if (!_isCurrent(generation)) return;
         if (duration != null && duration > Duration.zero) {
           _updateDuration(song.identity, duration);
+        }
+        if (resumeAt > Duration.zero) {
+          await _player.seek(resumeAt);
+          if (!_isCurrent(generation)) return;
         }
         _readyGeneration = generation;
         _isLoading = false;
@@ -402,6 +493,21 @@ class AudioService extends ChangeNotifier {
     }
     // Use current metadata, not the snapshot from before resolution/favoriting.
     _currentSong = _currentSong!.copyWith(duration: duration);
+  }
+
+  void _handlePlaybackError(int generation, Object error) {
+    if (!_isCurrent(generation) || _readyGeneration != generation) return;
+    if (!_retryAttempted &&
+        _wantsToPlay &&
+        _currentSong?.source == SongSource.youtube &&
+        classifyPlaybackFailure(error) != PlaybackFailure.forbidden) {
+      _retryAttempted = true;
+      final song = _currentSong!;
+      final position = _playbackPosition;
+      unawaited(_selectSong(song, resumeAt: position, retry: true));
+      return;
+    }
+    _failPlayback(generation, error: error);
   }
 
   void _failPlayback(int generation, {Object? error}) {
@@ -447,7 +553,7 @@ class AudioService extends ChangeNotifier {
 
   Future<void> retryPlayback() async {
     if (_disposed || _currentSong == null || !_canPlay(_currentSong!)) return;
-    await _selectSong(_currentSong!);
+    await _selectSong(_currentSong!, resumeAt: _playbackPosition);
   }
 
   Future<void> togglePlay() async {

@@ -27,34 +27,34 @@ class SongTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return RepaintBoundary(
       child: Container(
-        margin: const EdgeInsets.only(bottom: 2),
+        margin: const EdgeInsets.only(bottom: 4),
         decoration: BoxDecoration(
           color: isActive
               ? AppColors.accent.withValues(alpha: 0.08)
               : Colors.transparent,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(10),
           border: Border.all(
             color: isActive
-                ? AppColors.accent.withValues(alpha: 0.3)
+                ? AppColors.accent.withValues(alpha: 0.25)
                 : Colors.transparent,
             width: 1,
           ),
         ),
         child: Material(
           color: Colors.transparent,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(10),
           child: ListTile(
             onTap: onTap,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(10),
             ),
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 10,
-              vertical: 4,
+              vertical: 2,
             ),
             leading: AlbumArt(
               gradientId: song.gradientId,
-              size: 48,
+              size: 46,
               borderRadius: 8,
               showShadow: false,
               imageUrl: song.albumArtUrl,
@@ -66,9 +66,10 @@ class SongTile extends StatelessWidget {
                     song.title,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: isActive ? AppColors.accentLight : Colors.white,
+                    style: TextStyle(
+                      color: isActive ? AppColors.accentLight : AppColors.textPrimary,
                       fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
+                      fontSize: 14,
                     ),
                   ),
                 ),
@@ -81,22 +82,18 @@ class SongTile extends StatelessWidget {
                 ],
               ],
             ),
-            subtitle: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    "${song.artist} • ${song.album}",
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontSize: 12,
-                      color: isActive
-                          ? AppColors.accentLight.withValues(alpha: 0.7)
-                          : AppColors.textSecondary,
-                    ),
-                  ),
-                ),
-              ],
+            subtitle: Text(
+              song.album.isNotEmpty && song.album != 'YouTube'
+                  ? "${song.artist} · ${song.album}"
+                  : song.artist,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 12,
+                color: isActive
+                    ? AppColors.accentLight.withValues(alpha: 0.75)
+                    : AppColors.textSecondary,
+              ),
             ),
             trailing: Row(
               mainAxisSize: MainAxisSize.min,

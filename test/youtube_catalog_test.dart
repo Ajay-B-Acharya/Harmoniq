@@ -1,10 +1,9 @@
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:harmoniq/models/youtube_video.dart';
 import 'package:harmoniq/services/youtube_catalog.dart';
-import 'package:harmoniq/services/youtube_metadata_native.dart' as native;
+import 'package:harmoniq/services/youtube_metadata_android.dart' as native;
 import 'package:harmoniq/services/youtube_metadata_stub.dart' as stub;
 import 'package:harmoniq/services/youtube_service.dart';
 import 'package:http/http.dart' as http;
@@ -35,76 +34,12 @@ YoutubeCatalog _catalog(
   now: now,
 );
 
-class _TrackingClient extends MockClient {
-  bool closed = false;
-  int calls = 0;
-
-  _TrackingClient(super.handler);
-
-  @override
-  Future<http.StreamedResponse> send(http.BaseRequest request) {
-    calls++;
-    return super.send(request);
-  }
-
-  @override
-  void close() {
-    closed = true;
-    super.close();
-  }
-}
-
-String _searchPage({bool duration = true}) {
-  final data = {
-    'contents': {
-      'twoColumnSearchResultsRenderer': {
-        'primaryContents': {
-          'sectionListRenderer': {
-            'contents': [
-              {
-                'itemSectionRenderer': {
-                  'contents': [
-                    {
-                      'videoRenderer': {
-                        'videoId': _video.id,
-                        'title': {
-                          'runs': [
-                            {'text': _video.title},
-                          ],
-                        },
-                        'ownerText': {
-                          'runs': [
-                            {
-                              'text': _video.artist,
-                              'navigationEndpoint': {
-                                'browseEndpoint': {
-                                  'browseId': 'UC1234567890123456789012',
-                                },
-                              },
-                            },
-                          ],
-                        },
-                        if (duration) 'lengthText': {'simpleText': '3:32'},
-                      },
-                    },
-                  ],
-                },
-              },
-            ],
-          },
-        },
-      },
-    },
-  };
-  return '<html><script>var ytInitialData = ${jsonEncode(data)};</script></html>';
-}
-
 void main() {
   group('YoutubeCatalog', () {
     test('singleton and native availability need no key', () {
       expect(YoutubeCatalog.instance, same(YoutubeCatalog.instance));
       expect(_catalog((_) async => []).isAvailable, isTrue);
-      expect(native.isSupported, isTrue);
+      expect(native.isSupported, isFalse);
       expect(stub.isSupported, isFalse);
     });
 
@@ -185,7 +120,7 @@ void main() {
     test('blank and overlong searches avoid network', () async {
       final catalog = _catalog((_) async => fail('Unexpected request'));
       expect(await catalog.search(' \n '), isEmpty);
-      await expectLater(catalog.search('x' * 501), throwsA(_error('500')));
+      await expectLater(catalog.search('x' * 201), throwsA(_error('200')));
     });
 
     test('discovery preset shares cache and refreshes deduplicate', () async {
@@ -309,124 +244,6 @@ void main() {
       await tester.pump();
       expect(await catalog.search('music'), isEmpty);
       expect(calls, 2);
-    });
-  });
-
-  group('native metadata adapter', () {
-    for (final duration in [true, false]) {
-      test(
-        'maps public search metadata with duration=$duration and closes',
-        () async {
-          final client = _TrackingClient((request) async {
-            expect(request.method, 'GET');
-            expect(request.url.host, 'www.youtube.com');
-            expect(request.url.path, '/results');
-            expect(request.url.queryParameters['search_query'], 'public music');
-            expect(request.headers.containsKey('cookie'), isFalse);
-            expect(request.headers.containsKey('authorization'), isFalse);
-            expect(request.headers['user-agent'], startsWith('Harmoniq/'));
-            expect(request.followRedirects, isFalse);
-            return http.Response(_searchPage(duration: duration), 200);
-          });
-          final videos = await native.searchYoutubeMetadata(
-            'public music',
-            client: client,
-          );
-          final video = videos.single;
-          expect(video.id, _video.id);
-          expect(video.title, _video.title);
-          expect(video.artist, _video.artist);
-          expect(video.thumbnailUrl, _video.thumbnailUrl);
-          expect(video.duration, duration ? _video.duration : Duration.zero);
-          expect(() => videos.clear(), throwsUnsupportedError);
-          expect(client.calls, 1);
-          expect(client.closed, isTrue);
-        },
-      );
-    }
-
-    for (final status in [401, 403, 429, 503]) {
-      test('HTTP $status fails once and closes without retries', () async {
-        final client = _TrackingClient(
-          (_) async => http.Response('private body', status),
-        );
-        await expectLater(
-          native.searchYoutubeMetadata('music', client: client),
-          throwsA(_error(status == 503 ? 'unavailable' : 'blocked')),
-        );
-        expect(client.calls, 1);
-        expect(client.closed, isTrue);
-      });
-    }
-
-    for (final body in [
-      "Sign in to confirm you're not a bot",
-      'Our systems have detected unusual traffic from your computer network',
-    ]) {
-      test('detects bot block in HTTP 200 response', () async {
-        final client = _TrackingClient((_) async => http.Response(body, 200));
-        await expectLater(
-          native.searchYoutubeMetadata('music', client: client),
-          throwsA(_error('blocked')),
-        );
-        expect(client.calls, 1);
-        expect(client.closed, isTrue);
-      });
-    }
-
-    test('does not follow consent redirects', () async {
-      final client = _TrackingClient(
-        (_) async => http.Response(
-          '',
-          302,
-          headers: {'location': 'https://consent.youtube.com/'},
-        ),
-      );
-      await expectLater(
-        native.searchYoutubeMetadata('music', client: client),
-        throwsA(_error('consent')),
-      );
-      expect(client.calls, 1);
-      expect(client.closed, isTrue);
-    });
-
-    test('malformed page fails safely and closes', () async {
-      final client = _TrackingClient(
-        (_) async => http.Response('<html>not search data</html>', 200),
-      );
-      await expectLater(
-        native.searchYoutubeMetadata('music', client: client),
-        throwsA(_error('metadata')),
-      );
-      expect(client.calls, 1);
-      expect(client.closed, isTrue);
-    });
-
-    test('transport failure is safe and not retried', () async {
-      final client = _TrackingClient(
-        (_) async => throw http.ClientException('private detail'),
-      );
-      await expectLater(
-        native.searchYoutubeMetadata('music', client: client),
-        throwsA(_error('connection')),
-      );
-      expect(client.calls, 1);
-      expect(client.closed, isTrue);
-    });
-
-    testWidgets('closes stalled native client at 20 seconds', (tester) async {
-      final response = Completer<http.Response>();
-      final client = _TrackingClient((_) => response.future);
-      final assertion = expectLater(
-        native.searchYoutubeMetadata('music', client: client),
-        throwsA(_error('too long')),
-      );
-      await tester.pump(const Duration(seconds: 20));
-      await assertion;
-      expect(client.closed, isTrue);
-      expect(client.calls, 1);
-      response.complete(http.Response(_searchPage(), 200));
-      await tester.pump();
     });
   });
 }
