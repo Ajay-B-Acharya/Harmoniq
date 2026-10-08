@@ -519,7 +519,10 @@ class _MusicScreenState extends State<MusicScreen> {
                       label: Text(isPlaying ? 'Pause' : 'Play Now'),
                       style: FilledButton.styleFrom(
                         backgroundColor: AppColors.accent,
-                        foregroundColor: AppColors.background,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                         padding: const EdgeInsets.symmetric(
                           horizontal: 14,
                           vertical: 8,

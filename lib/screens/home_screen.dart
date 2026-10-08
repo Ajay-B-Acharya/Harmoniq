@@ -4,15 +4,19 @@ import '../models/playlist.dart';
 import '../models/song.dart';
 import '../models/youtube_video.dart';
 import '../services/audio_service.dart';
+import '../services/auth_service.dart';
 import '../services/youtube_catalog.dart';
 import '../theme/app_colors.dart';
+import '../widgets/account_dialog.dart';
 import '../widgets/album_art.dart';
 import '../widgets/motion.dart';
 import '../widgets/song_card.dart';
 import '../widgets/youtube_card.dart';
+import '../widgets/opening_animation.dart';
 
 class HomeScreen extends StatefulWidget {
   final AudioService audioService;
+  final AuthService? authService;
   final Function(Song, [List<Song>? queue]) onSongTap;
   final Function(Playlist) onPlaylistPlayTap;
   final VoidCallback? onLocalTap;
@@ -25,6 +29,7 @@ class HomeScreen extends StatefulWidget {
   const HomeScreen({
     super.key,
     required this.audioService,
+    this.authService,
     required this.onSongTap,
     required this.onPlaylistPlayTap,
     this.onLocalTap,
@@ -121,14 +126,19 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: EnterTransition(
                         child: Row(
                           children: [
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(8),
-                              child: Image.asset(
-                                'assets/brand_mark.png',
-                                width: 34,
-                                height: 34,
-                                cacheWidth: 102,
+                            Container(
+                              width: 34,
+                              height: 34,
+                              decoration: BoxDecoration(
+                                color: AppColors.backgroundSecondary,
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: AppColors.surfaceBorder,
+                                  width: 1,
+                                ),
                               ),
+                              alignment: Alignment.center,
+                              child: const HarmoniqEmblemSilhouette(size: 26),
                             ),
                             const SizedBox(width: 10),
                             const Expanded(
@@ -156,6 +166,39 @@ class _HomeScreenState extends State<HomeScreen> {
                               onPressed: () => widget.onSearchTap?.call(''),
                               icon: const Icon(Icons.search_rounded, size: 20),
                             ),
+                            if (widget.authService != null) ...[
+                              const SizedBox(width: 8),
+                              IconButton.outlined(
+                                tooltip: 'Account',
+                                style: IconButton.styleFrom(
+                                  side: const BorderSide(
+                                    color: AppColors.surfaceBorder,
+                                    width: 1,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                ),
+                                onPressed: () {
+                                  AccountDialog.show(
+                                    context,
+                                    authService: widget.authService!,
+                                    onAuthChanged: () {
+                                      setState(() {});
+                                    },
+                                  );
+                                },
+                                icon: Icon(
+                                  widget.authService!.isAuthenticated
+                                      ? Icons.person_rounded
+                                      : Icons.person_outline_rounded,
+                                  color: widget.authService!.isAuthenticated
+                                      ? AppColors.accent
+                                      : AppColors.textPrimary,
+                                  size: 20,
+                                ),
+                              ),
+                            ],
                           ],
                         ),
                       ),
@@ -573,7 +616,7 @@ class _HomeScreenState extends State<HomeScreen> {
             tooltip: isPlaying ? 'Pause' : 'Play',
             style: IconButton.styleFrom(
               backgroundColor: AppColors.accent,
-              foregroundColor: AppColors.background,
+              foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
@@ -581,6 +624,7 @@ class _HomeScreenState extends State<HomeScreen> {
             icon: Icon(
               isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
               size: 24,
+              color: Colors.white,
             ),
             onPressed: widget.audioService.togglePlay,
           ),

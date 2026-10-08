@@ -39,7 +39,7 @@ internal class YtDlpAdapter(private val context: Context) {
             check(python.getModule("yt_dlp.version").get("__version__").toString() == runtimeVersion) {
                 "Unexpected yt-dlp runtime"
             }
-            check(python.getModule("yt_dlp_ejs.version").get("__version__").toString() == "0.8.0") {
+            check(python.getModule("yt_dlp_ejs").get("version").toString() == "0.8.0") {
                 "Unexpected EJS runtime"
             }
             val probe = ProcessBuilder(quickJs.absolutePath, "-e", "console.log(1 + 1)")
@@ -55,6 +55,9 @@ internal class YtDlpAdapter(private val context: Context) {
                 probe.destroy()
             }
             runtimeReady = true
+            if (context.applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE != 0) {
+                android.util.Log.i("YtDlpAdapter", "Runtime ready: yt-dlp $runtimeVersion, EJS 0.8.0, QuickJS")
+            }
         }
         runtimeVersion
     }
@@ -70,6 +73,8 @@ internal class YtDlpAdapter(private val context: Context) {
             val safe = downloader.callAttr("sanitize_info", info)
             return mapOf(
                 "version" to version,
+                "ejsVersion" to "0.8.0",
+                "javascriptRuntime" to "quickjs",
                 "metadata" to json.callAttr("dumps", safe).toJava(String::class.java),
                 "download" to false
             )
@@ -123,6 +128,9 @@ internal class YtDlpAdapter(private val context: Context) {
                 val value = headers.optString(name)
                 if (value.isNotBlank() && !value.contains('\n') && !value.contains('\r')) playbackHeaders[name] = value
             }
+        }
+        if (context.applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE != 0) {
+            android.util.Log.i("YtDlpAdapter", "Resolved $videoId, audio format ${format.optString("format_id")}")
         }
         return mapOf(
             "id" to videoId,

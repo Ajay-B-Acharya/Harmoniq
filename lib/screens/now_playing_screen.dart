@@ -21,12 +21,12 @@ class NowPlayingScreen extends StatefulWidget {
 }
 
 class _NowPlayingScreenState extends State<NowPlayingScreen> {
-  static const _background = Color(0xFF0C0D10);
-  static const _surface = Color(0xFF14161C);
-  static const _foreground = Color(0xFFF3F4F6);
-  static const _muted = Color(0xFF9CA3AF);
-  static const _primary = Color(0xFFFF9E3B);
-  static const _border = Color(0xFF252933);
+  static const _background = Color(0xFF080808);
+  static const _surface = Color(0xFF151515);
+  static const _foreground = Color(0xFFF5F5F5);
+  static const _muted = Color(0xFF8A8A8A);
+  static const _primary = Color(0xFFE50914);
+  static const _border = Color(0xFF282828);
 
   AudioService get _svc => widget.audioService;
   late final PageController _carouselController;
@@ -575,7 +575,10 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
             onPressed: _svc.togglePlay,
             style: IconButton.styleFrom(
               backgroundColor: _primary,
-              foregroundColor: _background,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
             icon: AnimatedSwitcher(
               duration: _motionDuration(context, 160),

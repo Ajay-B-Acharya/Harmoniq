@@ -250,7 +250,7 @@ class SearchScreenState extends State<SearchScreen> {
     showCheckmark: false,
     selectedColor: AppColors.accent,
     labelStyle: TextStyle(
-      color: _filter == filter ? AppColors.background : AppColors.textSecondary,
+      color: _filter == filter ? Colors.white : AppColors.textSecondary,
       fontWeight: _filter == filter ? FontWeight.w700 : FontWeight.w500,
       fontSize: 12,
     ),

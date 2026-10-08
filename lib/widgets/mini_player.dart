@@ -127,6 +127,10 @@ class MiniPlayer extends StatelessWidget {
                       tooltip: showPause ? 'Pause' : 'Play',
                       style: IconButton.styleFrom(
                         backgroundColor: AppColors.accent,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                       ),
                       icon: AnimatedSwitcher(
                         duration: motionDuration(context, 180),
@@ -137,8 +141,8 @@ class MiniPlayer extends StatelessWidget {
                               ? Icons.pause_rounded
                               : Icons.play_arrow_rounded,
                           key: ValueKey(showPause),
-                          color: AppColors.background,
-                          size: 28,
+                          color: Colors.white,
+                          size: 26,
                         ),
                       ),
                       onPressed: onPlayPauseTap,
@@ -250,7 +254,7 @@ class MiniEqualizerBars extends StatefulWidget {
   const MiniEqualizerBars({
     super.key,
     required this.isPlaying,
-    this.color = AppColors.accentLight,
+    this.color = AppColors.accent,
   });
 
   @override
