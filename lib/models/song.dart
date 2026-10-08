@@ -59,6 +59,12 @@ class Song {
 
   bool get isOnline => source != SongSource.local;
 
+  String? get sourceUrl =>
+      source == SongSource.youtube &&
+          RegExp(r'^[A-Za-z0-9_-]{11}$').hasMatch(videoId ?? '')
+      ? 'https://www.youtube.com/watch?v=$videoId'
+      : null;
+
   Map<String, dynamic> toJson() => {
     'id': id,
     'title': title,
@@ -71,6 +77,7 @@ class Song {
     'albumArtUrl': albumArtUrl,
     'source': source.name,
     if (videoId != null) 'videoId': videoId,
+    if (sourceUrl != null) 'sourceUrl': sourceUrl,
     'licenseUrl': licenseUrl,
     'audioDownloadAllowed': audioDownloadAllowed,
   };

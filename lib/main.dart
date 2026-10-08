@@ -6,32 +6,68 @@ import 'package:just_audio_background/just_audio_background.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'theme/app_theme.dart';
-import 'theme/app_colors.dart';
 import 'services/audio_service.dart';
+import 'services/auth_service.dart';
+import 'services/supabase_service.dart';
 import 'screens/home_screen.dart';
 import 'screens/search_screen.dart';
 import 'screens/music_screen.dart';
 import 'screens/library_screen.dart';
 import 'screens/now_playing_screen.dart';
+import 'widgets/auth_gate.dart';
 import 'widgets/bottom_nav.dart';
 import 'widgets/mini_player.dart';
 import 'widgets/motion.dart';
 import 'models/song.dart';
 import 'models/youtube_video.dart';
+import 'widgets/opening_animation.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await JustAudioBackground.init(
-    androidNotificationChannelId: 'com.example.harmoniq.channel.audio',
-    androidNotificationChannelName: 'Harmoniq Audio Playback',
-    androidNotificationOngoing: true,
-    androidShowNotificationBadge: true,
-  );
+
+  // 1. Supabase Initialization (Safe / Non-blocking failure)
+  try {
+    await initSupabase();
+  } catch (e) {
+    debugPrint('[STARTUP] Supabase initialization notice: $e');
+  }
+
+  // 2. Background Audio Initialization (Safe fallback)
+  try {
+    await JustAudioBackground.init(
+      androidNotificationChannelId: 'com.example.harmoniq.channel.audio',
+      androidNotificationChannelName: 'Harmoniq Audio Playback',
+      androidNotificationOngoing: true,
+      androidShowNotificationBadge: true,
+    );
+  } catch (e) {
+    debugPrint('[STARTUP] JustAudioBackground initialization notice: $e');
+  }
+
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  late final AuthService _authService;
+
+  @override
+  void initState() {
+    super.initState();
+    _authService = AuthService();
+  }
+
+  @override
+  void dispose() {
+    _authService.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -39,35 +75,39 @@ class MyApp extends StatelessWidget {
       title: 'Harmoniq',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.darkTheme,
-      home: const SplashScreen(),
+      home: SplashScreen(authService: _authService),
     );
   }
 }
 
 class SplashScreen extends StatefulWidget {
-  const SplashScreen({super.key});
+  final AuthService authService;
+  const SplashScreen({super.key, required this.authService});
 
   @override
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
 class _SplashScreenState extends State<SplashScreen> {
+  bool _navigated = false;
+
   @override
   void initState() {
     super.initState();
     _checkAndRequestPermissionsOnce();
-    Future.delayed(const Duration(milliseconds: 900), () {
-      if (mounted) {
-        Navigator.of(context).pushReplacement(
-          PageRouteBuilder(
-            pageBuilder: (ctx, a1, a2) => const MainContainer(),
-            transitionsBuilder: (ctx, animation, a2, child) =>
-                FadeTransition(opacity: animation, child: child),
-            transitionDuration: motionDuration(context, 320),
-          ),
-        );
-      }
-    });
+  }
+
+  void _proceedToMain() {
+    if (!mounted || _navigated) return;
+    _navigated = true;
+    Navigator.of(context).pushReplacement(
+      PageRouteBuilder(
+        pageBuilder: (ctx, a1, a2) => AuthGate(authService: widget.authService),
+        transitionsBuilder: (ctx, animation, a2, child) =>
+            FadeTransition(opacity: animation, child: child),
+        transitionDuration: motionDuration(context, 200),
+      ),
+    );
   }
 
   Future<void> _checkAndRequestPermissionsOnce() async {
@@ -87,40 +127,16 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            EnterTransition(
-              child: Image.asset(
-                'assets/logo.png',
-                width: 240,
-                height: 240,
-                cacheWidth: 720,
-              ),
-            ),
-            const SizedBox(height: 20),
-            const Text(
-              'YOUR MUSIC. YOUR RHYTHM.',
-              style: TextStyle(
-                fontSize: 11,
-                color: AppColors.textMuted,
-                letterSpacing: 2.5,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
-      ),
+    return OpeningAnimationView(
+      onFinished: _proceedToMain,
     );
   }
 }
 
 class MainContainer extends StatefulWidget {
   final AudioService? audioService;
-  const MainContainer({super.key, this.audioService});
+  final AuthService? authService;
+  const MainContainer({super.key, this.audioService, this.authService});
 
   @override
   State<MainContainer> createState() => _MainContainerState();
@@ -130,6 +146,7 @@ class _MainContainerState extends State<MainContainer> {
   int _currentIndex = 0;
   late final PageController _pageController;
   late final AudioService _audioService;
+  late final AuthService _authService;
 
   late final List<Widget> _pages;
   final _searchKey = GlobalKey<SearchScreenState>();
@@ -139,6 +156,7 @@ class _MainContainerState extends State<MainContainer> {
   void initState() {
     super.initState();
     _audioService = widget.audioService ?? AudioService();
+    _authService = widget.authService ?? AuthService();
     _pageController = PageController();
 
     _pages = [
@@ -148,6 +166,7 @@ class _MainContainerState extends State<MainContainer> {
         onVideoTap: _playYoutube,
         onVideoQueueTap: _playYoutubeQueue,
         audioService: _audioService,
+        authService: _authService,
         onSongTap: (song, [queue]) =>
             _playSong(song, contextQueue: queue ?? _audioService.songs),
         onPlaylistPlayTap: (playlist) {
@@ -192,6 +211,7 @@ class _MainContainerState extends State<MainContainer> {
   void dispose() {
     _pageController.dispose();
     if (widget.audioService == null) _audioService.dispose();
+    if (widget.authService == null) _authService.dispose();
     super.dispose();
   }
 

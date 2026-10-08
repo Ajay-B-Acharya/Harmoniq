@@ -1,5 +1,7 @@
 # On-device yt-dlp migration — 2026-10-05
 
+> Historical baseline assessment. See [the 2026-10-07 resolver report](youtube-resolver-2026-10-07.md) for the subsequent runtime investigation, replacement bundle, and current validation. Results below describe the earlier build, not the current implementation.
+
 ## Outcome and scope
 
 Harmoniq's Android online path has been migrated from `youtube_explode_dart` to a custom MethodChannel adapter calling the Python yt-dlp runtime embedded in `dev.ffmpegkit-maintained:yt-dlp-android:2.0.2`. The public wrapper's `execute`/`download` API is **not called**. The app has no download feature, server, second player, cookie/credential handling, DRM bypass, or persisted signed stream URL. This is a technical integration, **not verified audible playback on a physical phone**.

@@ -7,6 +7,8 @@ class YoutubeVideo {
   final String thumbnailUrl;
   final Duration duration;
 
+  String get sourceUrl => 'https://www.youtube.com/watch?v=$id';
+
   const YoutubeVideo({
     required this.id,
     required this.title,

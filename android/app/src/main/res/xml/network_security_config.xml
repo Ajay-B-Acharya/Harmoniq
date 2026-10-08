@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Network Security Configuration for Harmoniq.
+
+  This restricts cleartext (HTTP) traffic to only localhost/development
+  scenarios while ensuring all production traffic uses HTTPS.
+
+  Why this matters:
+  - Android 9+ blocks cleartext HTTP by default in release builds.
+  - AndroidManifest already sets usesCleartextTraffic="true" but this
+    config provides more granular control and is better for release.
+  - All Supabase, YouTube, and external API traffic uses HTTPS.
+  - Only truly local development endpoints (if any) may use HTTP.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+
+    <!-- Allow HTTP to localhost only for development tools -->
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">localhost</domain>
+        <domain includeSubdomains="true">10.0.2.2</domain>
+        <domain includeSubdomains="true">127.0.0.1</domain>
+    </domain-config>
+</network-security-config>

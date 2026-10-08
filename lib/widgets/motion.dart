@@ -70,7 +70,7 @@ class _PressableState extends State<Pressable> {
         child: InkWell(
           onTap: widget.onTap,
           onHighlightChanged: _setPressed,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(10),
           child: widget.child,
         ),
       ),

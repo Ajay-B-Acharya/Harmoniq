@@ -308,7 +308,9 @@ class AudioService extends ChangeNotifier {
     _playbackErrorSub = _player.playbackEventStream.listen(
       (_) {},
       onError: (Object error) {
-        if (_acceptPlayerEvents) _handlePlaybackError(_generation, error);
+        if (_acceptPlayerEvents) {
+          unawaited(_handlePlaybackError(_generation, error));
+        }
       },
     );
     _positionSub = _player.positionStream.listen((pos) {
@@ -384,6 +386,7 @@ class AudioService extends ChangeNotifier {
     Song song, {
     Duration resumeAt = Duration.zero,
     bool retry = false,
+    bool? wantsToPlay,
   }) async {
     final generation = ++_generation;
     _readyGeneration = null;
@@ -391,7 +394,7 @@ class AudioService extends ChangeNotifier {
     _currentSong = song.copyWith(isFavorite: isSongFavorite(song));
     _recordRecentlyPlayed(song);
     _isPlaying = false;
-    _wantsToPlay = !_isSimulated(song);
+    _wantsToPlay = wantsToPlay ?? !_isSimulated(song);
     _isLoading = !_isSimulated(song);
     _playbackError = null;
     _playbackPosition = resumeAt;
@@ -405,6 +408,7 @@ class AudioService extends ChangeNotifier {
         }).catchError((Object error) {
           _failPlayback(generation, error: error);
         });
+    var loadingSource = false;
     try {
       if (_isSimulated(song)) {
         await stopped;
@@ -443,6 +447,7 @@ class AudioService extends ChangeNotifier {
               ? Uri.tryParse(song.albumArtUrl!)
               : null,
         );
+        loadingSource = true;
         final duration = await _player.setAudioSource(
           AudioSource.uri(
             uri,
@@ -464,7 +469,11 @@ class AudioService extends ChangeNotifier {
         if (_isCurrent(generation) && _wantsToPlay) _startPlaying(generation);
       });
     } catch (error) {
-      _failPlayback(generation, error: error);
+      if (song.source == SongSource.youtube && loadingSource) {
+        await _handlePlaybackError(generation, error, duringLoad: true);
+      } else {
+        _failPlayback(generation, error: error);
+      }
     }
   }
 
@@ -495,16 +504,25 @@ class AudioService extends ChangeNotifier {
     _currentSong = _currentSong!.copyWith(duration: duration);
   }
 
-  void _handlePlaybackError(int generation, Object error) {
-    if (!_isCurrent(generation) || _readyGeneration != generation) return;
-    if (!_retryAttempted &&
-        _wantsToPlay &&
-        _currentSong?.source == SongSource.youtube &&
-        classifyPlaybackFailure(error) != PlaybackFailure.forbidden) {
+  Future<void> _handlePlaybackError(
+    int generation,
+    Object error, {
+    bool duringLoad = false,
+  }) async {
+    if (!_isCurrent(generation) ||
+        _playbackError != null ||
+        (!duringLoad && _readyGeneration != generation)) {
+      return;
+    }
+    if (!_retryAttempted && _currentSong?.source == SongSource.youtube) {
       _retryAttempted = true;
-      final song = _currentSong!;
-      final position = _playbackPosition;
-      unawaited(_selectSong(song, resumeAt: position, retry: true));
+      // A 403 can mean an expired URL; refresh once, using the stable video ID.
+      await _selectSong(
+        _currentSong!,
+        resumeAt: _playbackPosition,
+        retry: true,
+        wantsToPlay: _wantsToPlay,
+      );
       return;
     }
     _failPlayback(generation, error: error);
@@ -534,6 +552,10 @@ class AudioService extends ChangeNotifier {
     // just_audio's play future completes only when paused/stopped/completed.
     unawaited(
       Future<void>.sync(_player.play).catchError((Object error) {
+        if (_isCurrent(generation) &&
+            _currentSong?.source == SongSource.youtube) {
+          return _handlePlaybackError(generation, error);
+        }
         _failPlayback(generation, error: error);
       }),
     );

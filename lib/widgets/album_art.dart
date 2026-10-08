@@ -14,7 +14,7 @@ class AlbumArt extends StatelessWidget {
     super.key,
     required this.gradientId,
     this.size = 120,
-    this.borderRadius = 16,
+    this.borderRadius = 10,
     this.showShadow = true,
     this.overlayIcon,
     this.imageUrl,
@@ -33,10 +33,10 @@ class AlbumArt extends StatelessWidget {
         boxShadow: showShadow
             ? [
                 BoxShadow(
-                  color: colors[0].withValues(alpha: 0.35),
-                  blurRadius: 15,
-                  spreadRadius: -3,
-                  offset: const Offset(0, 8),
+                  color: Colors.black.withValues(alpha: 0.4),
+                  blurRadius: 10,
+                  spreadRadius: -2,
+                  offset: const Offset(0, 4),
                 ),
               ]
             : null,

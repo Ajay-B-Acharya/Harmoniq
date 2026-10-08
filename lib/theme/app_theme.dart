@@ -10,9 +10,11 @@ class AppTheme {
     colorScheme: const ColorScheme.dark(
       surface: AppColors.backgroundSurface,
       primary: AppColors.accent,
-      onPrimary: AppColors.background,
-      secondary: AppColors.accentLight,
+      onPrimary: Colors.white,
+      secondary: AppColors.accentDark,
+      onSecondary: Colors.white,
       onSurface: AppColors.textPrimary,
+      outline: AppColors.surfaceBorder,
     ),
     splashFactory: InkSparkle.splashFactory,
     textTheme: const TextTheme(
@@ -58,7 +60,7 @@ class AppTheme {
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
         backgroundColor: AppColors.accent,
-        foregroundColor: AppColors.background,
+        foregroundColor: Colors.white,
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
         textStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13.5),
         shape: RoundedRectangleBorder(
@@ -115,14 +117,14 @@ class AppTheme {
       backgroundColor: AppColors.backgroundSurface,
       showDragHandle: true,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(14)),
       ),
     ),
     sliderTheme: SliderThemeData(
       activeTrackColor: AppColors.accent,
       inactiveTrackColor: Colors.white.withValues(alpha: 0.1),
-      thumbColor: AppColors.accentLight,
-      overlayColor: AppColors.accent.withValues(alpha: 0.12),
+      thumbColor: AppColors.textPrimary,
+      overlayColor: AppColors.accent.withValues(alpha: 0.14),
       trackHeight: 3,
       thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 5),
       overlayShape: const RoundSliderOverlayShape(overlayRadius: 12),

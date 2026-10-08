@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Harmoniq dark background color (#080808) used in launch screen -->
+    <color name="harmoniq_background">#080808</color>
+</resources>

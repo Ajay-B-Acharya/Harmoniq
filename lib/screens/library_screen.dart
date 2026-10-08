@@ -171,7 +171,7 @@ class LibraryScreenState extends State<LibraryScreen> {
                           _categories[index],
                           style: TextStyle(
                             color: isSelected
-                                ? AppColors.background
+                                ? Colors.white
                                 : AppColors.textSecondary,
                             fontSize: 12,
                             fontWeight:
