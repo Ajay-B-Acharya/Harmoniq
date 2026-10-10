@@ -31,8 +31,8 @@ class _AuthGateState extends State<AuthGate> {
       builder: (context, _) {
         final user = widget.authService.currentUser;
 
-        // If authenticated or user selected guest access
-        if (user != null || _isGuest) {
+        // If client is unavailable (e.g. offline/mock tests), authenticated, or user selected guest access
+        if (!widget.authService.isClientAvailable || user != null || _isGuest) {
           return MainContainer(
             audioService: widget.audioService,
             authService: widget.authService,

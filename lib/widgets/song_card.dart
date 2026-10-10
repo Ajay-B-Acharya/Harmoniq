@@ -45,30 +45,31 @@ class SongCard extends StatelessWidget {
                             AlbumArt(
                               gradientId: song.gradientId,
                               size: artSize,
-                              borderRadius: 10,
+                              borderRadius: 18,
                               imageUrl: song.albumArtUrl,
                               showShadow: false,
                             ),
                             Positioned(
-                              right: 8,
-                              bottom: 8,
+                              right: 10,
+                              bottom: 10,
                               child: Container(
-                                width: 32,
-                                height: 32,
+                                width: 34,
+                                height: 34,
                                 decoration: BoxDecoration(
-                                  color: AppColors.background.withValues(
-                                    alpha: 0.85,
-                                  ),
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(
-                                    color: Colors.white.withValues(alpha: 0.15),
-                                    width: 1,
-                                  ),
+                                  color: Colors.white.withValues(alpha: 0.88),
+                                  shape: BoxShape.circle,
+                                  boxShadow: const [
+                                    BoxShadow(
+                                      color: Color(0x55000000),
+                                      blurRadius: 10,
+                                      offset: Offset(0, 3),
+                                    ),
+                                  ],
                                 ),
                                 child: const Icon(
                                   Icons.play_arrow_rounded,
-                                  color: AppColors.textPrimary,
-                                  size: 18,
+                                  color: Color(0xFF101522),
+                                  size: 20,
                                 ),
                               ),
                             ),

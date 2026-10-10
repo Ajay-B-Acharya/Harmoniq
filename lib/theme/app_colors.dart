@@ -1,73 +1,84 @@
 import 'package:flutter/material.dart';
 
 class AppColors {
-  // Deep, modern, dark interface
-  static const Color background = Color(0xFF080808);
-  static const Color backgroundSecondary = Color(0xFF0D0D0D);
-  static const Color backgroundSurface = Color(0xFF151515);
-  static const Color surfaceHigh = Color(0xFF1C1C1C);
-  static const Color surfaceBorder = Color(0xFF282828);
+  // Spatial UI primary & secondary backgrounds
+  static const Color background = Color(0xFF101522);
+  static const Color backgroundSecondary = Color(0xFF171D30);
+  static const Color backgroundSurface = Color(0xFF1A2138);
+  static const Color surfaceHigh = Color(0xFF222B45);
+  static const Color surfaceBorder = Color(0x29FFFFFF); // rgba(255, 255, 255, 0.16)
 
-  // Red and metallic accents
-  static const Color accent = Color(0xFFE50914);
-  static const Color accentDark = Color(0xFF8F0B12);
-  static const Color accentLight = Color(0xFFE50914);
-  static const Color metallicAccent = Color(0xFFC8C8C8);
-  static const Color heartColor = Color(0xFFE50914);
+  // Spatial UI vibrant accents
+  static const Color primaryViolet = Color(0xFF9B7BFF);
+  static const Color secondaryPurple = Color(0xFFC084FC);
+  static const Color electricBlue = Color(0xFF69B7FF);
+  static const Color softCyan = Color(0xFF7CEBFF);
 
-  // Subtle flat / matte card surfaces without excessive glassmorphism
-  static const Color glassBackground = Color(0xFF151515);
-  static final Color glassBorder = Colors.white.withValues(alpha: 0.07);
-  static final Color glassShadow = Colors.black.withValues(alpha: 0.35);
+  static const Color accent = Color(0xFF9B7BFF);
+  static const Color accentDark = Color(0xFF7551E9);
+  static const Color accentLight = Color(0xFF7CEBFF);
+  static const Color metallicAccent = Color(0xFFB6BCD2);
+  static const Color heartColor = Color(0xFFFF6B81);
 
-  // Crisp, accessible typography
-  static const Color textPrimary = Color(0xFFF5F5F5);
-  static const Color textSecondary = Color(0xFF8A8A8A);
-  static const Color textMuted = Color(0xFF666666);
+  // Status colors
+  static const Color error = Color(0xFFFF6B81);
+  static const Color success = Color(0xFF79E6C5);
 
-  // Subtle, restrained album artwork backdrops - strictly NO purple or neon gradients
-  static const List<Color> gradientDarkRed = [
-    Color(0xFF3A0D11),
-    Color(0xFF140708),
+  // Frosted glass tokens
+  static const Color glassBackground = Color(0x14FFFFFF); // rgba(255, 255, 255, 0.08)
+  static const Color glassBorder = Color(0x29FFFFFF);     // rgba(255, 255, 255, 0.16)
+  static const Color glassBorderGlow = Color(0x4D9B7BFF); // Soft violet glow border
+  static const Color glassBorderCyan = Color(0x4D7CEBFF); // Soft cyan glow border
+  static const Color glassShadow = Color(0x4D050914);
+
+  // Crisp, accessible Spatial typography
+  static const Color textPrimary = Color(0xFFF5F6FF);
+  static const Color textSecondary = Color(0xFFB6BCD2);
+  static const Color textMuted = Color(0xFF858DA8);
+
+  // Atmospheric gradients for artwork and ambient highlights
+  static const List<Color> gradientVioletCosmic = [
+    Color(0xFF2D1B69),
+    Color(0xFF130E29),
   ];
-  static const List<Color> gradientCrimson = [
-    Color(0xFF4A1015),
-    Color(0xFF1C0A0C),
+  static const List<Color> gradientElectricIndigo = [
+    Color(0xFF1B2E6A),
+    Color(0xFF0F1735),
   ];
-  static const List<Color> gradientCharcoal = [
-    Color(0xFF2B2B2B),
-    Color(0xFF141414),
+  static const List<Color> gradientCyanDepth = [
+    Color(0xFF163C52),
+    Color(0xFF0D1D2B),
   ];
-  static const List<Color> gradientSilverSlate = [
-    Color(0xFF33383E),
-    Color(0xFF181B1E),
+  static const List<Color> gradientPurpleAura = [
+    Color(0xFF3B1E5C),
+    Color(0xFF160B26),
   ];
   static const List<Color> gradientMidnightSteel = [
-    Color(0xFF1F252E),
-    Color(0xFF101419),
+    Color(0xFF222B45),
+    Color(0xFF121727),
   ];
-  static const List<Color> gradientDeepAsh = [
-    Color(0xFF262626),
-    Color(0xFF121212),
+  static const List<Color> gradientStarlightTeal = [
+    Color(0xFF19444B),
+    Color(0xFF0E2226),
   ];
-  static const List<Color> gradientOnyx = [
-    Color(0xFF301E22),
-    Color(0xFF180F11),
+  static const List<Color> gradientNebulaRose = [
+    Color(0xFF451E38),
+    Color(0xFF1A0A16),
   ];
-  static const List<Color> gradientGraphite = [
-    Color(0xFF24272C),
-    Color(0xFF121417),
+  static const List<Color> gradientDarkOrbit = [
+    Color(0xFF252D42),
+    Color(0xFF101420),
   ];
 
   static const List<List<Color>> allGradients = [
-    gradientDarkRed,
-    gradientCharcoal,
-    gradientCrimson,
-    gradientSilverSlate,
+    gradientVioletCosmic,
+    gradientElectricIndigo,
+    gradientCyanDepth,
+    gradientPurpleAura,
     gradientMidnightSteel,
-    gradientDeepAsh,
-    gradientOnyx,
-    gradientGraphite,
+    gradientStarlightTeal,
+    gradientNebulaRose,
+    gradientDarkOrbit,
   ];
 
   static List<Color> getGradientForId(int id) =>

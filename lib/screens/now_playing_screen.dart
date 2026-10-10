@@ -4,7 +4,9 @@ import 'package:flutter/material.dart';
 
 import '../models/song.dart';
 import '../services/audio_service.dart';
+import '../theme/app_colors.dart';
 import '../widgets/album_art.dart';
+import '../widgets/spatial_background.dart';
 
 class NowPlayingScreen extends StatefulWidget {
   final AudioService audioService;
@@ -21,12 +23,12 @@ class NowPlayingScreen extends StatefulWidget {
 }
 
 class _NowPlayingScreenState extends State<NowPlayingScreen> {
-  static const _background = Color(0xFF080808);
-  static const _surface = Color(0xFF151515);
-  static const _foreground = Color(0xFFF5F5F5);
-  static const _muted = Color(0xFF8A8A8A);
-  static const _primary = Color(0xFFE50914);
-  static const _border = Color(0xFF282828);
+  static const _background = AppColors.background;
+  static const _surface = Color(0xCC171D30);
+  static const _foreground = AppColors.textPrimary;
+  static const _muted = AppColors.textSecondary;
+  static const _primary = AppColors.primaryViolet;
+  static const _border = AppColors.glassBorder;
 
   AudioService get _svc => widget.audioService;
   late final PageController _carouselController;
@@ -162,63 +164,65 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
     final song = _song;
     return Scaffold(
       backgroundColor: _background,
-      body: SafeArea(
-        child: song == null
-            ? Center(
-                child: TextButton.icon(
-                  onPressed: widget.onClose,
-                  icon: const Icon(Icons.keyboard_arrow_down_rounded),
-                  label: const Text('No song playing · Close'),
-                  style: TextButton.styleFrom(foregroundColor: _foreground),
-                ),
-              )
-            : LayoutBuilder(
-                builder: (context, constraints) {
-                  final wide = constraints.maxWidth >= 760;
-                  final padding = constraints.maxWidth < 360 ? 16.0 : 24.0;
-                  return SingleChildScrollView(
-                    physics: const ClampingScrollPhysics(),
-                    child: Center(
-                      child: ConstrainedBox(
-                        constraints: BoxConstraints(
-                          maxWidth: wide ? 1120 : 560,
-                          minHeight: constraints.maxHeight,
-                        ),
-                        child: Padding(
-                          padding: EdgeInsets.fromLTRB(padding, 8, padding, 24),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              _buildHeader(song),
-                              SizedBox(height: wide ? 24 : 20),
-                              if (wide)
-                                Row(
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  children: [
-                                    Expanded(
-                                      flex: 6,
-                                      child: _buildArtwork(context),
-                                    ),
-                                    const SizedBox(width: 36),
-                                    Expanded(
-                                      flex: 5,
-                                      child: _buildPlayback(context, song),
-                                    ),
-                                  ],
-                                )
-                              else ...[
-                                _buildArtwork(context),
-                                const SizedBox(height: 28),
-                                _buildPlayback(context, song),
+      body: SpatialBackground(
+        child: SafeArea(
+          child: song == null
+              ? Center(
+                  child: TextButton.icon(
+                    onPressed: widget.onClose,
+                    icon: const Icon(Icons.keyboard_arrow_down_rounded),
+                    label: const Text('No song playing · Close'),
+                    style: TextButton.styleFrom(foregroundColor: _foreground),
+                  ),
+                )
+              : LayoutBuilder(
+                  builder: (context, constraints) {
+                    final wide = constraints.maxWidth >= 760;
+                    final padding = constraints.maxWidth < 360 ? 16.0 : 24.0;
+                    return SingleChildScrollView(
+                      physics: const ClampingScrollPhysics(),
+                      child: Center(
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(
+                            maxWidth: wide ? 1120 : 560,
+                            minHeight: constraints.maxHeight,
+                          ),
+                          child: Padding(
+                            padding: EdgeInsets.fromLTRB(padding, 8, padding, 24),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                _buildHeader(song),
+                                SizedBox(height: wide ? 24 : 20),
+                                if (wide)
+                                  Row(
+                                    crossAxisAlignment: CrossAxisAlignment.center,
+                                    children: [
+                                      Expanded(
+                                        flex: 6,
+                                        child: _buildArtwork(context),
+                                      ),
+                                      const SizedBox(width: 36),
+                                      Expanded(
+                                        flex: 5,
+                                        child: _buildPlayback(context, song),
+                                      ),
+                                    ],
+                                  )
+                                else ...[
+                                  _buildArtwork(context),
+                                  const SizedBox(height: 28),
+                                  _buildPlayback(context, song),
+                                ],
                               ],
-                            ],
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  );
-                },
-              ),
+                    );
+                  },
+                ),
+        ),
       ),
     );
   }
@@ -314,19 +318,38 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
                   duration: _motionDuration(context, 220),
                   curve: Curves.easeOutCubic,
                   child: Center(
-                    child: RepaintBoundary(
-                      child: HeroMode(
-                        enabled: _motionDuration(context, 1) != Duration.zero,
-                        child: Hero(
-                          tag: isCurrent
-                              ? 'album-art-${item.identity}'
-                              : 'album-art-${item.identity}-np-$index',
-                          child: AlbumArt(
-                            gradientId: item.gradientId,
-                            size: artSize,
-                            borderRadius: 16,
-                            showShadow: false,
-                            imageUrl: item.albumArtUrl,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(26),
+                        boxShadow: isCurrent
+                            ? [
+                                BoxShadow(
+                                  color: AppColors.primaryViolet.withValues(alpha: 0.35),
+                                  blurRadius: 36,
+                                  spreadRadius: 2,
+                                ),
+                                BoxShadow(
+                                  color: AppColors.softCyan.withValues(alpha: 0.15),
+                                  blurRadius: 24,
+                                  spreadRadius: -4,
+                                ),
+                              ]
+                            : null,
+                      ),
+                      child: RepaintBoundary(
+                        child: HeroMode(
+                          enabled: _motionDuration(context, 1) != Duration.zero,
+                          child: Hero(
+                            tag: isCurrent
+                                ? 'album-art-${item.identity}'
+                                : 'album-art-${item.identity}-np-$index',
+                            child: AlbumArt(
+                              gradientId: item.gradientId,
+                              size: artSize,
+                              borderRadius: 24,
+                              showShadow: false,
+                              imageUrl: item.albumArtUrl,
+                            ),
                           ),
                         ),
                       ),
@@ -483,17 +506,17 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
               children: [
                 SliderTheme(
                   data: SliderTheme.of(context).copyWith(
-                    trackHeight: 3,
+                    trackHeight: 3.5,
                     thumbShape: const RoundSliderThumbShape(
-                      enabledThumbRadius: 5,
+                      enabledThumbRadius: 6,
                     ),
                     overlayShape: const RoundSliderOverlayShape(
                       overlayRadius: 14,
                     ),
-                    activeTrackColor: _primary,
-                    inactiveTrackColor: _border,
-                    thumbColor: _foreground,
-                    overlayColor: _primary.withValues(alpha: 0.12),
+                    activeTrackColor: AppColors.softCyan,
+                    inactiveTrackColor: AppColors.glassBorder,
+                    thumbColor: Colors.white,
+                    overlayColor: AppColors.softCyan.withValues(alpha: 0.18),
                   ),
                   child: Slider(
                     value: currentMs,
@@ -559,33 +582,43 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
           tooltip: _shuffle ? 'Turn shuffle off' : 'Turn shuffle on',
           isSelected: _shuffle,
           onPressed: _svc.toggleShuffle,
-          icon: const Icon(Icons.shuffle_rounded, size: 21),
-          color: _shuffle ? _primary : _muted,
+          icon: const Icon(Icons.shuffle_rounded, size: 22),
+          color: _shuffle ? AppColors.softCyan : _muted,
         ),
         IconButton(
           tooltip: 'Previous track',
           onPressed: _svc.previous,
-          icon: const Icon(Icons.skip_previous_rounded, size: 34),
+          icon: const Icon(Icons.skip_previous_rounded, size: 36),
           color: _foreground,
         ),
-        SizedBox.square(
-          dimension: 72,
-          child: IconButton.filled(
+        Container(
+          width: 72,
+          height: 72,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: const LinearGradient(
+              colors: [AppColors.primaryViolet, AppColors.electricBlue],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.primaryViolet.withValues(alpha: 0.45),
+                blurRadius: 22,
+                spreadRadius: 2,
+              ),
+            ],
+          ),
+          child: IconButton(
             tooltip: showPause ? 'Pause' : 'Play',
             onPressed: _svc.togglePlay,
-            style: IconButton.styleFrom(
-              backgroundColor: _primary,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
             icon: AnimatedSwitcher(
               duration: _motionDuration(context, 160),
               child: Icon(
                 showPause ? Icons.pause_rounded : Icons.play_arrow_rounded,
                 key: ValueKey(showPause),
-                size: 34,
+                color: Colors.white,
+                size: 38,
               ),
             ),
           ),
@@ -593,59 +626,84 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
         IconButton(
           tooltip: 'Next track',
           onPressed: _svc.next,
-          icon: const Icon(Icons.skip_next_rounded, size: 34),
+          icon: const Icon(Icons.skip_next_rounded, size: 36),
           color: _foreground,
         ),
         IconButton(
           tooltip: _repeat ? 'Turn repeat off' : 'Turn repeat on',
           isSelected: _repeat,
           onPressed: _svc.toggleRepeat,
-          icon: const Icon(Icons.repeat_rounded, size: 21),
-          color: _repeat ? _primary : _muted,
+          icon: const Icon(Icons.repeat_rounded, size: 22),
+          color: _repeat ? AppColors.softCyan : _muted,
         ),
       ],
     );
   }
 
   Widget _buildQueuePreview() {
-    return Material(
-      color: _surface,
-      borderRadius: BorderRadius.circular(16),
-      child: InkWell(
-        onTap: () => _showQueueBottomSheet(context),
-        borderRadius: BorderRadius.circular(16),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              const Icon(Icons.queue_music_rounded, color: _primary, size: 24),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'UP NEXT',
-                      style: TextStyle(
-                        color: _muted,
-                        fontSize: 10,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 1.4,
-                      ),
-                    ),
-                    const SizedBox(height: 5),
-                    Text(
-                      _nextTitle(),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(color: _foreground, fontSize: 13),
-                    ),
-                  ],
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.glassBackground,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: AppColors.glassBorder,
+          width: 1,
+        ),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x33050914),
+            blurRadius: 14,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(20),
+        child: InkWell(
+          onTap: () => _showQueueBottomSheet(context),
+          borderRadius: BorderRadius.circular(20),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryViolet.withValues(alpha: 0.16),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(Icons.queue_music_rounded, color: AppColors.primaryViolet, size: 22),
                 ),
-              ),
-              const SizedBox(width: 8),
-              const Icon(Icons.chevron_right_rounded, color: _muted, size: 20),
-            ],
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'UP NEXT',
+                        style: TextStyle(
+                          color: _muted,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 1.4,
+                        ),
+                      ),
+                      const SizedBox(height: 5),
+                      Text(
+                        _nextTitle(),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(color: _foreground, fontSize: 13),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                const Icon(Icons.chevron_right_rounded, color: _muted, size: 20),
+              ],
+            ),
           ),
         ),
       ),

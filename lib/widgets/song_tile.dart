@@ -27,35 +27,43 @@ class SongTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return RepaintBoundary(
       child: Container(
-        margin: const EdgeInsets.only(bottom: 4),
+        margin: const EdgeInsets.only(bottom: 6),
         decoration: BoxDecoration(
-          color: isActive
-              ? AppColors.accent.withValues(alpha: 0.08)
-              : Colors.transparent,
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: isActive
-                ? AppColors.accent.withValues(alpha: 0.25)
-                : Colors.transparent,
+                ? AppColors.primaryViolet.withValues(alpha: 0.5)
+                : AppColors.glassBorder,
             width: 1,
           ),
+          boxShadow: isActive
+              ? [
+                  BoxShadow(
+                    color: AppColors.primaryViolet.withValues(alpha: 0.15),
+                    blurRadius: 12,
+                    spreadRadius: 1,
+                  ),
+                ]
+              : null,
         ),
         child: Material(
-          color: Colors.transparent,
-          borderRadius: BorderRadius.circular(10),
+          color: isActive
+              ? AppColors.primaryViolet.withValues(alpha: 0.14)
+              : AppColors.glassBackground,
+          borderRadius: BorderRadius.circular(16),
           child: ListTile(
             onTap: onTap,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(16),
             ),
             contentPadding: const EdgeInsets.symmetric(
-              horizontal: 10,
-              vertical: 2,
+              horizontal: 12,
+              vertical: 4,
             ),
             leading: AlbumArt(
               gradientId: song.gradientId,
-              size: 46,
-              borderRadius: 8,
+              size: 48,
+              borderRadius: 12,
               showShadow: false,
               imageUrl: song.albumArtUrl,
             ),

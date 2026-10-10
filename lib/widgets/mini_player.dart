@@ -55,13 +55,14 @@ class MiniPlayer extends StatelessWidget {
             }
           },
           child: GlassCard(
-            borderRadius: 12,
+            borderRadius: 20,
             blurSigma: 0, // no BackdropFilter — sits over scrolling content
             padding: const EdgeInsets.fromLTRB(10, 8, 10, 6),
-            color: AppColors.backgroundSurface,
+            color: const Color(0xE6171D30),
             borderColor: isPlaying
-                ? AppColors.accent.withValues(alpha: 0.35)
-                : AppColors.surfaceBorder,
+                ? AppColors.primaryViolet.withValues(alpha: 0.55)
+                : AppColors.glassBorder,
+            glowColor: isPlaying ? AppColors.primaryViolet : null,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -72,8 +73,8 @@ class MiniPlayer extends StatelessWidget {
                       tag: 'album-art-${song.identity}',
                       child: AlbumArt(
                         gradientId: song.gradientId,
-                        size: 44,
-                        borderRadius: 10,
+                        size: 46,
+                        borderRadius: 14,
                         showShadow: false,
                         imageUrl: song.albumArtUrl,
                       ),
@@ -126,10 +127,10 @@ class MiniPlayer extends StatelessWidget {
                     IconButton(
                       tooltip: showPause ? 'Pause' : 'Play',
                       style: IconButton.styleFrom(
-                        backgroundColor: AppColors.accent,
+                        backgroundColor: AppColors.primaryViolet,
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(16),
                         ),
                       ),
                       icon: AnimatedSwitcher(
@@ -164,7 +165,7 @@ class MiniPlayer extends StatelessWidget {
                       IconButton(
                         icon: const Icon(
                           Icons.close_rounded,
-                          color: Colors.white70,
+                          color: AppColors.textMuted,
                           size: 20,
                         ),
                         onPressed: onCloseTap,
@@ -230,7 +231,7 @@ class MiniPlayer extends StatelessWidget {
                               : 'Playback progress',
                           backgroundColor: Colors.white.withValues(alpha: 0.08),
                           valueColor: const AlwaysStoppedAnimation<Color>(
-                            AppColors.accent,
+                            AppColors.softCyan,
                           ),
                           minHeight: 2.5,
                         );

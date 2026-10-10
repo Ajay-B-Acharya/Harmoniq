@@ -6,6 +6,7 @@ import '../models/playlist.dart';
 import '../theme/app_colors.dart';
 import '../widgets/song_tile.dart';
 import '../widgets/album_art.dart';
+import '../widgets/spatial_background.dart';
 
 class LibraryScreen extends StatefulWidget {
   final AudioService audioService;
@@ -88,102 +89,119 @@ class LibraryScreenState extends State<LibraryScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(
-        bottom: false,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 20),
+      backgroundColor: AppColors.background,
+      body: SpatialBackground(
+        child: SafeArea(
+          bottom: false,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 16),
 
-              // ── Title + add button ────────────────────────────────────────
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Your Library',
-                    style: Theme.of(context)
-                        .textTheme
-                        .headlineMedium
-                        ?.copyWith(
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: -0.6,
-                        ),
-                  ),
-                  if (_selectedCategoryIndex == 1)
-                    IconButton(
-                      tooltip: 'New playlist',
-                      icon: const Icon(
-                        Icons.add_rounded,
-                        color: AppColors.textPrimary,
-                        size: 26,
-                      ),
-                      onPressed: _showCreatePlaylistDialog,
-                      splashRadius: 24,
-                    )
-                  else if (_selectedCategoryIndex == 5)
-                    IconButton(
-                      tooltip: 'Scan device',
-                      icon: const Icon(
-                        Icons.refresh_rounded,
-                        color: AppColors.textPrimary,
-                        size: 24,
-                      ),
-                      onPressed: widget.audioService.scanLocalSongs,
-                      splashRadius: 24,
+                // ── Title + add button ────────────────────────────────────────
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Your Library',
+                      style: Theme.of(context)
+                          .textTheme
+                          .headlineMedium
+                          ?.copyWith(
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.6,
+                            color: AppColors.textPrimary,
+                          ),
                     ),
-                ],
-              ),
-              const SizedBox(height: 16),
-
-              // ── Category chips ────────────────────────────────────────────
-              SizedBox(
-                height: 36,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  physics: const BouncingScrollPhysics(),
-                  itemCount: _categories.length,
-                  itemBuilder: (context, index) {
-                    final isSelected = _selectedCategoryIndex == index;
-                    return GestureDetector(
-                      onTap: () =>
-                          setState(() => _selectedCategoryIndex = index),
-                      child: Container(
-                        margin: const EdgeInsets.only(right: 8),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 7,
+                    if (_selectedCategoryIndex == 1)
+                      IconButton(
+                        tooltip: 'New playlist',
+                        icon: const Icon(
+                          Icons.add_rounded,
+                          color: AppColors.softCyan,
+                          size: 26,
                         ),
-                        decoration: BoxDecoration(
-                          color: isSelected
-                              ? AppColors.accent
-                              : AppColors.surfaceHigh,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                            color: isSelected
-                                ? Colors.transparent
-                                : AppColors.surfaceBorder,
-                            width: 1,
-                          ),
+                        onPressed: _showCreatePlaylistDialog,
+                        splashRadius: 24,
+                      )
+                    else if (_selectedCategoryIndex == 5)
+                      IconButton(
+                        tooltip: 'Scan device',
+                        icon: const Icon(
+                          Icons.refresh_rounded,
+                          color: AppColors.softCyan,
+                          size: 24,
                         ),
-                        child: Text(
-                          _categories[index],
-                          style: TextStyle(
-                            color: isSelected
-                                ? Colors.white
-                                : AppColors.textSecondary,
-                            fontSize: 12,
-                            fontWeight:
-                                isSelected ? FontWeight.w700 : FontWeight.w500,
-                          ),
-                        ),
+                        onPressed: widget.audioService.scanLocalSongs,
+                        splashRadius: 24,
                       ),
-                    );
-                  },
+                  ],
                 ),
-              ),
-              const SizedBox(height: 18),
+                const SizedBox(height: 16),
+
+                // ── Category chips (Spatial UI pills) ─────────────────────────
+                SizedBox(
+                  height: 38,
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    physics: const BouncingScrollPhysics(),
+                    itemCount: _categories.length,
+                    itemBuilder: (context, index) {
+                      final isSelected = _selectedCategoryIndex == index;
+                      return GestureDetector(
+                        onTap: () =>
+                            setState(() => _selectedCategoryIndex = index),
+                        child: Container(
+                          margin: const EdgeInsets.only(right: 8),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            gradient: isSelected
+                                ? LinearGradient(
+                                    colors: [
+                                      AppColors.primaryViolet.withValues(alpha: 0.35),
+                                      AppColors.electricBlue.withValues(alpha: 0.20),
+                                    ],
+                                  )
+                                : null,
+                            color: isSelected ? null : AppColors.glassBackground,
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: isSelected
+                                  ? AppColors.primaryViolet.withValues(alpha: 0.7)
+                                  : AppColors.glassBorder,
+                              width: 1,
+                            ),
+                            boxShadow: isSelected
+                                ? [
+                                    BoxShadow(
+                                      color: AppColors.primaryViolet.withValues(alpha: 0.2),
+                                      blurRadius: 8,
+                                    ),
+                                  ]
+                                : null,
+                          ),
+                          child: Text(
+                            _categories[index],
+                            style: TextStyle(
+                              color: isSelected
+                                  ? AppColors.textPrimary
+                                  : AppColors.textMuted,
+                              fontSize: 12.5,
+                              fontWeight:
+                                  isSelected ? FontWeight.w700 : FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                const SizedBox(height: 18),
 
               // ── Content ───────────────────────────────────────────────────
               Expanded(
@@ -200,8 +218,9 @@ class LibraryScreenState extends State<LibraryScreen> {
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildCategoryContent({
     required List<Playlist> playlists,
@@ -318,14 +337,21 @@ class LibraryScreenState extends State<LibraryScreen> {
             }
           },
           child: Container(
-            padding: const EdgeInsets.all(10),
+            padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: AppColors.backgroundSurface,
-              borderRadius: BorderRadius.circular(10),
+              color: AppColors.glassBackground,
+              borderRadius: BorderRadius.circular(18),
               border: Border.all(
-                color: Colors.white.withValues(alpha: 0.05),
+                color: AppColors.glassBorder,
                 width: 1,
               ),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x33000000),
+                  blurRadius: 10,
+                  offset: Offset(0, 3),
+                ),
+              ],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -335,7 +361,7 @@ class LibraryScreenState extends State<LibraryScreen> {
                     builder: (context, constraints) => AlbumArt(
                       gradientId: playlist.gradientId,
                       size: constraints.biggest.shortestSide,
-                      borderRadius: 8,
+                      borderRadius: 14,
                       showShadow: false,
                       overlayIcon: Icons.playlist_play_rounded,
                     ),
@@ -389,14 +415,21 @@ class LibraryScreenState extends State<LibraryScreen> {
         return GestureDetector(
           onTap: () => _onSongTap(albumSongs[0]),
           child: Container(
-            padding: const EdgeInsets.all(10),
+            padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: AppColors.backgroundSurface,
-              borderRadius: BorderRadius.circular(10),
+              color: AppColors.glassBackground,
+              borderRadius: BorderRadius.circular(18),
               border: Border.all(
-                color: Colors.white.withValues(alpha: 0.05),
+                color: AppColors.glassBorder,
                 width: 1,
               ),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x33000000),
+                  blurRadius: 10,
+                  offset: Offset(0, 3),
+                ),
+              ],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -406,7 +439,7 @@ class LibraryScreenState extends State<LibraryScreen> {
                     builder: (context, constraints) => AlbumArt(
                       gradientId: albumSongs[0].gradientId,
                       size: constraints.biggest.shortestSide,
-                      borderRadius: 8,
+                      borderRadius: 14,
                       showShadow: false,
                       overlayIcon: Icons.album_rounded,
                     ),

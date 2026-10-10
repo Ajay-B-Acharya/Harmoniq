@@ -257,7 +257,7 @@ void main() {
           textScale: 1.5,
         ),
       );
-      const labels = ['Home', 'Search', 'Music', 'Library'];
+      const labels = ['Home', 'Explore', 'Library', 'Search', 'Profile'];
       for (var index = 0; index < labels.length; index++) {
         final target = find.bySemanticsLabel(labels[index]);
         expect(target, findsOneWidget);
@@ -285,7 +285,7 @@ void main() {
           Tristate.isTrue,
         );
       }
-      expect(taps, [0, 1, 2, 3]);
+      expect(taps, [0, 1, 2, 3, 4]);
       expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox.shrink());
     } finally {

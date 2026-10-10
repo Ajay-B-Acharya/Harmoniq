@@ -15,12 +15,14 @@ class GlassCard extends StatelessWidget {
   final Widget child;
   final double borderRadius;
 
-  /// Set to 0 to disable BackdropFilter completely (best for MiniPlayer,
-  /// BottomNav, or any card over frequently-repainting content).
+  /// Set to 0 to disable BackdropFilter completely (best for scrolling content).
   final double blurSigma;
 
   final Color? color;
+  final Gradient? gradient;
   final Color? borderColor;
+  final double borderWidth;
+  final Color? glowColor;
   final EdgeInsetsGeometry? padding;
   final EdgeInsetsGeometry? margin;
   final double? width;
@@ -29,10 +31,13 @@ class GlassCard extends StatelessWidget {
   const GlassCard({
     super.key,
     required this.child,
-    this.borderRadius = 12,
+    this.borderRadius = 16,
     this.blurSigma = 0,
     this.color,
+    this.gradient,
     this.borderColor,
+    this.borderWidth = 1.0,
+    this.glowColor,
     this.padding,
     this.margin,
     this.width,
@@ -44,15 +49,31 @@ class GlassCard extends StatelessWidget {
     final inner = Container(
       padding: padding,
       decoration: BoxDecoration(
-        color: color ?? AppColors.glassBackground,
+        color: gradient == null ? (color ?? AppColors.glassBackground) : null,
+        gradient: gradient,
         borderRadius: BorderRadius.circular(borderRadius),
         border: Border.all(
           color: borderColor ?? AppColors.glassBorder,
-          width: 1.0,
+          width: borderWidth,
         ),
       ),
       child: child,
     );
+
+    final shadows = <BoxShadow>[
+      BoxShadow(
+        color: AppColors.glassShadow,
+        blurRadius: 14,
+        spreadRadius: -2,
+        offset: const Offset(0, 4),
+      ),
+      if (glowColor != null)
+        BoxShadow(
+          color: glowColor!.withValues(alpha: 0.28),
+          blurRadius: 16,
+          spreadRadius: 1,
+        ),
+    ];
 
     return Container(
       width: width,
@@ -60,18 +81,10 @@ class GlassCard extends StatelessWidget {
       margin: margin,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(borderRadius),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.glassShadow,
-            blurRadius: 10,
-            spreadRadius: -2,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        boxShadow: shadows,
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(borderRadius),
-        // Only pay the BackdropFilter GPU cost when blur is actually needed.
         child: blurSigma > 0
             ? BackdropFilter(
                 filter: ImageFilter.blur(sigmaX: blurSigma, sigmaY: blurSigma),

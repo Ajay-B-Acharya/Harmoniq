@@ -5,19 +5,22 @@ import 'package:flutter/services.dart';
 import 'package:just_audio_background/just_audio_background.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'theme/app_colors.dart';
 import 'theme/app_theme.dart';
 import 'services/audio_service.dart';
 import 'services/auth_service.dart';
 import 'services/supabase_service.dart';
 import 'screens/home_screen.dart';
-import 'screens/search_screen.dart';
-import 'screens/music_screen.dart';
+import 'screens/explore_screen.dart';
 import 'screens/library_screen.dart';
+import 'screens/search_screen.dart';
+import 'screens/profile_screen.dart';
 import 'screens/now_playing_screen.dart';
 import 'widgets/auth_gate.dart';
 import 'widgets/bottom_nav.dart';
 import 'widgets/mini_player.dart';
 import 'widgets/motion.dart';
+import 'widgets/spatial_background.dart';
 import 'models/song.dart';
 import 'models/youtube_video.dart';
 import 'widgets/opening_animation.dart';
@@ -165,6 +168,7 @@ class _MainContainerState extends State<MainContainer> {
         onSearchTap: _openSearch,
         onVideoTap: _playYoutube,
         onVideoQueueTap: _playYoutubeQueue,
+        onProfileTap: () => _onTabTap(4),
         audioService: _audioService,
         authService: _authService,
         onSongTap: (song, [queue]) =>
@@ -175,20 +179,13 @@ class _MainContainerState extends State<MainContainer> {
           }
         },
       ),
-      SearchScreen(
-        key: _searchKey,
-        onVideoTap: _playYoutube,
-        onVideoQueueTap: _playYoutubeQueue,
-        audioService: _audioService,
-        onSongTap: (song) => _playSong(song, contextQueue: _audioService.songs),
-        onFavoriteTap: _audioService.toggleFavorite,
-      ),
-      MusicScreen(
+      ExploreScreen(
         audioService: _audioService,
         onSongTap: (song, [queue]) =>
             _playSong(song, contextQueue: queue ?? _audioService.songs),
         onFavoriteTap: _audioService.toggleFavorite,
         onSearchTap: _openSearch,
+        onProfileTap: () => _onTabTap(4),
       ),
       LibraryScreen(
         key: _libraryKey,
@@ -197,13 +194,28 @@ class _MainContainerState extends State<MainContainer> {
         onFavoriteTap: _audioService.toggleFavorite,
         onCreatePlaylist: _audioService.createPlaylist,
       ),
+      SearchScreen(
+        key: _searchKey,
+        onVideoTap: _playYoutube,
+        onVideoQueueTap: _playYoutubeQueue,
+        onProfileTap: () => _onTabTap(4),
+        audioService: _audioService,
+        onSongTap: (song) => _playSong(song, contextQueue: _audioService.songs),
+        onFavoriteTap: _audioService.toggleFavorite,
+      ),
+      ProfileScreen(
+        audioService: _audioService,
+        authService: _authService,
+        onLocalTap: _openLocalMusic,
+        onSearchTap: _openSearch,
+      ),
     ];
   }
 
   void _openLocalMusic() {
-    _onTabTap(3);
+    _onTabTap(2);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _libraryKey.currentState?.selectCategory(3);
+      if (mounted) _libraryKey.currentState?.selectCategory(5);
     });
   }
 
@@ -246,7 +258,7 @@ class _MainContainerState extends State<MainContainer> {
   }
 
   void _openSearch(String query) {
-    _pageController.jumpToPage(1);
+    _onTabTap(3);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _searchKey.currentState?.setQuery(query);
     });
@@ -290,18 +302,21 @@ class _MainContainerState extends State<MainContainer> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 1100),
-          child: PageView(
-            controller: _pageController,
-            onPageChanged: (index) => setState(() => _currentIndex = index),
-            children: List.generate(
-              _pages.length,
-              (index) => _RetainedPage(
-                child: TickerMode(
-                  enabled: index == _currentIndex,
-                  child: _pages[index],
+      backgroundColor: AppColors.background,
+      body: SpatialBackground(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 1100),
+            child: PageView(
+              controller: _pageController,
+              onPageChanged: (index) => setState(() => _currentIndex = index),
+              children: List.generate(
+                _pages.length,
+                (index) => _RetainedPage(
+                  child: TickerMode(
+                    enabled: index == _currentIndex,
+                    child: _pages[index],
+                  ),
                 ),
               ),
             ),
