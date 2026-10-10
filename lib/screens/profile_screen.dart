@@ -6,7 +6,6 @@ import '../services/audio_service.dart';
 import '../services/auth_service.dart';
 import '../theme/app_colors.dart';
 import '../widgets/account_dialog.dart';
-import '../widgets/harmoniq_emblem.dart';
 import '../widgets/motion.dart';
 import '../widgets/spatial_background.dart';
 
@@ -89,12 +88,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
               title: Text(
                 opt,
                 style: TextStyle(
-                  color: isSelected ? AppColors.softCyan : AppColors.textPrimary,
+                  color: isSelected
+                      ? AppColors.softCyan
+                      : AppColors.textPrimary,
                   fontWeight: isSelected ? FontWeight.w700 : FontWeight.w400,
                 ),
               ),
               trailing: isSelected
-                  ? const Icon(Icons.check_circle_rounded, color: AppColors.softCyan)
+                  ? const Icon(
+                      Icons.check_circle_rounded,
+                      color: AppColors.softCyan,
+                    )
                   : null,
               onTap: () {
                 _setAudioQuality(opt.split(' ').first);
@@ -122,12 +126,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
         content: const Text(
           'Your listening history and playlists are stored locally and synced only with your authenticated Supabase account. No third-party tracking is enabled.',
-          style: TextStyle(color: AppColors.textSecondary, fontSize: 13.5, height: 1.4),
+          style: TextStyle(
+            color: AppColors.textSecondary,
+            fontSize: 13.5,
+            height: 1.4,
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('OK', style: TextStyle(color: AppColors.primaryViolet)),
+            child: const Text(
+              'OK',
+              style: TextStyle(color: AppColors.primaryViolet),
+            ),
           ),
         ],
       ),
@@ -163,7 +174,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel', style: TextStyle(color: AppColors.textMuted)),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: AppColors.textMuted),
+            ),
           ),
           FilledButton(
             style: FilledButton.styleFrom(
@@ -183,9 +197,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
         if (mounted) setState(() {});
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Sign out notice: $e')),
-          );
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text('Sign out notice: $e')));
         }
       }
     }
@@ -237,9 +250,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
       builder: (context, _) {
         final user = widget.authService.currentUser;
         final isAuthenticated = user != null;
-        final username = user?.userMetadata?['username'] as String? ??
+        final username =
+            user?.userMetadata?['username'] as String? ??
             user?.userMetadata?['display_name'] as String? ??
-            (user?.email != null ? user!.email!.split('@').first : 'Guest User');
+            (user?.email != null
+                ? user!.email!.split('@').first
+                : 'Guest User');
 
         final favorites = widget.audioService.favorites;
         final playlists = widget.audioService.playlists;
@@ -267,57 +283,39 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       child: Row(
                         children: [
                           Container(
-                            width: 38,
-                            height: 38,
+                            width: 36,
+                            height: 36,
                             decoration: BoxDecoration(
-                              color: AppColors.glassBackground,
+                              color: AppColors.backgroundSurface,
                               borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: AppColors.glassBorder),
+                              border: Border.all(
+                                color: AppColors.surfaceBorder,
+                              ),
                             ),
                             child: const Icon(
                               Icons.grid_view_rounded,
-                              size: 19,
+                              size: 18,
                               color: AppColors.textPrimary,
                             ),
                           ),
-                          const SizedBox(width: 12),
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Container(
-                                width: 26,
-                                height: 26,
-                                decoration: BoxDecoration(
-                                  color: AppColors.primaryViolet.withValues(alpha: 0.18),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                alignment: Alignment.center,
-                                child: const HarmoniqEmblem(size: 20),
+                          const SizedBox(width: 8),
+                          const Expanded(
+                            child: Text(
+                              'Harmoniq',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 19,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: -0.5,
+                                color: AppColors.textPrimary,
                               ),
-                              const SizedBox(width: 8),
-                              const Text(
-                                'Harmoniq',
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.w700,
-                                  letterSpacing: -0.5,
-                                  color: AppColors.textPrimary,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const Spacer(),
-                          IconButton(
-                            tooltip: 'Notifications',
-                            onPressed: () {},
-                            icon: const Icon(
-                              Icons.notifications_none_rounded,
-                              size: 22,
-                              color: AppColors.textPrimary,
                             ),
                           ),
                           IconButton(
-                            tooltip: isAuthenticated ? 'Edit Account' : 'Sign In',
+                            tooltip: isAuthenticated
+                                ? 'Edit Account'
+                                : 'Sign In',
                             onPressed: () {
                               AccountDialog.show(
                                 context,
@@ -330,7 +328,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   ? Icons.edit_outlined
                                   : Icons.login_rounded,
                               size: 21,
-                              color: AppColors.softCyan,
+                              color: AppColors.accentLight,
                             ),
                           ),
                         ],
@@ -340,34 +338,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                   // Profile Avatar, Name, and Badges (Screenshot 1)
                   SliverPadding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 8,
+                    ),
                     sliver: SliverToBoxAdapter(
                       child: Column(
                         children: [
-                          // Glowing circular avatar ring (cyan to violet)
+                          // Simple outlined avatar keeps the profile in focus.
                           Center(
                             child: Container(
-                              width: 104,
-                              height: 104,
-                              padding: const EdgeInsets.all(3.5),
+                              width: 96,
+                              height: 96,
+                              padding: const EdgeInsets.all(2),
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                gradient: const LinearGradient(
-                                  colors: [
-                                    AppColors.softCyan,
-                                    AppColors.primaryViolet,
-                                    AppColors.secondaryPurple,
-                                  ],
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: AppColors.primaryViolet.withValues(alpha: 0.35),
-                                    blurRadius: 20,
-                                    spreadRadius: 2,
+                                border: Border.all(
+                                  color: AppColors.accent.withValues(
+                                    alpha: 0.55,
                                   ),
-                                ],
+                                  width: 1.5,
+                                ),
                               ),
                               child: Container(
                                 decoration: const BoxDecoration(
@@ -381,7 +372,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       : Icons.person_outline_rounded,
                                   size: 48,
                                   color: isAuthenticated
-                                      ? AppColors.softCyan
+                                      ? AppColors.accentLight
                                       : AppColors.textMuted,
                                 ),
                               ),
@@ -405,24 +396,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           // Membership status pill
                           Container(
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 14,
+                              horizontal: 12,
                               vertical: 4,
                             ),
                             decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [
-                                  AppColors.primaryViolet.withValues(alpha: 0.35),
-                                  AppColors.electricBlue.withValues(alpha: 0.20),
-                                ],
-                              ),
-                              borderRadius: BorderRadius.circular(16),
+                              color: AppColors.backgroundSurface,
+                              borderRadius: BorderRadius.circular(12),
                               border: Border.all(
-                                color: AppColors.primaryViolet.withValues(alpha: 0.6),
-                                width: 1,
+                                color: AppColors.surfaceBorder,
                               ),
                             ),
                             child: Text(
-                              isAuthenticated ? 'Harmoniq Member' : 'Guest Mode',
+                              isAuthenticated
+                                  ? 'Harmoniq Member'
+                                  : 'Guest Mode',
                               style: const TextStyle(
                                 color: AppColors.textPrimary,
                                 fontSize: 11.5,
@@ -435,23 +422,40 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                           // Authentic Stats pill (calculated strictly from stored data)
                           Container(
+                            width: double.infinity,
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 20,
+                              horizontal: 10,
                               vertical: 10,
                             ),
                             decoration: BoxDecoration(
-                              color: AppColors.glassBackground,
-                              borderRadius: BorderRadius.circular(24),
-                              border: Border.all(color: AppColors.glassBorder),
+                              color: AppColors.backgroundSurface,
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                color: AppColors.surfaceBorder,
+                              ),
                             ),
                             child: Row(
-                              mainAxisSize: MainAxisSize.min,
                               children: [
-                                _statSegment('${favorites.length}', 'Liked'),
+                                Expanded(
+                                  child: _statSegment(
+                                    '${favorites.length}',
+                                    'Liked',
+                                  ),
+                                ),
                                 _statDivider(),
-                                _statSegment('${playlists.length}', 'Playlists'),
+                                Expanded(
+                                  child: _statSegment(
+                                    '${playlists.length}',
+                                    'Playlists',
+                                  ),
+                                ),
                                 _statDivider(),
-                                _statSegment('${history.length}', 'History'),
+                                Expanded(
+                                  child: _statSegment(
+                                    '${history.length}',
+                                    'History',
+                                  ),
+                                ),
                               ],
                             ),
                           ),
@@ -478,7 +482,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                   SliverToBoxAdapter(
                     child: SizedBox(
-                      height: 120,
+                      height: 184,
                       child: ListView(
                         scrollDirection: Axis.horizontal,
                         padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -486,28 +490,35 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           // Card 1: Listening Time
                           _activityCard(
                             title: 'Listening Time',
-                            content: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                            content: Row(
+                              crossAxisAlignment: CrossAxisAlignment.end,
                               children: [
-                                const SizedBox(height: 8),
-                                Row(
-                                  children: [
-                                    _miniBar(14, AppColors.softCyan),
-                                    _miniBar(22, AppColors.primaryViolet),
-                                    _miniBar(10, AppColors.softCyan),
-                                    _miniBar(28, AppColors.electricBlue),
-                                    _miniBar(18, AppColors.primaryViolet),
-                                    _miniBar(24, AppColors.softCyan),
-                                    _miniBar(16, AppColors.electricBlue),
-                                  ],
+                                SizedBox(
+                                  height: 34,
+                                  child: Row(
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    children: [
+                                      _miniBar(14, AppColors.accentLight),
+                                      _miniBar(22, AppColors.accent),
+                                      _miniBar(10, AppColors.accentLight),
+                                      _miniBar(28, AppColors.electricBlue),
+                                      _miniBar(18, AppColors.accent),
+                                      _miniBar(24, AppColors.accentLight),
+                                      _miniBar(16, AppColors.electricBlue),
+                                    ],
+                                  ),
                                 ),
-                                const Spacer(),
-                                Text(
-                                  '$listeningTimeStr recently',
-                                  style: const TextStyle(
-                                    color: AppColors.textMuted,
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w500,
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    '$listeningTimeStr recently',
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      color: AppColors.textMuted,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w500,
+                                    ),
                                   ),
                                 ),
                               ],
@@ -518,23 +529,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           // Card 2: Top Genre
                           _activityCard(
                             title: 'Top Genre',
-                            content: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                const Spacer(),
-                                Text(
-                                  topGenre,
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
-                                    color: AppColors.textPrimary,
-                                    fontSize: 14.5,
-                                    fontWeight: FontWeight.w700,
-                                  ),
+                            content: Align(
+                              alignment: Alignment.centerLeft,
+                              child: Text(
+                                topGenre,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  color: AppColors.textPrimary,
+                                  fontSize: 14.5,
+                                  fontWeight: FontWeight.w700,
                                 ),
-                                const Spacer(),
-                              ],
+                              ),
                             ),
                           ),
                           const SizedBox(width: 12),
@@ -544,33 +550,39 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             title: 'Top Artists',
                             content: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
                               children: [
-                                const SizedBox(height: 10),
+                                const SizedBox(height: 7),
                                 if (topArtists.isNotEmpty)
                                   Row(
                                     children: List.generate(
                                       topArtists.length,
-                                      (i) => Container(
-                                        width: 32,
-                                        height: 32,
-                                        margin: EdgeInsets.only(
-                                          left: i == 0 ? 0 : -8,
+                                      (i) => Padding(
+                                        padding: EdgeInsets.only(
+                                          left: i == 0 ? 0 : 6,
                                         ),
-                                        decoration: BoxDecoration(
-                                          shape: BoxShape.circle,
-                                          color: AppColors.getGradientForId(i)[0],
-                                          border: Border.all(
-                                            color: AppColors.backgroundSecondary,
-                                            width: 1.5,
+                                        child: Container(
+                                          width: 30,
+                                          height: 30,
+                                          decoration: BoxDecoration(
+                                            shape: BoxShape.circle,
+                                            color: AppColors.getGradientForId(
+                                              i,
+                                            )[0],
+                                            border: Border.all(
+                                              color:
+                                                  AppColors.backgroundSecondary,
+                                              width: 1.5,
+                                            ),
                                           ),
-                                        ),
-                                        alignment: Alignment.center,
-                                        child: Text(
-                                          topArtists[i].substring(0, 1),
-                                          style: const TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 11,
-                                            fontWeight: FontWeight.w700,
+                                          alignment: Alignment.center,
+                                          child: Text(
+                                            topArtists[i].substring(0, 1),
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.w700,
+                                            ),
                                           ),
                                         ),
                                       ),
@@ -584,7 +596,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       fontSize: 12,
                                     ),
                                   ),
-                                const Spacer(),
+                                const SizedBox(height: 6),
                                 Text(
                                   topArtists.isNotEmpty
                                       ? topArtists.first
@@ -625,9 +637,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     sliver: SliverToBoxAdapter(
                       child: Container(
                         decoration: BoxDecoration(
-                          color: AppColors.glassBackground,
-                          borderRadius: BorderRadius.circular(22),
-                          border: Border.all(color: AppColors.glassBorder),
+                          color: AppColors.backgroundSurface,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: AppColors.surfaceBorder),
                         ),
                         child: Column(
                           children: [
@@ -649,7 +661,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               trailing: Text(
                                 '$_audioQuality >',
                                 style: const TextStyle(
-                                  color: AppColors.softCyan,
+                                  color: AppColors.accentLight,
                                   fontSize: 13,
                                   fontWeight: FontWeight.w600,
                                 ),
@@ -662,9 +674,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               title: 'Offline Mode',
                               trailing: Switch(
                                 value: _offlineMode,
-                                activeThumbColor: AppColors.primaryViolet,
-                                activeTrackColor: AppColors.primaryViolet.withValues(alpha: 0.35),
-                                inactiveTrackColor: Colors.white.withValues(alpha: 0.08),
+                                activeThumbColor: AppColors.accentLight,
+                                activeTrackColor: AppColors.accent.withValues(
+                                  alpha: 0.35,
+                                ),
+                                inactiveTrackColor: Colors.white.withValues(
+                                  alpha: 0.08,
+                                ),
                                 onChanged: _toggleOfflineMode,
                               ),
                               onTap: () => _toggleOfflineMode(!_offlineMode),
@@ -696,7 +712,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                   // Log Out Button (Screenshot 1: red-tinted glass panel)
                   SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(20, 22, 20, 96),
+                    padding: const EdgeInsets.fromLTRB(20, 22, 20, 112),
                     sliver: SliverToBoxAdapter(
                       child: Pressable(
                         onTap: _handleLogout,
@@ -720,16 +736,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     : Icons.login_rounded,
                                 color: isAuthenticated
                                     ? AppColors.error
-                                    : AppColors.softCyan,
+                                    : AppColors.accentLight,
                                 size: 20,
                               ),
                               const SizedBox(width: 8),
                               Text(
-                                isAuthenticated ? 'Log Out' : 'Sign In / Register',
+                                isAuthenticated
+                                    ? 'Log Out'
+                                    : 'Sign In / Register',
                                 style: TextStyle(
                                   color: isAuthenticated
                                       ? AppColors.error
-                                      : AppColors.softCyan,
+                                      : AppColors.accentLight,
                                   fontSize: 15,
                                   fontWeight: FontWeight.w600,
                                 ),
@@ -764,10 +782,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         const SizedBox(height: 2),
         Text(
           label,
-          style: const TextStyle(
-            color: AppColors.textMuted,
-            fontSize: 11,
-          ),
+          style: const TextStyle(color: AppColors.textMuted, fontSize: 11),
         ),
       ],
     );
@@ -777,21 +792,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Container(
       width: 1,
       height: 20,
-      margin: const EdgeInsets.symmetric(horizontal: 16),
+      margin: const EdgeInsets.symmetric(horizontal: 6),
       color: AppColors.glassBorder,
     );
   }
 
   Widget _activityCard({required String title, required Widget content}) {
     return Container(
-      width: 140,
-      padding: const EdgeInsets.all(12),
+      width: 148,
+      padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color: AppColors.glassBackground,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: AppColors.glassBorder),
+        color: AppColors.backgroundSurface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.surfaceBorder),
       ),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
@@ -804,7 +820,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
               fontWeight: FontWeight.w500,
             ),
           ),
-          Expanded(child: content),
+          const SizedBox(height: 8),
+          content,
         ],
       ),
     );
@@ -842,7 +859,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             fontWeight: FontWeight.w500,
           ),
         ),
-        trailing: trailing ??
+        trailing:
+            trailing ??
             const Icon(
               Icons.chevron_right_rounded,
               color: AppColors.textMuted,

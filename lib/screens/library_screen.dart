@@ -65,8 +65,9 @@ class LibraryScreenState extends State<LibraryScreen> {
     _cachedCatalogRevision = service.catalogRevision;
     _cachedLocalRevision = service.localSongsRevision;
 
-    final localIdentities =
-        service.localSongs.map((song) => song.identity).toSet();
+    final localIdentities = service.localSongs
+        .map((song) => song.identity)
+        .toSet();
     _librarySongs = [
       ...service.localSongs,
       ...service.songs.where(
@@ -106,9 +107,7 @@ class LibraryScreenState extends State<LibraryScreen> {
                   children: [
                     Text(
                       'Your Library',
-                      style: Theme.of(context)
-                          .textTheme
-                          .headlineMedium
+                      style: Theme.of(context).textTheme.headlineMedium
                           ?.copyWith(
                             fontWeight: FontWeight.w800,
                             letterSpacing: -0.6,
@@ -120,7 +119,7 @@ class LibraryScreenState extends State<LibraryScreen> {
                         tooltip: 'New playlist',
                         icon: const Icon(
                           Icons.add_rounded,
-                          color: AppColors.softCyan,
+                          color: AppColors.accentLight,
                           size: 26,
                         ),
                         onPressed: _showCreatePlaylistDialog,
@@ -131,7 +130,7 @@ class LibraryScreenState extends State<LibraryScreen> {
                         tooltip: 'Scan device',
                         icon: const Icon(
                           Icons.refresh_rounded,
-                          color: AppColors.softCyan,
+                          color: AppColors.accentLight,
                           size: 24,
                         ),
                         onPressed: widget.audioService.scanLocalSongs,
@@ -160,30 +159,16 @@ class LibraryScreenState extends State<LibraryScreen> {
                             vertical: 8,
                           ),
                           decoration: BoxDecoration(
-                            gradient: isSelected
-                                ? LinearGradient(
-                                    colors: [
-                                      AppColors.primaryViolet.withValues(alpha: 0.35),
-                                      AppColors.electricBlue.withValues(alpha: 0.20),
-                                    ],
-                                  )
-                                : null,
-                            color: isSelected ? null : AppColors.glassBackground,
-                            borderRadius: BorderRadius.circular(20),
+                            color: isSelected
+                                ? AppColors.accentDark.withValues(alpha: 0.62)
+                                : AppColors.backgroundSurface,
+                            borderRadius: BorderRadius.circular(14),
                             border: Border.all(
                               color: isSelected
-                                  ? AppColors.primaryViolet.withValues(alpha: 0.7)
-                                  : AppColors.glassBorder,
+                                  ? AppColors.accent.withValues(alpha: 0.55)
+                                  : AppColors.surfaceBorder,
                               width: 1,
                             ),
-                            boxShadow: isSelected
-                                ? [
-                                    BoxShadow(
-                                      color: AppColors.primaryViolet.withValues(alpha: 0.2),
-                                      blurRadius: 8,
-                                    ),
-                                  ]
-                                : null,
                           ),
                           child: Text(
                             _categories[index],
@@ -192,8 +177,9 @@ class LibraryScreenState extends State<LibraryScreen> {
                                   ? AppColors.textPrimary
                                   : AppColors.textMuted,
                               fontSize: 12.5,
-                              fontWeight:
-                                  isSelected ? FontWeight.w700 : FontWeight.w500,
+                              fontWeight: isSelected
+                                  ? FontWeight.w700
+                                  : FontWeight.w500,
                             ),
                           ),
                         ),
@@ -203,24 +189,24 @@ class LibraryScreenState extends State<LibraryScreen> {
                 ),
                 const SizedBox(height: 18),
 
-              // ── Content ───────────────────────────────────────────────────
-              Expanded(
-                child: ListenableBuilder(
-                  listenable: widget.audioService,
-                  builder: (context, child) => _buildCategoryContent(
-                    playlists: widget.audioService.playlists,
-                    currentSong: widget.audioService.currentSong,
-                    isPlaying: widget.audioService.isPlaying,
+                // ── Content ───────────────────────────────────────────────────
+                Expanded(
+                  child: ListenableBuilder(
+                    listenable: widget.audioService,
+                    builder: (context, child) => _buildCategoryContent(
+                      playlists: widget.audioService.playlists,
+                      currentSong: widget.audioService.currentSong,
+                      isPlaying: widget.audioService.isPlaying,
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   Widget _buildCategoryContent({
     required List<Playlist> playlists,
@@ -317,9 +303,9 @@ class LibraryScreenState extends State<LibraryScreen> {
       itemCount: playlists.length,
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
-        crossAxisSpacing: 14,
-        mainAxisSpacing: 14,
-        childAspectRatio: 0.82,
+        crossAxisSpacing: 12,
+        mainAxisSpacing: 12,
+        childAspectRatio: 0.78,
       ),
       itemBuilder: (context, index) {
         final playlist = playlists[index];
@@ -339,19 +325,9 @@ class LibraryScreenState extends State<LibraryScreen> {
           child: Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: AppColors.glassBackground,
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(
-                color: AppColors.glassBorder,
-                width: 1,
-              ),
-              boxShadow: const [
-                BoxShadow(
-                  color: Color(0x33000000),
-                  blurRadius: 10,
-                  offset: Offset(0, 3),
-                ),
-              ],
+              color: AppColors.backgroundSurface,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.surfaceBorder),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -417,19 +393,9 @@ class LibraryScreenState extends State<LibraryScreen> {
           child: Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: AppColors.glassBackground,
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(
-                color: AppColors.glassBorder,
-                width: 1,
-              ),
-              boxShadow: const [
-                BoxShadow(
-                  color: Color(0x33000000),
-                  blurRadius: 10,
-                  offset: Offset(0, 3),
-                ),
-              ],
+              color: AppColors.backgroundSurface,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.surfaceBorder),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -487,12 +453,15 @@ class LibraryScreenState extends State<LibraryScreen> {
       );
     }
 
-    final localFavs =
-        allFavorites.where((s) => s.source == SongSource.local).toList();
-    final youtubeFavs =
-        allFavorites.where((s) => s.source == SongSource.youtube).toList();
-    final legacyFavs =
-        allFavorites.where((s) => s.source == SongSource.legacy).toList();
+    final localFavs = allFavorites
+        .where((s) => s.source == SongSource.local)
+        .toList();
+    final youtubeFavs = allFavorites
+        .where((s) => s.source == SongSource.youtube)
+        .toList();
+    final legacyFavs = allFavorites
+        .where((s) => s.source == SongSource.legacy)
+        .toList();
     if (legacyFavs.isEmpty && _favoriteFilterIndex == 2) {
       _favoriteFilterIndex = 0;
     }
@@ -500,10 +469,10 @@ class LibraryScreenState extends State<LibraryScreen> {
     final filtered = _favoriteFilterIndex == 1
         ? localFavs
         : _favoriteFilterIndex == 2
-            ? legacyFavs
-            : _favoriteFilterIndex == 3
-                ? youtubeFavs
-                : allFavorites;
+        ? legacyFavs
+        : _favoriteFilterIndex == 3
+        ? youtubeFavs
+        : allFavorites;
 
     return Column(
       children: [
@@ -544,8 +513,8 @@ class LibraryScreenState extends State<LibraryScreen> {
                   _favoriteFilterIndex == 1
                       ? 'No local favorite songs'
                       : _favoriteFilterIndex == 3
-                          ? 'No YouTube favorite songs'
-                          : 'No previous-source favorite songs',
+                      ? 'No YouTube favorite songs'
+                      : 'No previous-source favorite songs',
                 )
               : ListView.builder(
                   physics: const BouncingScrollPhysics(),
@@ -582,9 +551,7 @@ class LibraryScreenState extends State<LibraryScreen> {
               : AppColors.surfaceHigh,
           borderRadius: BorderRadius.circular(6),
           border: Border.all(
-            color: isSelected
-                ? AppColors.accent
-                : AppColors.surfaceBorder,
+            color: isSelected ? AppColors.accent : AppColors.surfaceBorder,
             width: 1,
           ),
         ),
@@ -712,10 +679,7 @@ class LibraryScreenState extends State<LibraryScreen> {
             Text(
               subtitle,
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: AppColors.textMuted,
-                fontSize: 12,
-              ),
+              style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
             ),
           ],
           const SizedBox(height: 80),

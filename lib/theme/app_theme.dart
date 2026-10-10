@@ -10,9 +10,9 @@ class AppTheme {
     colorScheme: const ColorScheme.dark(
       surface: AppColors.backgroundSurface,
       primary: AppColors.accent,
-      onPrimary: Colors.white,
+      onPrimary: Color(0xFF101717),
       secondary: AppColors.electricBlue,
-      onSecondary: Colors.white,
+      onSecondary: Color(0xFF101717),
       onSurface: AppColors.textPrimary,
       outline: AppColors.surfaceBorder,
     ),
@@ -60,12 +60,10 @@ class AppTheme {
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
         backgroundColor: AppColors.accent,
-        foregroundColor: Colors.white,
+        foregroundColor: const Color(0xFF101717),
         padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
         textStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13.5),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       ),
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
@@ -74,58 +72,52 @@ class AppTheme {
         foregroundColor: AppColors.textPrimary,
         elevation: 0,
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       ),
     ),
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
         foregroundColor: AppColors.textPrimary,
         side: const BorderSide(color: AppColors.surfaceBorder),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       ),
     ),
     chipTheme: ChipThemeData(
-      backgroundColor: AppColors.surfaceHigh,
-      selectedColor: AppColors.accent.withValues(alpha: 0.25),
+      backgroundColor: AppColors.backgroundSurface,
+      selectedColor: AppColors.accent.withValues(alpha: 0.22),
       side: const BorderSide(color: AppColors.surfaceBorder),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
     ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: AppColors.glassBackground,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+      fillColor: AppColors.backgroundSurface,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(16),
         borderSide: const BorderSide(color: AppColors.surfaceBorder),
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(16),
         borderSide: const BorderSide(color: AppColors.surfaceBorder),
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(24),
-        borderSide: const BorderSide(color: AppColors.primaryViolet, width: 1.5),
+        borderRadius: BorderRadius.circular(16),
+        borderSide: const BorderSide(color: AppColors.accent, width: 1.2),
       ),
     ),
     bottomSheetTheme: const BottomSheetThemeData(
       backgroundColor: AppColors.backgroundSecondary,
       showDragHandle: true,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
     ),
     sliderTheme: SliderThemeData(
       activeTrackColor: AppColors.accent,
       inactiveTrackColor: Colors.white.withValues(alpha: 0.12),
-      thumbColor: Colors.white,
-      overlayColor: AppColors.accentLight.withValues(alpha: 0.2),
-      trackHeight: 3.5,
+      thumbColor: AppColors.textPrimary,
+      overlayColor: AppColors.accent.withValues(alpha: 0.12),
+      trackHeight: 3,
       thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
       overlayShape: const RoundSliderOverlayShape(overlayRadius: 14),
     ),

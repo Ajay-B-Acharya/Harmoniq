@@ -29,28 +29,19 @@ class SongTile extends StatelessWidget {
       child: Container(
         margin: const EdgeInsets.only(bottom: 6),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(14),
           border: Border.all(
             color: isActive
-                ? AppColors.primaryViolet.withValues(alpha: 0.5)
-                : AppColors.glassBorder,
+                ? AppColors.accent.withValues(alpha: 0.42)
+                : Colors.transparent,
             width: 1,
           ),
-          boxShadow: isActive
-              ? [
-                  BoxShadow(
-                    color: AppColors.primaryViolet.withValues(alpha: 0.15),
-                    blurRadius: 12,
-                    spreadRadius: 1,
-                  ),
-                ]
-              : null,
         ),
         child: Material(
           color: isActive
-              ? AppColors.primaryViolet.withValues(alpha: 0.14)
-              : AppColors.glassBackground,
-          borderRadius: BorderRadius.circular(16),
+              ? AppColors.accent.withValues(alpha: 0.10)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(14),
           child: ListTile(
             onTap: onTap,
             shape: RoundedRectangleBorder(
@@ -75,7 +66,9 @@ class SongTile extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      color: isActive ? AppColors.accentLight : AppColors.textPrimary,
+                      color: isActive
+                          ? AppColors.accentLight
+                          : AppColors.textPrimary,
                       fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
                       fontSize: 14,
                     ),

@@ -53,8 +53,9 @@ class _ExploreScreenState extends State<ExploreScreen> {
     setState(() => _isLoading = true);
     try {
       if (YoutubeCatalog.instance.isAvailable || widget.loadVideos != null) {
-        final videos = await (widget.loadVideos?.call() ??
-            YoutubeCatalog.instance.discover(forceRefresh: refresh));
+        final videos =
+            await (widget.loadVideos?.call() ??
+                YoutubeCatalog.instance.discover(forceRefresh: refresh));
         if (mounted) {
           final onlineSongs = videos.map(Song.fromYoutube).toList();
           setState(() {
@@ -145,7 +146,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                               width: 26,
                               height: 26,
                               decoration: BoxDecoration(
-                                color: AppColors.primaryViolet.withValues(alpha: 0.18),
+                                color: AppColors.backgroundSurface,
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               alignment: Alignment.center,
@@ -181,8 +182,9 @@ class _ExploreScreenState extends State<ExploreScreen> {
                             padding: const EdgeInsets.all(2),
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              gradient: const LinearGradient(
-                                colors: [AppColors.softCyan, AppColors.primaryViolet],
+                              color: AppColors.backgroundSurface,
+                              border: Border.all(
+                                color: AppColors.surfaceBorder,
                               ),
                             ),
                             child: Container(
@@ -193,7 +195,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                               child: const Icon(
                                 Icons.person_rounded,
                                 size: 20,
-                                color: AppColors.softCyan,
+                                color: AppColors.accentLight,
                               ),
                             ),
                           ),
@@ -263,15 +265,30 @@ class _ExploreScreenState extends State<ExploreScreen> {
                       scrollDirection: Axis.horizontal,
                       padding: const EdgeInsets.symmetric(horizontal: 20),
                       children: [
-                        _genreCard('Pop', const [Color(0xFF8B2B71), Color(0xFF261033)]),
+                        _genreCard('Pop', const [
+                          Color(0xFF8B2B71),
+                          Color(0xFF261033),
+                        ]),
                         const SizedBox(width: 12),
-                        _genreCard('Hip-Hop', const [Color(0xFF243B6B), Color(0xFF0F1836)]),
+                        _genreCard('Hip-Hop', const [
+                          Color(0xFF243B6B),
+                          Color(0xFF0F1836),
+                        ]),
                         const SizedBox(width: 12),
-                        _genreCard('Rock', const [Color(0xFF6B3124), Color(0xFF29100D)]),
+                        _genreCard('Rock', const [
+                          Color(0xFF6B3124),
+                          Color(0xFF29100D),
+                        ]),
                         const SizedBox(width: 12),
-                        _genreCard('Electronic', const [Color(0xFF195B6E), Color(0xFF09222E)]),
+                        _genreCard('Electronic', const [
+                          Color(0xFF195B6E),
+                          Color(0xFF09222E),
+                        ]),
                         const SizedBox(width: 12),
-                        _genreCard('Bollywood', const [Color(0xFF6E4219), Color(0xFF2E1B09)]),
+                        _genreCard('Bollywood', const [
+                          Color(0xFF6E4219),
+                          Color(0xFF2E1B09),
+                        ]),
                       ],
                     ),
                   ),
@@ -303,7 +320,10 @@ class _ExploreScreenState extends State<ExploreScreen> {
                         _trendingPlaylistCard(
                           title: 'Global Hits',
                           icon: Icons.public_rounded,
-                          gradient: const [Color(0xFF1B3B59), Color(0xFF0C1B2B)],
+                          gradient: const [
+                            Color(0xFF1B3B59),
+                            Color(0xFF0C1B2B),
+                          ],
                           onTap: () {
                             if (catalogue.isNotEmpty) {
                               widget.onSongTap(catalogue.first, catalogue);
@@ -316,7 +336,10 @@ class _ExploreScreenState extends State<ExploreScreen> {
                         _trendingPlaylistCard(
                           title: 'Viral Tracks',
                           icon: Icons.star_rounded,
-                          gradient: const [Color(0xFF481C5E), Color(0xFF1F0B2B)],
+                          gradient: const [
+                            Color(0xFF481C5E),
+                            Color(0xFF1F0B2B),
+                          ],
                           onTap: () {
                             if (catalogue.length > 1) {
                               widget.onSongTap(catalogue[1], catalogue);
@@ -353,13 +376,29 @@ class _ExploreScreenState extends State<ExploreScreen> {
                       scrollDirection: Axis.horizontal,
                       padding: const EdgeInsets.symmetric(horizontal: 20),
                       children: [
-                        _moodChip('Focus', Icons.album_rounded, AppColors.primaryViolet),
+                        _moodChip(
+                          'Focus',
+                          Icons.album_rounded,
+                          AppColors.accentLight,
+                        ),
                         const SizedBox(width: 10),
-                        _moodChip('Workout', Icons.fitness_center_rounded, const Color(0xFFFF69B4)),
+                        _moodChip(
+                          'Workout',
+                          Icons.fitness_center_rounded,
+                          const Color(0xFFFF69B4),
+                        ),
                         const SizedBox(width: 10),
-                        _moodChip('Relax', Icons.nightlight_round, AppColors.electricBlue),
+                        _moodChip(
+                          'Relax',
+                          Icons.nightlight_round,
+                          AppColors.electricBlue,
+                        ),
                         const SizedBox(width: 10),
-                        _moodChip('Road Trip', Icons.directions_car_rounded, AppColors.softCyan),
+                        _moodChip(
+                          'Road Trip',
+                          Icons.directions_car_rounded,
+                          AppColors.softCyan,
+                        ),
                       ],
                     ),
                   ),
@@ -394,7 +433,8 @@ class _ExploreScreenState extends State<ExploreScreen> {
                         else
                           IconButton(
                             tooltip: 'Refresh discovery tracks',
-                            onPressed: () => _loadDiscoveryTracks(refresh: true),
+                            onPressed: () =>
+                                _loadDiscoveryTracks(refresh: true),
                             icon: const Icon(Icons.refresh_rounded, size: 20),
                             color: AppColors.textMuted,
                           ),
@@ -410,8 +450,10 @@ class _ExploreScreenState extends State<ExploreScreen> {
                       itemCount: catalogue.length.clamp(0, 12),
                       itemBuilder: (context, index) {
                         final song = catalogue[index];
-                        final isPlaying = widget.audioService.isPlaying &&
-                            widget.audioService.currentSong?.identity == song.identity;
+                        final isPlaying =
+                            widget.audioService.isPlaying &&
+                            widget.audioService.currentSong?.identity ==
+                                song.identity;
                         return SongTile(
                           song: song,
                           isPlaying: isPlaying,
@@ -429,7 +471,10 @@ class _ExploreScreenState extends State<ExploreScreen> {
                       child: Center(
                         child: Text(
                           'Pull down to refresh and discover new tracks',
-                          style: TextStyle(color: AppColors.textMuted, fontSize: 13),
+                          style: TextStyle(
+                            color: AppColors.textMuted,
+                            fontSize: 13,
+                          ),
                         ),
                       ),
                     ),
@@ -448,52 +493,17 @@ class _ExploreScreenState extends State<ExploreScreen> {
     return Container(
       height: 165,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(22),
         gradient: const LinearGradient(
-          colors: [
-            Color(0xFF263359),
-            Color(0xFF1A1C3B),
-            Color(0xFF101522),
-          ],
+          colors: [Color(0xFF293A3E), Color(0xFF182329), Color(0xFF121A20)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        border: Border.all(
-          color: AppColors.primaryViolet.withValues(alpha: 0.45),
-          width: 1.2,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primaryViolet.withValues(alpha: 0.2),
-            blurRadius: 18,
-            offset: const Offset(0, 5),
-          ),
-        ],
+        border: Border.all(color: AppColors.surfaceBorder),
       ),
       child: Stack(
         fit: StackFit.expand,
         children: [
-          // Ambient lighting
-          Positioned(
-            right: -10,
-            top: -10,
-            width: 140,
-            height: 140,
-            child: IgnorePointer(
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: RadialGradient(
-                    colors: [
-                      AppColors.softCyan.withValues(alpha: 0.25),
-                      Colors.transparent,
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-
           Padding(
             padding: const EdgeInsets.all(20),
             child: Column(
@@ -526,19 +536,12 @@ class _ExploreScreenState extends State<ExploreScreen> {
                   onTap: _shufflePlay,
                   child: Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
+                      horizontal: 18,
                       vertical: 9,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.92),
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: const [
-                        BoxShadow(
-                          color: Color(0x44000000),
-                          blurRadius: 10,
-                          offset: Offset(0, 3),
-                        ),
-                      ],
+                      color: AppColors.accentLight,
+                      borderRadius: BorderRadius.circular(14),
                     ),
                     child: const Row(
                       mainAxisSize: MainAxisSize.min,
@@ -546,7 +549,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                         Icon(
                           Icons.play_arrow_rounded,
                           size: 19,
-                          color: Color(0xFF101522),
+                          color: Color(0xFF101717),
                         ),
                         SizedBox(width: 6),
                         Text(
@@ -554,7 +557,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                           style: TextStyle(
                             fontSize: 12.5,
                             fontWeight: FontWeight.w700,
-                            color: Color(0xFF101522),
+                            color: Color(0xFF101717),
                           ),
                         ),
                       ],
@@ -576,19 +579,15 @@ class _ExploreScreenState extends State<ExploreScreen> {
         width: 108,
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: gradient,
+            colors: [
+              gradient.first.withValues(alpha: 0.7),
+              AppColors.backgroundSurface,
+            ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: AppColors.glassBorder),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x33000000),
-              blurRadius: 10,
-              offset: Offset(0, 3),
-            ),
-          ],
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.surfaceBorder),
         ),
         padding: const EdgeInsets.all(12),
         alignment: Alignment.bottomLeft,
@@ -610,64 +609,51 @@ class _ExploreScreenState extends State<ExploreScreen> {
     required List<Color> gradient,
     required VoidCallback onTap,
   }) {
-    return Container(
-      width: 180,
-      decoration: BoxDecoration(
-        color: AppColors.glassBackground,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: AppColors.primaryViolet.withValues(alpha: 0.45),
-          width: 1.2,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primaryViolet.withValues(alpha: 0.15),
-            blurRadius: 10,
+    return Material(
+      color: AppColors.backgroundSurface,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          width: 180,
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppColors.surfaceBorder),
           ),
-        ],
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      child: Row(
-        children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(colors: gradient),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, color: Colors.white, size: 24),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              title,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                fontSize: 13.5,
-                fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
+          child: Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(colors: gradient),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, color: Colors.white, size: 24),
               ),
-            ),
-          ),
-          GestureDetector(
-            onTap: onTap,
-            child: Container(
-              width: 32,
-              height: 32,
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.88),
-                shape: BoxShape.circle,
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
               ),
-              child: const Icon(
+              const Icon(
                 Icons.play_arrow_rounded,
-                color: Color(0xFF101522),
-                size: 20,
+                color: AppColors.accentLight,
+                size: 22,
               ),
-            ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -678,9 +664,9 @@ class _ExploreScreenState extends State<ExploreScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: AppColors.glassBackground,
-          borderRadius: BorderRadius.circular(22),
-          border: Border.all(color: color.withValues(alpha: 0.4)),
+          color: AppColors.backgroundSurface,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: AppColors.surfaceBorder),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,

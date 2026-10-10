@@ -60,9 +60,8 @@ class MiniPlayer extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(10, 8, 10, 6),
             color: const Color(0xE6171D30),
             borderColor: isPlaying
-                ? AppColors.primaryViolet.withValues(alpha: 0.55)
+                ? AppColors.accent.withValues(alpha: 0.42)
                 : AppColors.glassBorder,
-            glowColor: isPlaying ? AppColors.primaryViolet : null,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [

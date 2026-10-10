@@ -102,13 +102,13 @@ class SearchScreenState extends State<SearchScreen> {
     _local = lower.isEmpty
         ? []
         : widget.audioService.localSongs
-            .where(
-              (song) =>
-                  song.title.toLowerCase().contains(lower) ||
-                  song.artist.toLowerCase().contains(lower) ||
-                  song.album.toLowerCase().contains(lower),
-            )
-            .toList();
+              .where(
+                (song) =>
+                    song.title.toLowerCase().contains(lower) ||
+                    song.artist.toLowerCase().contains(lower) ||
+                    song.album.toLowerCase().contains(lower),
+              )
+              .toList();
   }
 
   Future<void> _submit() async {
@@ -212,7 +212,10 @@ class SearchScreenState extends State<SearchScreen> {
                         decoration: const BoxDecoration(
                           shape: BoxShape.circle,
                           gradient: LinearGradient(
-                            colors: [AppColors.softCyan, AppColors.primaryViolet],
+                            colors: [
+                              AppColors.softCyan,
+                              AppColors.primaryViolet,
+                            ],
                           ),
                         ),
                         child: Container(
@@ -238,21 +241,14 @@ class SearchScreenState extends State<SearchScreen> {
                 child: Container(
                   height: 52,
                   decoration: BoxDecoration(
-                    color: AppColors.glassBackground,
-                    borderRadius: BorderRadius.circular(26),
+                    color: AppColors.backgroundSurface,
+                    borderRadius: BorderRadius.circular(16),
                     border: Border.all(
                       color: _focusNode.hasFocus
-                          ? AppColors.primaryViolet
-                          : AppColors.primaryViolet.withValues(alpha: 0.45),
-                      width: 1.2,
+                          ? AppColors.accent.withValues(alpha: 0.68)
+                          : AppColors.surfaceBorder,
+                      width: 1,
                     ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.primaryViolet.withValues(alpha: 0.14),
-                        blurRadius: 14,
-                        offset: const Offset(0, 3),
-                      ),
-                    ],
                   ),
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Row(
@@ -356,18 +352,16 @@ class SearchScreenState extends State<SearchScreen> {
     label: Text(text),
     selected: _filter == filter,
     showCheckmark: false,
-    selectedColor: AppColors.primaryViolet,
-    backgroundColor: AppColors.glassBackground,
+    selectedColor: AppColors.accentDark,
+    backgroundColor: AppColors.backgroundSurface,
     labelStyle: TextStyle(
       color: _filter == filter ? Colors.white : AppColors.textSecondary,
       fontWeight: _filter == filter ? FontWeight.w700 : FontWeight.w500,
       fontSize: 12,
     ),
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(20),
-    ),
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
     side: BorderSide(
-      color: _filter == filter ? AppColors.primaryViolet : AppColors.glassBorder,
+      color: _filter == filter ? AppColors.accent : AppColors.surfaceBorder,
       width: 1,
     ),
     onSelected: (_) => setState(() {
@@ -402,10 +396,7 @@ class SearchScreenState extends State<SearchScreen> {
         const SizedBox(height: 4),
         Text(
           subtext,
-          style: const TextStyle(
-            fontSize: 13,
-            color: AppColors.textSecondary,
-          ),
+          style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
         ),
         const SizedBox(height: 18),
         // Recent Searches
@@ -492,12 +483,30 @@ class SearchScreenState extends State<SearchScreen> {
           spacing: 12,
           runSpacing: 12,
           children: [
-            _categoryCard('Top Playlists', const [Color(0xFF261D5A), Color(0xFF130E2B)], hasPlay: true),
-            _categoryCard('New Releases', const [Color(0xFF194052), Color(0xFF0C2029)]),
-            _categoryCard('Pop', const [Color(0xFF5D1E5A), Color(0xFF2E0F2D)], isHighlighted: true),
-            _categoryCard('Bollywood', const [Color(0xFF5A311D), Color(0xFF29160D)]),
-            _categoryCard('Hip-Hop', const [Color(0xFF1D345A), Color(0xFF0D1729)]),
-            _categoryCard('Podcasts', const [Color(0xFF381D5A), Color(0xFF1A0D29)]),
+            _categoryCard('Top Playlists', const [
+              Color(0xFF261D5A),
+              Color(0xFF130E2B),
+            ], hasPlay: true),
+            _categoryCard('New Releases', const [
+              Color(0xFF194052),
+              Color(0xFF0C2029),
+            ]),
+            _categoryCard('Pop', const [
+              Color(0xFF5D1E5A),
+              Color(0xFF2E0F2D),
+            ], isHighlighted: true),
+            _categoryCard('Bollywood', const [
+              Color(0xFF5A311D),
+              Color(0xFF29160D),
+            ]),
+            _categoryCard('Hip-Hop', const [
+              Color(0xFF1D345A),
+              Color(0xFF0D1729),
+            ]),
+            _categoryCard('Podcasts', const [
+              Color(0xFF381D5A),
+              Color(0xFF1A0D29),
+            ]),
           ],
         ),
 
@@ -515,17 +524,29 @@ class SearchScreenState extends State<SearchScreen> {
         ),
         const SizedBox(height: 10),
         Container(
-          decoration: BoxDecoration(
-            color: AppColors.glassBackground,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: AppColors.glassBorder),
+          decoration: const BoxDecoration(
+            color: AppColors.backgroundSurface,
+            border: Border(
+              top: BorderSide(color: AppColors.surfaceBorder),
+              bottom: BorderSide(color: AppColors.surfaceBorder),
+            ),
           ),
           child: Column(
             children: [
               _trendingSearchTile('#1 Sunset Drive', 'Arijit Singh'),
-              const Divider(color: AppColors.glassBorder, height: 1, indent: 16, endIndent: 16),
+              const Divider(
+                color: AppColors.glassBorder,
+                height: 1,
+                indent: 16,
+                endIndent: 16,
+              ),
               _trendingSearchTile('#2 Chill Beats', 'Lofi Sound'),
-              const Divider(color: AppColors.glassBorder, height: 1, indent: 16, endIndent: 16),
+              const Divider(
+                color: AppColors.glassBorder,
+                height: 1,
+                indent: 16,
+                endIndent: 16,
+              ),
               _trendingSearchTile('#3 Vintage Hits', 'Classic 90s'),
             ],
           ),
@@ -540,7 +561,8 @@ class SearchScreenState extends State<SearchScreen> {
     bool hasPlay = false,
     bool isHighlighted = false,
   }) {
-    final width = (MediaQuery.of(context).size.width - 52) / 2;
+    final width =
+        (MediaQuery.sizeOf(context).width - 52).clamp(100.0, 360.0) / 2;
     return Pressable(
       onTap: () {
         setQuery(label);
@@ -548,28 +570,22 @@ class SearchScreenState extends State<SearchScreen> {
       },
       child: Container(
         width: width,
-        height: 80,
+        height: 76,
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: gradient,
+            colors: [
+              gradient.first.withValues(alpha: 0.58),
+              AppColors.backgroundSurface,
+            ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(14),
           border: Border.all(
             color: isHighlighted
-                ? AppColors.primaryViolet
-                : AppColors.glassBorder,
-            width: isHighlighted ? 1.5 : 1.0,
+                ? AppColors.accent.withValues(alpha: 0.55)
+                : AppColors.surfaceBorder,
           ),
-          boxShadow: isHighlighted
-              ? [
-                  BoxShadow(
-                    color: AppColors.primaryViolet.withValues(alpha: 0.3),
-                    blurRadius: 14,
-                  ),
-                ]
-              : null,
         ),
         padding: const EdgeInsets.all(14),
         child: Stack(
@@ -699,7 +715,10 @@ class SearchScreenState extends State<SearchScreen> {
                 padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
                 child: Text(
                   _error!,
-                  style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                  style: const TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 13,
+                  ),
                 ),
               ),
             ),
@@ -741,7 +760,10 @@ class SearchScreenState extends State<SearchScreen> {
                 padding: EdgeInsets.fromLTRB(20, 0, 20, 16),
                 child: Text(
                   'No tracks found. Try a different query.',
-                  style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 13,
+                  ),
                 ),
               ),
             ),

@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../theme/app_colors.dart';
 
-/// Layered atmospheric background environment for Harmoniq Spatial UI.
-/// Provides deep blue-gray canvas with soft violet and cyan ambient glow layers.
+/// A quiet, layered canvas that keeps content readable while adding depth.
 class SpatialBackground extends StatelessWidget {
   final Widget child;
 
@@ -13,80 +12,35 @@ class SpatialBackground extends StatelessWidget {
   Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: const BoxDecoration(
-        color: AppColors.background,
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0xFF111922), AppColors.background, Color(0xFF090D12)],
+        ),
       ),
       child: Stack(
         fit: StackFit.expand,
         children: [
-          // Upper-right violet ambient lighting aura
           Positioned(
-            top: -100,
-            right: -80,
-            width: 380,
-            height: 380,
-            child: IgnorePointer(
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: RadialGradient(
-                    colors: [
-                      AppColors.primaryViolet.withValues(alpha: 0.18),
-                      AppColors.secondaryPurple.withValues(alpha: 0.07),
-                      Colors.transparent,
-                    ],
-                    stops: const [0.0, 0.55, 1.0],
-                  ),
-                ),
-              ),
-            ),
-          ),
-
-          // Lower-left soft cyan ambient lighting aura
-          Positioned(
-            bottom: 40,
-            left: -90,
-            width: 340,
-            height: 340,
-            child: IgnorePointer(
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: RadialGradient(
-                    colors: [
-                      AppColors.softCyan.withValues(alpha: 0.13),
-                      AppColors.electricBlue.withValues(alpha: 0.05),
-                      Colors.transparent,
-                    ],
-                    stops: const [0.0, 0.5, 1.0],
-                  ),
-                ),
-              ),
-            ),
-          ),
-
-          // Center subtle ambient purple depth
-          Positioned(
-            top: 260,
-            left: 30,
-            width: 280,
+            top: 0,
+            left: 0,
+            right: 0,
             height: 280,
             child: IgnorePointer(
               child: DecoratedBox(
                 decoration: BoxDecoration(
-                  shape: BoxShape.circle,
                   gradient: RadialGradient(
+                    center: const Alignment(0.75, -0.9),
+                    radius: 1.15,
                     colors: [
-                      AppColors.secondaryPurple.withValues(alpha: 0.07),
+                      AppColors.accent.withValues(alpha: 0.055),
                       Colors.transparent,
                     ],
-                    stops: const [0.0, 0.8],
                   ),
                 ),
               ),
             ),
           ),
-
-          // Foreground child
           child,
         ],
       ),

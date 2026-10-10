@@ -11,6 +11,8 @@ import 'package:harmoniq/screens/local_screen.dart';
 import 'package:harmoniq/widgets/song_tile.dart';
 import 'package:harmoniq/screens/home_screen.dart';
 import 'package:harmoniq/screens/now_playing_screen.dart';
+import 'package:harmoniq/screens/profile_screen.dart';
+import 'package:harmoniq/services/auth_service.dart';
 import 'package:harmoniq/services/audio_service.dart';
 import 'package:harmoniq/theme/app_theme.dart';
 import 'package:harmoniq/widgets/bottom_nav.dart';
@@ -214,15 +216,14 @@ void main() {
         await tester.pumpAndSettle();
         expect(tester.takeException(), isNull);
         expect(find.text('Harmoniq'), findsOneWidget);
-        await tester.scrollUntilVisible(
-          find.text('Offline collection'),
-          200,
-          scrollable: find.byType(Scrollable).first,
-        );
+        final localCollection = find.text('Local Device');
+        for (var scroll = 0; scroll < 4; scroll++) {
+          await tester.dragFrom(const Offset(10, 550), const Offset(0, -300));
+          await tester.pumpAndSettle();
+        }
+        await tester.ensureVisible(localCollection);
         await tester.pumpAndSettle();
-        await tester.ensureVisible(find.text('Offline collection'));
-        await tester.pumpAndSettle();
-        await tester.tap(find.text('Offline collection'));
+        await tester.tap(localCollection);
         await tester.pumpAndSettle();
         expect(localTaps, 1);
         expect(tester.takeException(), isNull);
@@ -232,6 +233,35 @@ void main() {
       }
     });
   }
+
+  testWidgets(
+    'profile renders on narrow and wide screens without layout errors',
+    (tester) async {
+      final auth = AuthService(client: null);
+      for (final size in [const Size(320, 640), const Size(430, 900)]) {
+        final exceptionStart = tester.takeException();
+        expect(exceptionStart, isNull);
+        await _viewport(tester, size);
+        await tester.pumpWidget(
+          _app(
+            ProfileScreen(audioService: service, authService: auth),
+            textScale: 1.3,
+          ),
+        );
+        await tester.pumpAndSettle();
+        expect(find.text('Guest User'), findsOneWidget);
+        expect(tester.takeException(), isNull);
+        await tester.scrollUntilVisible(
+          find.text('Settings & Preferences'),
+          200,
+          scrollable: find.byType(Scrollable).first,
+        );
+        expect(tester.takeException(), isNull);
+        await tester.pumpWidget(const SizedBox.shrink());
+      }
+      auth.dispose();
+    },
+  );
 
   testWidgets('bottom navigation exposes selected labels and all tab actions', (
     tester,
