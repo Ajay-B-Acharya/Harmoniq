@@ -10,6 +10,7 @@ import '../theme/app_colors.dart';
 import '../widgets/account_dialog.dart';
 import '../widgets/album_art.dart';
 import '../widgets/avatar_halo.dart';
+import '../widgets/glass_card.dart';
 import '../widgets/harmoniq_emblem.dart';
 import '../widgets/motion.dart';
 import '../widgets/song_card.dart';
@@ -222,7 +223,13 @@ class _HomeScreenState extends State<HomeScreen> {
                     // ── Hero Featured Card ("Good Vibes Only") ────────────────
                     SliverPadding(
                       padding: const EdgeInsets.fromLTRB(20, 6, 20, 24),
-                      sliver: SliverToBoxAdapter(child: _buildHeroBanner()),
+                      sliver: SliverToBoxAdapter(
+                        child: _buildHeroBanner(
+                          recentlyPlayed.isNotEmpty
+                              ? recentlyPlayed.first
+                              : (allSongs.isNotEmpty ? allSongs.first : null),
+                        ),
+                      ),
                     ),
 
                     // ── Continue Listening (if active track) ─────────────────
@@ -288,10 +295,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         child: Container(
                           decoration: const BoxDecoration(
                             border: Border(
-                              top: BorderSide(color: AppColors.surfaceBorder),
-                              bottom: BorderSide(
-                                color: AppColors.surfaceBorder,
-                              ),
+                              top: BorderSide(color: AppColors.divider),
+                              bottom: BorderSide(color: AppColors.divider),
                             ),
                           ),
                           padding: const EdgeInsets.symmetric(vertical: 8),
@@ -304,6 +309,13 @@ class _HomeScreenState extends State<HomeScreen> {
                                       return _buildRecommendedRow(
                                         song,
                                         recommendedSongs,
+                                        showDivider:
+                                            index <
+                                            recommendedSongs.length.clamp(
+                                                  0,
+                                                  5,
+                                                ) -
+                                                1,
                                       );
                                     },
                                   ),
@@ -553,125 +565,152 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildHeroBanner() {
-    return Container(
-      constraints: const BoxConstraints(minHeight: 180),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(22),
-        gradient: const LinearGradient(
-          colors: [
-            Color(0xFF1B1534), // Deep blue-violet
-            Color(0xFF100E22), // Midnight navy
-            Color(0xFF07080E), // Near-black base
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        border: Border.all(color: AppColors.borderElevated),
-        boxShadow: const [
-          BoxShadow(
-            color: AppColors.shadowFloating,
-            blurRadius: 20,
-            offset: Offset(0, 8),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(22),
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text(
-                'Good Vibes\nOnly',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w800,
-                  height: 1.1,
-                  color: AppColors.textPrimary,
-                  letterSpacing: -0.8,
+  Widget _buildHeroBanner(Song? featuredSong) {
+    final textScale = MediaQuery.textScalerOf(context).scale(16) / 16;
+    final bannerHeight = 200 + (textScale - 1).clamp(0, 1).toDouble() * 260;
+
+    return GlassCard(
+      borderRadius: 24,
+      blurSigma: 5,
+      level: GlassLevel.floating,
+      tint: GlassTint.violet,
+      color: AppColors.glassPrimary,
+      borderColor: AppColors.borderElevated,
+      child: SizedBox(
+        height: bannerHeight,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            if (featuredSong != null)
+              Positioned(
+                top: 16,
+                right: -16,
+                bottom: 16,
+                child: Opacity(
+                  opacity: 0.92,
+                  child: AlbumArt(
+                    gradientId: featuredSong.gradientId,
+                    size: 158,
+                    borderRadius: 22,
+                    imageUrl: featuredSong.albumArtUrl,
+                  ),
                 ),
               ),
-              const SizedBox(height: 6),
-              const Text(
-                'Curated playlist for your best moments.',
-                style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+            DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                  colors: [
+                    AppColors.background.withValues(alpha: 0.72),
+                    AppColors.background.withValues(alpha: 0.36),
+                    Colors.transparent,
+                  ],
+                  stops: const [0, 0.56, 1],
+                ),
               ),
-              const SizedBox(height: 16),
-              Wrap(
-                alignment: WrapAlignment.spaceBetween,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                runSpacing: 10,
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 20, 16, 18),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Pressable(
-                    onTap: _playHeroBanner,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [
-                            AppColors.primaryViolet,
-                            AppColors.deepViolet,
-                          ],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
+                  const Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Good Vibes\nOnly',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w800,
+                          height: 1.08,
+                          color: AppColors.textPrimary,
+                          letterSpacing: -0.8,
                         ),
-                        borderRadius: BorderRadius.circular(14),
-                        boxShadow: const [
-                          BoxShadow(
-                            color: AppColors.shadowActiveViolet,
-                            blurRadius: 12,
-                            offset: Offset(0, 2),
-                          ),
-                        ],
                       ),
-                      child: const Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.play_arrow_rounded,
-                            size: 19,
-                            color: Colors.white,
+                      SizedBox(height: 7),
+                      SizedBox(
+                        width: 190,
+                        child: Text(
+                          'Curated playlist for your best moments.',
+                          style: TextStyle(
+                            fontSize: 12,
+                            height: 1.35,
+                            color: AppColors.textSecondary,
                           ),
-                          SizedBox(width: 5),
-                          Text(
-                            'Play Now',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
-                    ),
+                    ],
                   ),
                   Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: List.generate(3, (i) {
-                      final active = i == _bannerIndex;
-                      return Container(
-                        width: active ? 16 : 6,
-                        height: 6,
-                        margin: const EdgeInsets.only(left: 4),
-                        decoration: BoxDecoration(
-                          color: active
-                              ? AppColors.primaryViolet
-                              : Colors.white.withValues(alpha: 0.20),
-                          borderRadius: BorderRadius.circular(3),
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Pressable(
+                        onTap: _playHeroBanner,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 15,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.glassSelected,
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
+                              color: AppColors.dockActiveBorder,
+                            ),
+                            boxShadow: const [
+                              BoxShadow(
+                                color: AppColors.shadowActiveViolet,
+                                blurRadius: 10,
+                                offset: Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.play_arrow_rounded,
+                                size: 18,
+                                color: AppColors.textPrimary,
+                              ),
+                              SizedBox(width: 5),
+                              Text(
+                                'Play Now',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.textPrimary,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      );
-                    }),
+                      ),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: List.generate(3, (i) {
+                          final active = i == _bannerIndex;
+                          return Container(
+                            width: active ? 16 : 6,
+                            height: 6,
+                            margin: const EdgeInsets.only(left: 4),
+                            decoration: BoxDecoration(
+                              color: active
+                                  ? AppColors.lightViolet
+                                  : Colors.white.withValues(alpha: 0.20),
+                              borderRadius: BorderRadius.circular(3),
+                            ),
+                          );
+                        }),
+                      ),
+                    ],
                   ),
                 ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -742,9 +781,18 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildRecommendedRow(Song song, List<Song> queue) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
+  Widget _buildRecommendedRow(
+    Song song,
+    List<Song> queue, {
+    required bool showDivider,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        border: showDivider
+            ? const Border(bottom: BorderSide(color: AppColors.divider))
+            : null,
+      ),
+      padding: const EdgeInsets.symmetric(vertical: 7),
       child: Row(
         children: [
           // Rounded artwork
