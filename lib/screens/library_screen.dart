@@ -6,7 +6,9 @@ import '../models/playlist.dart';
 import '../theme/app_colors.dart';
 import '../widgets/song_tile.dart';
 import '../widgets/album_art.dart';
+import '../widgets/glass_card.dart';
 import '../widgets/spatial_background.dart';
+import '../utils/local_song_sort.dart';
 
 class LibraryScreen extends StatefulWidget {
   final AudioService audioService;
@@ -31,6 +33,7 @@ class LibraryScreen extends StatefulWidget {
 class LibraryScreenState extends State<LibraryScreen> {
   late int _selectedCategoryIndex;
   int _favoriteFilterIndex = 0; // 0 = All, 1 = Local, 2 = Legacy, 3 = YouTube
+  LocalSongSort _localSongSort = LocalSongSort.titleAscending;
 
   final List<String> _categories = [
     'Songs',
@@ -105,14 +108,18 @@ class LibraryScreenState extends State<LibraryScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      'Your Library',
-                      style: Theme.of(context).textTheme.headlineMedium
-                          ?.copyWith(
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: -0.6,
-                            color: AppColors.textPrimary,
-                          ),
+                    Expanded(
+                      child: Text(
+                        'Your Library',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.headlineMedium
+                            ?.copyWith(
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: -0.6,
+                              color: AppColors.textPrimary,
+                            ),
+                      ),
                     ),
                     if (_selectedCategoryIndex == 1)
                       IconButton(
@@ -126,15 +133,68 @@ class LibraryScreenState extends State<LibraryScreen> {
                         splashRadius: 24,
                       )
                     else if (_selectedCategoryIndex == 5)
-                      IconButton(
-                        tooltip: 'Scan device',
-                        icon: const Icon(
-                          Icons.refresh_rounded,
-                          color: AppColors.accentLight,
-                          size: 24,
-                        ),
-                        onPressed: widget.audioService.scanLocalSongs,
-                        splashRadius: 24,
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          PopupMenuButton<LocalSongSort>(
+                            tooltip: 'Sort local songs',
+                            color: AppColors.sheetSurface,
+                            child: Container(
+                              constraints: const BoxConstraints(minHeight: 44),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.glassSecondary,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: AppColors.borderStandard,
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(
+                                    Icons.sort_rounded,
+                                    color: AppColors.accentLight,
+                                    size: 19,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    _localSongSort.shortLabel,
+                                    style: const TextStyle(
+                                      color: AppColors.textSecondary,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            onSelected: (sort) =>
+                                setState(() => _localSongSort = sort),
+                            itemBuilder: (context) => LocalSongSort.values
+                                .map(
+                                  (sort) => CheckedPopupMenuItem(
+                                    value: sort,
+                                    checked: sort == _localSongSort,
+                                    child: Text(sort.label),
+                                  ),
+                                )
+                                .toList(),
+                          ),
+                          IconButton(
+                            tooltip: 'Scan device',
+                            icon: const Icon(
+                              Icons.refresh_rounded,
+                              color: AppColors.accentLight,
+                              size: 24,
+                            ),
+                            onPressed: widget.audioService.scanLocalSongs,
+                            splashRadius: 24,
+                          ),
+                        ],
                       ),
                   ],
                 ),
@@ -165,14 +225,14 @@ class LibraryScreenState extends State<LibraryScreen> {
                             borderRadius: BorderRadius.circular(14),
                             border: Border.all(
                               color: isSelected
-                                  ? AppColors.borderActiveViolet
+                                  ? AppColors.borderActiveCyan
                                   : AppColors.borderStandard,
                               width: 1,
                             ),
                             boxShadow: isSelected
                                 ? const [
                                     BoxShadow(
-                                      color: AppColors.shadowActiveViolet,
+                                      color: AppColors.shadowActiveCyan,
                                       blurRadius: 10,
                                       offset: Offset(0, 1),
                                     ),
@@ -244,7 +304,7 @@ class LibraryScreenState extends State<LibraryScreen> {
         );
       case 5:
         return _buildLocalSongsView(
-          widget.audioService.localSongs,
+          sortLocalSongs(widget.audioService.localSongs, _localSongSort),
           currentSong,
           isPlaying,
         );
@@ -331,13 +391,10 @@ class LibraryScreenState extends State<LibraryScreen> {
               );
             }
           },
-          child: Container(
+          child: GlassCard(
             padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: AppColors.backgroundSurface,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.surfaceBorder),
-            ),
+            borderRadius: 16,
+            blurSigma: 3,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -399,13 +456,10 @@ class LibraryScreenState extends State<LibraryScreen> {
         final albumSongs = albums[albumName]!;
         return GestureDetector(
           onTap: () => _onSongTap(albumSongs[0]),
-          child: Container(
+          child: GlassCard(
             padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: AppColors.backgroundSurface,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.surfaceBorder),
-            ),
+            borderRadius: 16,
+            blurSigma: 3,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

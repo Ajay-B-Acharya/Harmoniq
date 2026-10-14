@@ -24,10 +24,10 @@ class NowPlayingScreen extends StatefulWidget {
 
 class _NowPlayingScreenState extends State<NowPlayingScreen> {
   static const _background = AppColors.background;
-  static const _surface = Color(0xCC171D30);
+  static const _surface = AppColors.sheetSurface;
   static const _foreground = AppColors.textPrimary;
   static const _muted = AppColors.textSecondary;
-  static const _primary = AppColors.primaryViolet;
+  static const _primary = AppColors.primaryCyan;
   static const _border = AppColors.glassBorder;
 
   AudioService get _svc => widget.audioService;
@@ -188,7 +188,12 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
                             minHeight: constraints.maxHeight,
                           ),
                           child: Padding(
-                            padding: EdgeInsets.fromLTRB(padding, 8, padding, 24),
+                            padding: EdgeInsets.fromLTRB(
+                              padding,
+                              8,
+                              padding,
+                              24,
+                            ),
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
@@ -196,7 +201,8 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
                                 SizedBox(height: wide ? 24 : 20),
                                 if (wide)
                                   Row(
-                                    crossAxisAlignment: CrossAxisAlignment.center,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.center,
                                     children: [
                                       Expanded(
                                         flex: 6,
@@ -324,12 +330,16 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
                         boxShadow: isCurrent
                             ? [
                                 BoxShadow(
-                                  color: AppColors.primaryViolet.withValues(alpha: 0.35),
+                                  color: AppColors.primaryCyan.withValues(
+                                    alpha: 0.35,
+                                  ),
                                   blurRadius: 36,
                                   spreadRadius: 2,
                                 ),
                                 BoxShadow(
-                                  color: AppColors.softCyan.withValues(alpha: 0.15),
+                                  color: AppColors.softCyan.withValues(
+                                    alpha: 0.15,
+                                  ),
                                   blurRadius: 24,
                                   spreadRadius: -4,
                                 ),
@@ -411,9 +421,7 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
         ),
         const SizedBox(height: 12),
         Text(
-          song.source == SongSource.youtube
-              ? 'ONLINE STREAM'
-              : 'LOCAL LIBRARY',
+          song.source == SongSource.youtube ? 'ONLINE STREAM' : 'LOCAL LIBRARY',
           style: const TextStyle(
             color: _muted,
             fontSize: 10,
@@ -597,13 +605,13 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             gradient: const LinearGradient(
-              colors: [AppColors.primaryViolet, AppColors.electricBlue],
+              colors: [AppColors.primaryCyan, AppColors.electricBlue],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
             boxShadow: [
               BoxShadow(
-                color: AppColors.primaryViolet.withValues(alpha: 0.45),
+                color: AppColors.primaryCyan.withValues(alpha: 0.45),
                 blurRadius: 22,
                 spreadRadius: 2,
               ),
@@ -645,13 +653,10 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
       decoration: BoxDecoration(
         color: AppColors.glassBackground,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: AppColors.glassBorder,
-          width: 1,
-        ),
+        border: Border.all(color: AppColors.glassBorder, width: 1),
         boxShadow: const [
           BoxShadow(
-            color: Color(0x33050914),
+            color: AppColors.shadowStandard,
             blurRadius: 14,
             offset: Offset(0, 4),
           ),
@@ -671,10 +676,14 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
                   width: 42,
                   height: 42,
                   decoration: BoxDecoration(
-                    color: AppColors.primaryViolet.withValues(alpha: 0.16),
+                    color: AppColors.primaryCyan.withValues(alpha: 0.16),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Icon(Icons.queue_music_rounded, color: AppColors.primaryViolet, size: 22),
+                  child: const Icon(
+                    Icons.queue_music_rounded,
+                    color: AppColors.primaryCyan,
+                    size: 22,
+                  ),
                 ),
                 const SizedBox(width: 14),
                 Expanded(
@@ -695,13 +704,20 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
                         _nextTitle(),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(color: _foreground, fontSize: 13),
+                        style: const TextStyle(
+                          color: _foreground,
+                          fontSize: 13,
+                        ),
                       ),
                     ],
                   ),
                 ),
                 const SizedBox(width: 8),
-                const Icon(Icons.chevron_right_rounded, color: _muted, size: 20),
+                const Icon(
+                  Icons.chevron_right_rounded,
+                  color: _muted,
+                  size: 20,
+                ),
               ],
             ),
           ),

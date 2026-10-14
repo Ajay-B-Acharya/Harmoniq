@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 
 /// Harmoniq logo emblem rendered with vector paths to seamlessly complement
-/// the dark + red + metallic silver theme without purple/neon gradients.
+/// the dark + red + metallic silver theme without neon gradients.
 class HarmoniqEmblem extends StatelessWidget {
   final double size;
   final Color primaryColor;

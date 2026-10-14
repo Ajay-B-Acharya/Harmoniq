@@ -138,7 +138,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             onPressed: () => Navigator.pop(ctx),
             child: const Text(
               'OK',
-              style: TextStyle(color: AppColors.primaryViolet),
+              style: TextStyle(color: AppColors.primaryCyan),
             ),
           ),
         ],
@@ -388,7 +388,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
                                 color: isAuthenticated
-                                    ? AppColors.amber.withValues(alpha: 0.5)
+                                    ? AppColors.silver.withValues(alpha: 0.5)
                                     : AppColors.borderStandard,
                               ),
                             ),
@@ -399,7 +399,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   const Icon(
                                     Icons.star_rounded,
                                     size: 14,
-                                    color: AppColors.amber,
+                                    color: AppColors.silver,
                                   ),
                                   const SizedBox(width: 5),
                                 ],
@@ -409,7 +409,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       : 'Guest Mode',
                                   style: TextStyle(
                                     color: isAuthenticated
-                                        ? AppColors.amber
+                                        ? AppColors.silver
                                         : AppColors.textSecondary,
                                     fontSize: 11.5,
                                     fontWeight: FontWeight.w600,

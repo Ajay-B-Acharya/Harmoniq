@@ -60,11 +60,11 @@ class MiniPlayer extends StatelessWidget {
             level: GlassLevel.floating,
             specularHighlight: true,
             padding: const EdgeInsets.fromLTRB(10, 8, 10, 6),
-            color: const Color(0xCC0F111E),
+            color: AppColors.floatingGlass,
             borderColor: isPlaying
-                ? AppColors.borderActiveViolet
+                ? AppColors.borderActiveCyan
                 : AppColors.dockBorder,
-            glowColor: isPlaying ? AppColors.primaryViolet : null,
+            glowColor: isPlaying ? AppColors.primaryCyan : null,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -129,7 +129,7 @@ class MiniPlayer extends StatelessWidget {
                     IconButton(
                       tooltip: showPause ? 'Pause' : 'Play',
                       style: IconButton.styleFrom(
-                        backgroundColor: AppColors.primaryViolet,
+                        backgroundColor: AppColors.primaryCyan,
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
@@ -233,7 +233,7 @@ class MiniPlayer extends StatelessWidget {
                               : 'Playback progress',
                           backgroundColor: Colors.white.withValues(alpha: 0.08),
                           valueColor: const AlwaysStoppedAnimation<Color>(
-                            AppColors.primaryViolet,
+                            AppColors.primaryCyan,
                           ),
                           minHeight: 2.5,
                         );

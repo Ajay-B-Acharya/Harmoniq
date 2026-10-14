@@ -7,19 +7,10 @@ import '../theme/app_colors.dart';
 /// Elevation hierarchy for spatial glass materials:
 /// - Level 2 (surface): subtle translucent surface with 1px neutral illuminated edge.
 /// - Level 3 (floating): slightly more visible glass with top-edge specular highlight & elevation shadow.
-/// - Level 4 (active): subtle violet-tinted glass with controlled accent glow.
-enum GlassLevel {
-  surface,
-  floating,
-  active,
-}
+/// - Level 4 (active): subtle cyan-tinted glass with controlled accent glow.
+enum GlassLevel { surface, floating, active }
 
-enum GlassTint {
-  neutral,
-  violet,
-  blue,
-  selected,
-}
+enum GlassTint { neutral, cyan, blue, selected }
 
 /// A rounded physical glass card with precision transparency, physical illuminated
 /// edges, top-edge specular highlight, and optional backdrop blur.
@@ -69,7 +60,7 @@ class GlassCard extends StatelessWidget {
     } else {
       switch (level) {
         case GlassLevel.active:
-          surfaceColor = AppColors.glassSelected; // rgba(168, 85, 247, 0.080)
+          surfaceColor = AppColors.glassSelected;
           break;
         case GlassLevel.floating:
           surfaceColor = AppColors.glassElevated; // rgba(255, 255, 255, 0.055)
@@ -79,14 +70,16 @@ class GlassCard extends StatelessWidget {
             case GlassTint.selected:
               surfaceColor = AppColors.glassSelected;
               break;
-            case GlassTint.violet:
-              surfaceColor = AppColors.glassVioletTint; // rgba(168, 85, 247, 0.045)
+            case GlassTint.cyan:
+              surfaceColor = AppColors.glassCyanTint;
               break;
             case GlassTint.blue:
-              surfaceColor = AppColors.glassBlueTint; // rgba(96, 165, 250, 0.035)
+              surfaceColor =
+                  AppColors.glassBlueTint; // rgba(96, 165, 250, 0.035)
               break;
             case GlassTint.neutral:
-              surfaceColor = AppColors.glassPrimary; // rgba(255, 255, 255, 0.025)
+              surfaceColor =
+                  AppColors.glassPrimary; // rgba(255, 255, 255, 0.025)
               break;
           }
           break;
@@ -100,13 +93,15 @@ class GlassCard extends StatelessWidget {
     } else {
       switch (level) {
         case GlassLevel.active:
-          effectiveBorderColor = AppColors.borderActiveViolet; // rgba(168, 85, 247, 0.50)
+          effectiveBorderColor = AppColors.borderActiveCyan;
           break;
         case GlassLevel.floating:
-          effectiveBorderColor = AppColors.borderElevated; // rgba(255, 255, 255, 0.20)
+          effectiveBorderColor =
+              AppColors.borderElevated; // rgba(255, 255, 255, 0.20)
           break;
         case GlassLevel.surface:
-          effectiveBorderColor = AppColors.borderStandard; // rgba(255, 255, 255, 0.14)
+          effectiveBorderColor =
+              AppColors.borderStandard; // rgba(255, 255, 255, 0.14)
           break;
       }
     }
@@ -131,7 +126,7 @@ class GlassCard extends StatelessWidget {
         case GlassLevel.active:
           shadows = const [
             BoxShadow(
-              color: AppColors.shadowActiveViolet, // rgba(168, 85, 247, 0.16)
+              color: AppColors.shadowActiveCyan,
               blurRadius: 14,
               offset: Offset(0, 1),
             ),
@@ -166,10 +161,7 @@ class GlassCard extends StatelessWidget {
         color: gradient == null ? surfaceColor : null,
         gradient: gradient,
         borderRadius: BorderRadius.circular(borderRadius),
-        border: Border.all(
-          color: effectiveBorderColor,
-          width: borderWidth,
-        ),
+        border: Border.all(color: effectiveBorderColor, width: borderWidth),
       ),
       child: child,
     );
@@ -229,10 +221,7 @@ class _SpecularTopHighlightPainter extends CustomPainter {
       ..shader = LinearGradient(
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
-        colors: [
-          highlightColor,
-          highlightColor.withValues(alpha: 0.0),
-        ],
+        colors: [highlightColor, highlightColor.withValues(alpha: 0.0)],
       ).createShader(Rect.fromLTWH(0, 0, size.width, clipHeight))
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.0;

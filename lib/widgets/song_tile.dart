@@ -32,7 +32,7 @@ class SongTile extends StatelessWidget {
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
             color: isActive
-                ? AppColors.borderActiveViolet
+                ? AppColors.borderActiveCyan
                 : Colors.transparent,
             width: 1,
           ),

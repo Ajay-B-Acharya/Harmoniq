@@ -122,7 +122,7 @@ class _HomeScreenState extends State<HomeScreen> {
         child: SafeArea(
           bottom: false,
           child: RefreshIndicator(
-            color: AppColors.primaryViolet,
+            color: AppColors.primaryCyan,
             backgroundColor: AppColors.backgroundSecondary,
             onRefresh: () => _load(refresh: true),
             child: ListenableBuilder(
@@ -376,7 +376,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             child: Center(
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
-                                color: AppColors.primaryViolet,
+                                color: AppColors.primaryCyan,
                               ),
                             ),
                           ),
@@ -573,8 +573,7 @@ class _HomeScreenState extends State<HomeScreen> {
       borderRadius: 24,
       blurSigma: 5,
       level: GlassLevel.floating,
-      tint: GlassTint.violet,
-      color: AppColors.glassPrimary,
+      tint: GlassTint.cyan,
       borderColor: AppColors.borderElevated,
       child: SizedBox(
         height: bannerHeight,
@@ -661,7 +660,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                             boxShadow: const [
                               BoxShadow(
-                                color: AppColors.shadowActiveViolet,
+                                color: AppColors.shadowActiveCyan,
                                 blurRadius: 10,
                                 offset: Offset(0, 2),
                               ),
@@ -698,7 +697,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             margin: const EdgeInsets.only(left: 4),
                             decoration: BoxDecoration(
                               color: active
-                                  ? AppColors.lightViolet
+                                  ? AppColors.lightCyan
                                   : Colors.white.withValues(alpha: 0.20),
                               borderRadius: BorderRadius.circular(3),
                             ),
@@ -872,7 +871,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               child: const Icon(
                 Icons.play_arrow_rounded,
-                color: Color(0xFF101522),
+                color: AppColors.playControlForeground,
                 size: 20,
               ),
             ),
@@ -944,7 +943,7 @@ class _HomeScreenState extends State<HomeScreen> {
               isPlaying
                   ? Icons.pause_circle_filled_rounded
                   : Icons.play_circle_filled_rounded,
-              color: AppColors.primaryViolet,
+              color: AppColors.primaryCyan,
               size: 38,
             ),
           ),

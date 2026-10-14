@@ -227,7 +227,7 @@ class SearchScreenState extends State<SearchScreen> {
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
                       color: _focusNode.hasFocus
-                          ? AppColors.borderActiveViolet
+                          ? AppColors.borderActiveCyan
                           : AppColors.borderStandard,
                       width: 1,
                     ),
@@ -344,14 +344,16 @@ class SearchScreenState extends State<SearchScreen> {
     selectedColor: AppColors.glassSelected,
     backgroundColor: AppColors.glassSecondary,
     labelStyle: TextStyle(
-      color: _filter == filter ? AppColors.textPrimary : AppColors.textSecondary,
+      color: _filter == filter
+          ? AppColors.textPrimary
+          : AppColors.textSecondary,
       fontWeight: _filter == filter ? FontWeight.w700 : FontWeight.w500,
       fontSize: 12,
     ),
     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
     side: BorderSide(
       color: _filter == filter
-          ? AppColors.borderActiveViolet
+          ? AppColors.borderActiveCyan
           : AppColors.borderStandard,
       width: 1,
     ),
@@ -474,30 +476,20 @@ class SearchScreenState extends State<SearchScreen> {
           spacing: 12,
           runSpacing: 12,
           children: [
-            _categoryCard('Top Playlists', const [
-              Color(0xFF261D5A),
-              Color(0xFF130E2B),
-            ], hasPlay: true),
-            _categoryCard('New Releases', const [
-              Color(0xFF194052),
-              Color(0xFF0C2029),
-            ]),
-            _categoryCard('Pop', const [
-              Color(0xFF5D1E5A),
-              Color(0xFF2E0F2D),
-            ], isHighlighted: true),
-            _categoryCard('Bollywood', const [
-              Color(0xFF5A311D),
-              Color(0xFF29160D),
-            ]),
-            _categoryCard('Hip-Hop', const [
-              Color(0xFF1D345A),
-              Color(0xFF0D1729),
-            ]),
-            _categoryCard('Podcasts', const [
-              Color(0xFF381D5A),
-              Color(0xFF1A0D29),
-            ]),
+            _categoryCard(
+              'Top Playlists',
+              AppColors.gradientOceanBlue,
+              hasPlay: true,
+            ),
+            _categoryCard('New Releases', AppColors.gradientCyanDepth),
+            _categoryCard(
+              'Pop',
+              AppColors.gradientBlueAura,
+              isHighlighted: true,
+            ),
+            _categoryCard('Bollywood', AppColors.gradientMidnightSteel),
+            _categoryCard('Hip-Hop', AppColors.gradientElectricBlue),
+            _categoryCard('Podcasts', AppColors.gradientBlueCosmic),
           ],
         ),
 
@@ -604,7 +596,7 @@ class SearchScreenState extends State<SearchScreen> {
                   ),
                   child: const Icon(
                     Icons.play_arrow_rounded,
-                    color: Color(0xFF101522),
+                    color: AppColors.playControlForeground,
                     size: 18,
                   ),
                 ),
@@ -623,7 +615,7 @@ class SearchScreenState extends State<SearchScreen> {
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
         leading: const Icon(
           Icons.local_fire_department_rounded,
-          color: Color(0xFFFF7A45),
+          color: AppColors.primaryCyan,
           size: 20,
         ),
         title: Text(
@@ -695,7 +687,7 @@ class SearchScreenState extends State<SearchScreen> {
                   padding: EdgeInsets.all(24),
                   child: CircularProgressIndicator(
                     strokeWidth: 2.5,
-                    color: AppColors.primaryViolet,
+                    color: AppColors.primaryCyan,
                   ),
                 ),
               ),
@@ -720,7 +712,7 @@ class SearchScreenState extends State<SearchScreen> {
                 child: Text(
                   'STREAMING RESULTS',
                   style: TextStyle(
-                    color: AppColors.primaryViolet,
+                    color: AppColors.primaryCyan,
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 1.2,

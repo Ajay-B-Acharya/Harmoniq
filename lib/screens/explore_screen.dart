@@ -108,7 +108,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
         child: SafeArea(
           bottom: false,
           child: RefreshIndicator(
-            color: AppColors.primaryViolet,
+            color: AppColors.primaryCyan,
             backgroundColor: AppColors.backgroundSecondary,
             onRefresh: () async {
               await _loadDiscoveryTracks(refresh: true);
@@ -249,30 +249,15 @@ class _ExploreScreenState extends State<ExploreScreen> {
                       scrollDirection: Axis.horizontal,
                       padding: const EdgeInsets.symmetric(horizontal: 20),
                       children: [
-                        _genreCard('Pop', const [
-                          Color(0xFF8B2B71),
-                          Color(0xFF261033),
-                        ]),
+                        _genreCard('Pop', AppColors.gradientOceanBlue),
                         const SizedBox(width: 12),
-                        _genreCard('Hip-Hop', const [
-                          Color(0xFF243B6B),
-                          Color(0xFF0F1836),
-                        ]),
+                        _genreCard('Hip-Hop', AppColors.gradientElectricBlue),
                         const SizedBox(width: 12),
-                        _genreCard('Rock', const [
-                          Color(0xFF6B3124),
-                          Color(0xFF29100D),
-                        ]),
+                        _genreCard('Rock', AppColors.gradientMidnightSteel),
                         const SizedBox(width: 12),
-                        _genreCard('Electronic', const [
-                          Color(0xFF195B6E),
-                          Color(0xFF09222E),
-                        ]),
+                        _genreCard('Electronic', AppColors.gradientCyanDepth),
                         const SizedBox(width: 12),
-                        _genreCard('Bollywood', const [
-                          Color(0xFF6E4219),
-                          Color(0xFF2E1B09),
-                        ]),
+                        _genreCard('Bollywood', AppColors.gradientBlueAura),
                       ],
                     ),
                   ),
@@ -304,10 +289,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                         _trendingPlaylistCard(
                           title: 'Global Hits',
                           icon: Icons.public_rounded,
-                          gradient: const [
-                            Color(0xFF1B3B59),
-                            Color(0xFF0C1B2B),
-                          ],
+                          gradient: AppColors.gradientOceanBlue,
                           onTap: () {
                             if (catalogue.isNotEmpty) {
                               widget.onSongTap(catalogue.first, catalogue);
@@ -320,10 +302,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                         _trendingPlaylistCard(
                           title: 'Viral Tracks',
                           icon: Icons.star_rounded,
-                          gradient: const [
-                            Color(0xFF481C5E),
-                            Color(0xFF1F0B2B),
-                          ],
+                          gradient: AppColors.gradientCyanDepth,
                           onTap: () {
                             if (catalogue.length > 1) {
                               widget.onSongTap(catalogue[1], catalogue);
@@ -369,7 +348,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                         _moodChip(
                           'Workout',
                           Icons.fitness_center_rounded,
-                          const Color(0xFFFF69B4),
+                          AppColors.primaryCyan,
                         ),
                         const SizedBox(width: 10),
                         _moodChip(
@@ -411,7 +390,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                             height: 16,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              color: AppColors.primaryViolet,
+                              color: AppColors.primaryCyan,
                             ),
                           )
                         else
@@ -479,11 +458,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(22),
         gradient: const LinearGradient(
-          colors: [
-            Color(0xFF1B1534), // Deep blue-violet
-            Color(0xFF100E22), // Midnight navy
-            Color(0xFF07080E), // Near-black base
-          ],
+          colors: AppColors.gradientHero,
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -536,17 +511,14 @@ class _ExploreScreenState extends State<ExploreScreen> {
                     ),
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
-                        colors: [
-                          AppColors.primaryViolet,
-                          AppColors.deepViolet,
-                        ],
+                        colors: [AppColors.primaryCyan, AppColors.blue],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
                       borderRadius: BorderRadius.circular(14),
                       boxShadow: const [
                         BoxShadow(
-                          color: AppColors.shadowActiveViolet,
+                          color: AppColors.shadowActiveCyan,
                           blurRadius: 12,
                           offset: Offset(0, 2),
                         ),

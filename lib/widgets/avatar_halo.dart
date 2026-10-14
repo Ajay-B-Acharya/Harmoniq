@@ -4,7 +4,7 @@ import '../theme/app_colors.dart';
 
 /// SPATIAL UI — 7.B AVATAR HALO
 ///
-/// A restrained cyan-to-violet-to-pink gradient halo around user avatars.
+/// A restrained cyan-to-blue halo around user avatars.
 class AvatarHalo extends StatelessWidget {
   final double size;
   final Widget child;
@@ -29,17 +29,16 @@ class AvatarHalo extends StatelessWidget {
         shape: BoxShape.circle,
         gradient: SweepGradient(
           colors: [
-            AppColors.cyan,
-            AppColors.primaryViolet,
-            AppColors.neonPink,
+            AppColors.primaryCyan,
+            AppColors.blue,
             AppColors.lightCyan,
-            AppColors.cyan,
+            AppColors.primaryCyan,
           ],
-          stops: [0.0, 0.35, 0.65, 0.88, 1.0],
+          stops: [0.0, 0.42, 0.76, 1.0],
         ),
         boxShadow: [
           BoxShadow(
-            color: Color(0x1FA855F7), // Restrained violet ambient glow
+            color: AppColors.shadowActiveCyan,
             blurRadius: 10,
             spreadRadius: 0,
           ),
@@ -57,10 +56,7 @@ class AvatarHalo extends StatelessWidget {
     );
 
     if (onTap != null) {
-      avatar = GestureDetector(
-        onTap: onTap,
-        child: avatar,
-      );
+      avatar = GestureDetector(onTap: onTap, child: avatar);
     }
 
     return avatar;

@@ -10,13 +10,7 @@ import 'motion.dart';
 /// Suspended transparent glass dock with 5 destinations:
 /// Home, Explore, Library, Search, Profile.
 ///
-/// Specifications:
-/// - Surface: rgba(15, 17, 30, 0.62)
-/// - Border: rgba(255, 255, 255, 0.16)
-/// - Blur: BackdropFilter sigma 10 (8–12)
-/// - Shadow: Restrained black elevation shadow
-/// - Active Item: rgba(168, 85, 247, 0.13) surface, 0.45 border, 0.16 glow, near-white label
-/// - Inactive Item: rgba(248, 250, 252, 0.60)
+/// Cyan-selected glass dock with a blurred background and muted silver inactive items.
 class BottomNav extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int> onTap;
@@ -59,7 +53,7 @@ class BottomNav extends StatelessWidget {
               borderRadius: BorderRadius.circular(28),
               boxShadow: const [
                 BoxShadow(
-                  color: AppColors.shadowFloating, // rgba(0, 0, 0, 0.28)
+                  color: AppColors.shadowFloating,
                   blurRadius: 24,
                   spreadRadius: -2,
                   offset: Offset(0, 8),
@@ -74,14 +68,17 @@ class BottomNav extends StatelessWidget {
                   foregroundPainter: const _DockSpecularHighlightPainter(),
                   child: Container(
                     decoration: BoxDecoration(
-                      color: AppColors.dockSurface, // rgba(15, 17, 30, 0.62)
+                      color: AppColors.dockSurface,
                       borderRadius: BorderRadius.circular(28),
                       border: Border.all(
-                        color: AppColors.dockBorder, // rgba(255, 255, 255, 0.16)
+                        color: AppColors.dockBorder,
                         width: 1.0,
                       ),
                     ),
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 6,
+                    ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: List.generate(_labels.length, (index) {
@@ -108,19 +105,19 @@ class BottomNav extends StatelessWidget {
                                 ),
                                 decoration: BoxDecoration(
                                   color: selected
-                                      ? AppColors.dockActiveSurface // rgba(168, 85, 247, 0.13)
+                                      ? AppColors.dockActiveSurface
                                       : Colors.transparent,
                                   borderRadius: BorderRadius.circular(20),
                                   border: selected
                                       ? Border.all(
-                                          color: AppColors.dockActiveBorder, // rgba(168, 85, 247, 0.45)
+                                          color: AppColors.dockActiveBorder,
                                           width: 1.0,
                                         )
                                       : null,
                                   boxShadow: selected
                                       ? const [
                                           BoxShadow(
-                                            color: AppColors.dockActiveGlow, // rgba(168, 85, 247, 0.16)
+                                            color: AppColors.dockActiveGlow,
                                             blurRadius: 14,
                                             offset: Offset(0, 1),
                                           ),
@@ -133,7 +130,8 @@ class BottomNav extends StatelessWidget {
                                   children: [
                                     Column(
                                       mainAxisSize: MainAxisSize.min,
-                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
                                       children: [
                                         Icon(
                                           selected
@@ -141,7 +139,8 @@ class BottomNav extends StatelessWidget {
                                               : _icons[index],
                                           size: 21,
                                           color: selected
-                                              ? AppColors.textPrimary // Near-white
+                                              ? AppColors
+                                                    .textPrimary // Near-white
                                               : AppColors.dockInactive, // rgba(248, 250, 252, 0.60)
                                         ),
                                         const SizedBox(height: 2),
@@ -170,7 +169,9 @@ class BottomNav extends StatelessWidget {
                                         child: Icon(
                                           Icons.auto_awesome,
                                           size: 11,
-                                          color: AppColors.lightCyan.withValues(alpha: 0.9),
+                                          color: AppColors.lightCyan.withValues(
+                                            alpha: 0.9,
+                                          ),
                                         ),
                                       ),
                                   ],

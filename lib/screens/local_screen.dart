@@ -5,6 +5,8 @@ import '../services/audio_service.dart';
 import '../models/song.dart';
 import '../theme/app_colors.dart';
 import '../widgets/song_tile.dart';
+import '../widgets/spatial_background.dart';
+import '../utils/local_song_sort.dart';
 
 class LocalScreen extends StatefulWidget {
   final AudioService audioService;
@@ -30,6 +32,7 @@ class _LocalScreenState extends State<LocalScreen> {
   // Tracks whether we've already attempted the auto-scan this lifecycle so we
   // don't fire it repeatedly on rebuilds.
   bool _autoScanAttempted = false;
+  LocalSongSort _sort = LocalSongSort.titleAscending;
 
   @override
   void initState() {
@@ -66,8 +69,7 @@ class _LocalScreenState extends State<LocalScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Material(
-        color: AppColors.background,
+      body: SpatialNebulaBackground(
         child: SafeArea(
           bottom: false,
           child: Padding(
@@ -89,23 +91,86 @@ class _LocalScreenState extends State<LocalScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(
-                              'Local Music',
-                              style: Theme.of(context).textTheme.headlineMedium
-                                  ?.copyWith(
-                                    fontWeight: FontWeight.w800,
-                                    letterSpacing: -0.6,
-                                  ),
+                            Expanded(
+                              child: Text(
+                                'Local Music',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .headlineMedium
+                                    ?.copyWith(
+                                      fontWeight: FontWeight.w800,
+                                      letterSpacing: -0.6,
+                                    ),
+                              ),
                             ),
                             if (!isScanning)
-                              IconButton(
-                                icon: const Icon(
-                                  Icons.refresh_rounded,
-                                  color: Colors.white,
-                                  size: 24,
-                                ),
-                                onPressed: widget.onScanTap,
-                                splashRadius: 24,
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  PopupMenuButton<LocalSongSort>(
+                                    tooltip: 'Sort local songs',
+                                    color: AppColors.sheetSurface,
+                                    child: Container(
+                                      constraints: const BoxConstraints(
+                                        minHeight: 44,
+                                      ),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                        vertical: 6,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.glassSecondary,
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(
+                                          color: AppColors.borderStandard,
+                                        ),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          const Icon(
+                                            Icons.sort_rounded,
+                                            color: AppColors.accentLight,
+                                            size: 19,
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            _sort.shortLabel,
+                                            style: const TextStyle(
+                                              color: AppColors.textSecondary,
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    onSelected: (sort) =>
+                                        setState(() => _sort = sort),
+                                    itemBuilder: (context) => LocalSongSort
+                                        .values
+                                        .map(
+                                          (sort) => CheckedPopupMenuItem(
+                                            value: sort,
+                                            checked: sort == _sort,
+                                            child: Text(sort.label),
+                                          ),
+                                        )
+                                        .toList(),
+                                  ),
+                                  IconButton(
+                                    tooltip: 'Scan device',
+                                    icon: const Icon(
+                                      Icons.refresh_rounded,
+                                      color: AppColors.textPrimary,
+                                      size: 24,
+                                    ),
+                                    onPressed: widget.onScanTap,
+                                    splashRadius: 24,
+                                  ),
+                                ],
                               ),
                           ],
                         ),
@@ -135,7 +200,7 @@ class _LocalScreenState extends State<LocalScreen> {
                       final isPlaying = widget.audioService.isPlaying;
                       return _buildBody(
                         context,
-                        localSongs: localSongs,
+                        localSongs: sortLocalSongs(localSongs, _sort),
                         isScanning: isScanning,
                         currentSong: currentSong,
                         isPlaying: isPlaying,

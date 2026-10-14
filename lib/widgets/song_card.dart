@@ -60,7 +60,7 @@ class SongCard extends StatelessWidget {
                                   shape: BoxShape.circle,
                                   boxShadow: const [
                                     BoxShadow(
-                                      color: Color(0x55000000),
+                                      color: AppColors.shadowFloating,
                                       blurRadius: 10,
                                       offset: Offset(0, 3),
                                     ),
@@ -68,7 +68,7 @@ class SongCard extends StatelessWidget {
                                 ),
                                 child: const Icon(
                                   Icons.play_arrow_rounded,
-                                  color: Color(0xFF101522),
+                                  color: AppColors.playControlForeground,
                                   size: 20,
                                 ),
                               ),

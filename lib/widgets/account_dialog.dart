@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 
 import '../screens/login_screen.dart';
@@ -23,13 +25,25 @@ class AccountDialog extends StatelessWidget {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppColors.backgroundSurface,
+      backgroundColor: Colors.transparent,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (ctx) => AccountDialog(
-        authService: authService,
-        onAuthChanged: onAuthChanged,
+      builder: (ctx) => ClipRRect(
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+          child: DecoratedBox(
+            decoration: const BoxDecoration(
+              color: AppColors.sheetSurface,
+              border: Border(top: BorderSide(color: AppColors.borderElevated)),
+            ),
+            child: AccountDialog(
+              authService: authService,
+              onAuthChanged: onAuthChanged,
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -38,7 +52,8 @@ class AccountDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     final user = authService.currentUser;
     final isAuthenticated = user != null;
-    final username = user?.userMetadata?['username'] as String? ??
+    final username =
+        user?.userMetadata?['username'] as String? ??
         user?.userMetadata?['display_name'] as String? ??
         (user?.email != null ? user!.email!.split('@').first : 'Music Lover');
 

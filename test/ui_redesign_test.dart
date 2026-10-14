@@ -15,6 +15,7 @@ import 'package:harmoniq/screens/profile_screen.dart';
 import 'package:harmoniq/services/auth_service.dart';
 import 'package:harmoniq/services/audio_service.dart';
 import 'package:harmoniq/theme/app_theme.dart';
+import 'package:harmoniq/utils/local_song_sort.dart';
 import 'package:harmoniq/widgets/bottom_nav.dart';
 import 'package:harmoniq/widgets/mini_player.dart';
 import 'package:harmoniq/widgets/motion.dart';
@@ -233,6 +234,53 @@ void main() {
       }
     });
   }
+
+  testWidgets(
+    'local songs sort menu reorders the view without playback changes',
+    (tester) async {
+      await _viewport(tester, const Size(360, 720));
+      final zed = _track(1).copyWith(title: 'Zed');
+      final alpha = _track(2).copyWith(title: 'Alpha');
+      service.testLocalSongs = [zed, alpha];
+      service.testQueue = [zed];
+      service.index = 0;
+      service.playing = true;
+
+      await tester.pumpWidget(
+        _app(
+          LibraryScreen(
+            audioService: service,
+            onSongTap: (_, [queue]) {},
+            onFavoriteTap: (_) {},
+            onCreatePlaylist: (_) {},
+            initialCategoryIndex: 5,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Title A–Z'), findsOneWidget);
+      expect(
+        tester.getTopLeft(find.text('Alpha')).dy,
+        lessThan(tester.getTopLeft(find.text('Zed')).dy),
+      );
+
+      await tester.tap(find.byTooltip('Sort local songs'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byType(CheckedPopupMenuItem<LocalSongSort>).at(1));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Title Z–A'), findsOneWidget);
+      expect(
+        tester.getTopLeft(find.text('Zed')).dy,
+        lessThan(tester.getTopLeft(find.text('Alpha')).dy),
+      );
+      expect(service.currentSong?.identity, zed.identity);
+      expect(service.isPlaying, isTrue);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+    },
+  );
 
   testWidgets(
     'profile renders on narrow and wide screens without layout errors',

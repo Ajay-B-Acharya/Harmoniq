@@ -9,7 +9,7 @@ class AppTheme {
     scaffoldBackgroundColor: AppColors.background,
     colorScheme: const ColorScheme.dark(
       surface: AppColors.backgroundSecondary,
-      primary: AppColors.primaryViolet,
+      primary: AppColors.primaryCyan,
       onPrimary: Colors.white,
       secondary: AppColors.cyan,
       onSecondary: Colors.white,
@@ -59,7 +59,7 @@ class AppTheme {
     ),
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
-        backgroundColor: AppColors.primaryViolet,
+        backgroundColor: AppColors.primaryCyan,
         foregroundColor: Colors.white,
         padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
         textStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13.5),
@@ -102,7 +102,7 @@ class AppTheme {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
-        borderSide: const BorderSide(color: AppColors.borderActiveViolet, width: 1.2),
+        borderSide: const BorderSide(color: AppColors.borderActiveCyan, width: 1.2),
       ),
     ),
     bottomSheetTheme: const BottomSheetThemeData(
@@ -113,10 +113,10 @@ class AppTheme {
       ),
     ),
     sliderTheme: SliderThemeData(
-      activeTrackColor: AppColors.primaryViolet,
+      activeTrackColor: AppColors.primaryCyan,
       inactiveTrackColor: Colors.white.withValues(alpha: 0.12),
       thumbColor: AppColors.textPrimary,
-      overlayColor: AppColors.primaryViolet.withValues(alpha: 0.16),
+      overlayColor: AppColors.primaryCyan.withValues(alpha: 0.16),
       trackHeight: 3,
       thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
       overlayShape: const RoundSliderOverlayShape(overlayRadius: 14),
