@@ -56,12 +56,15 @@ class MiniPlayer extends StatelessWidget {
           },
           child: GlassCard(
             borderRadius: 20,
-            blurSigma: 0, // no BackdropFilter — sits over scrolling content
+            blurSigma: 8,
+            level: GlassLevel.floating,
+            specularHighlight: true,
             padding: const EdgeInsets.fromLTRB(10, 8, 10, 6),
-            color: const Color(0xE6171D30),
+            color: const Color(0xCC0F111E),
             borderColor: isPlaying
-                ? AppColors.accent.withValues(alpha: 0.42)
-                : AppColors.glassBorder,
+                ? AppColors.borderActiveViolet
+                : AppColors.dockBorder,
+            glowColor: isPlaying ? AppColors.primaryViolet : null,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -230,7 +233,7 @@ class MiniPlayer extends StatelessWidget {
                               : 'Playback progress',
                           backgroundColor: Colors.white.withValues(alpha: 0.08),
                           valueColor: const AlwaysStoppedAnimation<Color>(
-                            AppColors.softCyan,
+                            AppColors.primaryViolet,
                           ),
                           minHeight: 2.5,
                         );

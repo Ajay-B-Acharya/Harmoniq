@@ -7,6 +7,7 @@ import '../models/youtube_video.dart';
 import '../services/audio_service.dart';
 import '../services/youtube_catalog.dart';
 import '../theme/app_colors.dart';
+import '../widgets/avatar_halo.dart';
 import '../widgets/harmoniq_emblem.dart';
 import '../widgets/motion.dart';
 import '../widgets/song_tile.dart';
@@ -174,30 +175,13 @@ class _ExploreScreenState extends State<ExploreScreen> {
                             color: AppColors.textPrimary,
                           ),
                         ),
-                        GestureDetector(
+                        AvatarHalo(
+                          size: 38,
                           onTap: widget.onProfileTap,
-                          child: Container(
-                            width: 38,
-                            height: 38,
-                            padding: const EdgeInsets.all(2),
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: AppColors.backgroundSurface,
-                              border: Border.all(
-                                color: AppColors.surfaceBorder,
-                              ),
-                            ),
-                            child: Container(
-                              decoration: const BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: AppColors.backgroundSecondary,
-                              ),
-                              child: const Icon(
-                                Icons.person_rounded,
-                                size: 20,
-                                color: AppColors.accentLight,
-                              ),
-                            ),
+                          child: const Icon(
+                            Icons.person_rounded,
+                            size: 20,
+                            color: AppColors.textPrimary,
                           ),
                         ),
                       ],
@@ -491,21 +475,32 @@ class _ExploreScreenState extends State<ExploreScreen> {
 
   Widget _buildDiscoverHeroBanner() {
     return Container(
-      height: 165,
+      height: 185,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(22),
         gradient: const LinearGradient(
-          colors: [Color(0xFF293A3E), Color(0xFF182329), Color(0xFF121A20)],
+          colors: [
+            Color(0xFF1B1534), // Deep blue-violet
+            Color(0xFF100E22), // Midnight navy
+            Color(0xFF07080E), // Near-black base
+          ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        border: Border.all(color: AppColors.surfaceBorder),
+        border: Border.all(color: AppColors.borderElevated),
+        boxShadow: const [
+          BoxShadow(
+            color: AppColors.shadowFloating,
+            blurRadius: 20,
+            offset: Offset(0, 8),
+          ),
+        ],
       ),
       child: Stack(
         fit: StackFit.expand,
         children: [
           Padding(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -518,7 +513,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                       style: TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.w800,
-                        color: Colors.white,
+                        color: AppColors.textPrimary,
                         letterSpacing: -0.6,
                       ),
                     ),
@@ -540,8 +535,22 @@ class _ExploreScreenState extends State<ExploreScreen> {
                       vertical: 9,
                     ),
                     decoration: BoxDecoration(
-                      color: AppColors.accentLight,
+                      gradient: const LinearGradient(
+                        colors: [
+                          AppColors.primaryViolet,
+                          AppColors.deepViolet,
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
                       borderRadius: BorderRadius.circular(14),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: AppColors.shadowActiveViolet,
+                          blurRadius: 12,
+                          offset: Offset(0, 2),
+                        ),
+                      ],
                     ),
                     child: const Row(
                       mainAxisSize: MainAxisSize.min,
@@ -549,7 +558,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                         Icon(
                           Icons.play_arrow_rounded,
                           size: 19,
-                          color: Color(0xFF101717),
+                          color: Colors.white,
                         ),
                         SizedBox(width: 6),
                         Text(
@@ -557,7 +566,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                           style: TextStyle(
                             fontSize: 12.5,
                             fontWeight: FontWeight.w700,
-                            color: Color(0xFF101717),
+                            color: Colors.white,
                           ),
                         ),
                       ],

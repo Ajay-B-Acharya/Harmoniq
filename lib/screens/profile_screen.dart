@@ -6,6 +6,7 @@ import '../services/audio_service.dart';
 import '../services/auth_service.dart';
 import '../theme/app_colors.dart';
 import '../widgets/account_dialog.dart';
+import '../widgets/avatar_halo.dart';
 import '../widgets/motion.dart';
 import '../widgets/spatial_background.dart';
 
@@ -345,36 +346,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     sliver: SliverToBoxAdapter(
                       child: Column(
                         children: [
-                          // Simple outlined avatar keeps the profile in focus.
+                          // Profile avatar with restrained gradient halo
                           Center(
-                            child: Container(
-                              width: 96,
-                              height: 96,
-                              padding: const EdgeInsets.all(2),
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: AppColors.accent.withValues(
-                                    alpha: 0.55,
-                                  ),
-                                  width: 1.5,
-                                ),
-                              ),
-                              child: Container(
-                                decoration: const BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: AppColors.backgroundSecondary,
-                                ),
-                                alignment: Alignment.center,
-                                child: Icon(
-                                  isAuthenticated
-                                      ? Icons.person_rounded
-                                      : Icons.person_outline_rounded,
-                                  size: 48,
-                                  color: isAuthenticated
-                                      ? AppColors.accentLight
-                                      : AppColors.textMuted,
-                                ),
+                            child: AvatarHalo(
+                              size: 96,
+                              borderWidth: 2.5,
+                              child: Icon(
+                                isAuthenticated
+                                    ? Icons.person_rounded
+                                    : Icons.person_outline_rounded,
+                                size: 48,
+                                color: isAuthenticated
+                                    ? AppColors.textPrimary
+                                    : AppColors.textMuted,
                               ),
                             ),
                           ),
@@ -393,29 +377,46 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                           const SizedBox(height: 6),
 
-                          // Membership status pill
+                          // Membership status pill (amber status indicator)
                           Container(
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 4,
+                              horizontal: 14,
+                              vertical: 5,
                             ),
                             decoration: BoxDecoration(
-                              color: AppColors.backgroundSurface,
+                              color: AppColors.glassSecondary,
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
-                                color: AppColors.surfaceBorder,
+                                color: isAuthenticated
+                                    ? AppColors.amber.withValues(alpha: 0.5)
+                                    : AppColors.borderStandard,
                               ),
                             ),
-                            child: Text(
-                              isAuthenticated
-                                  ? 'Harmoniq Member'
-                                  : 'Guest Mode',
-                              style: const TextStyle(
-                                color: AppColors.textPrimary,
-                                fontSize: 11.5,
-                                fontWeight: FontWeight.w600,
-                                letterSpacing: 0.2,
-                              ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                if (isAuthenticated) ...[
+                                  const Icon(
+                                    Icons.star_rounded,
+                                    size: 14,
+                                    color: AppColors.amber,
+                                  ),
+                                  const SizedBox(width: 5),
+                                ],
+                                Text(
+                                  isAuthenticated
+                                      ? 'Harmoniq Member'
+                                      : 'Guest Mode',
+                                  style: TextStyle(
+                                    color: isAuthenticated
+                                        ? AppColors.amber
+                                        : AppColors.textSecondary,
+                                    fontSize: 11.5,
+                                    fontWeight: FontWeight.w600,
+                                    letterSpacing: 0.2,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                           const SizedBox(height: 16),
@@ -428,10 +429,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               vertical: 10,
                             ),
                             decoration: BoxDecoration(
-                              color: AppColors.backgroundSurface,
+                              color: AppColors.glassSecondary,
                               borderRadius: BorderRadius.circular(16),
                               border: Border.all(
-                                color: AppColors.surfaceBorder,
+                                color: AppColors.borderStandard,
                               ),
                             ),
                             child: Row(

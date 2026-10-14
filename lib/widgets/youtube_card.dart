@@ -28,17 +28,17 @@ class YoutubeCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: AppColors.glassBackground,
+          color: AppColors.glassSecondary,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: AppColors.glassBorder,
+            color: AppColors.borderStandard,
             width: 1,
           ),
           boxShadow: const [
             BoxShadow(
-              color: Color(0x33050914),
-              blurRadius: 10,
-              offset: Offset(0, 3),
+              color: AppColors.shadowStandard,
+              blurRadius: 12,
+              offset: Offset(0, 4),
             ),
           ],
         ),

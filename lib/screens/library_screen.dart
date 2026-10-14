@@ -160,22 +160,31 @@ class LibraryScreenState extends State<LibraryScreen> {
                           ),
                           decoration: BoxDecoration(
                             color: isSelected
-                                ? AppColors.accentDark.withValues(alpha: 0.62)
-                                : AppColors.backgroundSurface,
+                                ? AppColors.glassSelected
+                                : AppColors.glassSecondary,
                             borderRadius: BorderRadius.circular(14),
                             border: Border.all(
                               color: isSelected
-                                  ? AppColors.accent.withValues(alpha: 0.55)
-                                  : AppColors.surfaceBorder,
+                                  ? AppColors.borderActiveViolet
+                                  : AppColors.borderStandard,
                               width: 1,
                             ),
+                            boxShadow: isSelected
+                                ? const [
+                                    BoxShadow(
+                                      color: AppColors.shadowActiveViolet,
+                                      blurRadius: 10,
+                                      offset: Offset(0, 1),
+                                    ),
+                                  ]
+                                : null,
                           ),
                           child: Text(
                             _categories[index],
                             style: TextStyle(
                               color: isSelected
                                   ? AppColors.textPrimary
-                                  : AppColors.textMuted,
+                                  : AppColors.textSecondary,
                               fontSize: 12.5,
                               fontWeight: isSelected
                                   ? FontWeight.w700

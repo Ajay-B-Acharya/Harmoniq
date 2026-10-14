@@ -50,3 +50,7 @@ app.*.map.json
 # Generated Android reports and local Gradle cache
 /android/build/
 /android/.gradle/
+
+# Editor local metadata
+.zcode/
+.zcodeignore

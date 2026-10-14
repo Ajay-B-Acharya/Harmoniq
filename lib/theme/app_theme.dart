@@ -8,13 +8,13 @@ class AppTheme {
     brightness: Brightness.dark,
     scaffoldBackgroundColor: AppColors.background,
     colorScheme: const ColorScheme.dark(
-      surface: AppColors.backgroundSurface,
-      primary: AppColors.accent,
-      onPrimary: Color(0xFF101717),
-      secondary: AppColors.electricBlue,
-      onSecondary: Color(0xFF101717),
+      surface: AppColors.backgroundSecondary,
+      primary: AppColors.primaryViolet,
+      onPrimary: Colors.white,
+      secondary: AppColors.cyan,
+      onSecondary: Colors.white,
       onSurface: AppColors.textPrimary,
-      outline: AppColors.surfaceBorder,
+      outline: AppColors.borderStandard,
     ),
     splashFactory: InkSparkle.splashFactory,
     textTheme: const TextTheme(
@@ -52,15 +52,15 @@ class AppTheme {
         height: 1.45,
       ),
       bodySmall: TextStyle(
-        color: AppColors.textMuted,
+        color: AppColors.textTertiary,
         fontSize: 12,
         height: 1.4,
       ),
     ),
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
-        backgroundColor: AppColors.accent,
-        foregroundColor: const Color(0xFF101717),
+        backgroundColor: AppColors.primaryViolet,
+        foregroundColor: Colors.white,
         padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
         textStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13.5),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
@@ -68,7 +68,7 @@ class AppTheme {
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
-        backgroundColor: AppColors.surfaceHigh,
+        backgroundColor: AppColors.glassElevated,
         foregroundColor: AppColors.textPrimary,
         elevation: 0,
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
@@ -78,31 +78,31 @@ class AppTheme {
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
         foregroundColor: AppColors.textPrimary,
-        side: const BorderSide(color: AppColors.surfaceBorder),
+        side: const BorderSide(color: AppColors.borderStandard),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       ),
     ),
     chipTheme: ChipThemeData(
-      backgroundColor: AppColors.backgroundSurface,
-      selectedColor: AppColors.accent.withValues(alpha: 0.22),
-      side: const BorderSide(color: AppColors.surfaceBorder),
+      backgroundColor: AppColors.glassSecondary,
+      selectedColor: AppColors.glassSelected,
+      side: const BorderSide(color: AppColors.borderStandard),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
     ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: AppColors.backgroundSurface,
+      fillColor: AppColors.glassSecondary,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
-        borderSide: const BorderSide(color: AppColors.surfaceBorder),
+        borderSide: const BorderSide(color: AppColors.borderStandard),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
-        borderSide: const BorderSide(color: AppColors.surfaceBorder),
+        borderSide: const BorderSide(color: AppColors.borderStandard),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
-        borderSide: const BorderSide(color: AppColors.accent, width: 1.2),
+        borderSide: const BorderSide(color: AppColors.borderActiveViolet, width: 1.2),
       ),
     ),
     bottomSheetTheme: const BottomSheetThemeData(
@@ -113,10 +113,10 @@ class AppTheme {
       ),
     ),
     sliderTheme: SliderThemeData(
-      activeTrackColor: AppColors.accent,
+      activeTrackColor: AppColors.primaryViolet,
       inactiveTrackColor: Colors.white.withValues(alpha: 0.12),
       thumbColor: AppColors.textPrimary,
-      overlayColor: AppColors.accent.withValues(alpha: 0.12),
+      overlayColor: AppColors.primaryViolet.withValues(alpha: 0.16),
       trackHeight: 3,
       thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
       overlayShape: const RoundSliderOverlayShape(overlayRadius: 14),

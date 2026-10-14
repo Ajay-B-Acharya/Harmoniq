@@ -6,6 +6,7 @@ import '../services/audio_service.dart';
 import '../services/youtube_catalog.dart';
 import '../services/youtube_links.dart';
 import '../theme/app_colors.dart';
+import '../widgets/avatar_halo.dart';
 import '../widgets/harmoniq_emblem.dart';
 import '../widgets/motion.dart';
 import '../widgets/song_tile.dart';
@@ -203,32 +204,13 @@ class SearchScreenState extends State<SearchScreen> {
                         ),
                       ),
                     ),
-                    GestureDetector(
+                    AvatarHalo(
+                      size: 38,
                       onTap: widget.onProfileTap,
-                      child: Container(
-                        width: 38,
-                        height: 38,
-                        padding: const EdgeInsets.all(2),
-                        decoration: const BoxDecoration(
-                          shape: BoxShape.circle,
-                          gradient: LinearGradient(
-                            colors: [
-                              AppColors.softCyan,
-                              AppColors.primaryViolet,
-                            ],
-                          ),
-                        ),
-                        child: Container(
-                          decoration: const BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: AppColors.backgroundSecondary,
-                          ),
-                          child: const Icon(
-                            Icons.person_rounded,
-                            size: 19,
-                            color: AppColors.softCyan,
-                          ),
-                        ),
+                      child: const Icon(
+                        Icons.person_rounded,
+                        size: 20,
+                        color: AppColors.textPrimary,
                       ),
                     ),
                   ],
@@ -241,14 +223,21 @@ class SearchScreenState extends State<SearchScreen> {
                 child: Container(
                   height: 52,
                   decoration: BoxDecoration(
-                    color: AppColors.backgroundSurface,
+                    color: AppColors.glassSecondary,
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
                       color: _focusNode.hasFocus
-                          ? AppColors.accent.withValues(alpha: 0.68)
-                          : AppColors.surfaceBorder,
+                          ? AppColors.borderActiveViolet
+                          : AppColors.borderStandard,
                       width: 1,
                     ),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: AppColors.shadowStandard,
+                        blurRadius: 14,
+                        offset: Offset(0, 4),
+                      ),
+                    ],
                   ),
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Row(
@@ -352,16 +341,18 @@ class SearchScreenState extends State<SearchScreen> {
     label: Text(text),
     selected: _filter == filter,
     showCheckmark: false,
-    selectedColor: AppColors.accentDark,
-    backgroundColor: AppColors.backgroundSurface,
+    selectedColor: AppColors.glassSelected,
+    backgroundColor: AppColors.glassSecondary,
     labelStyle: TextStyle(
-      color: _filter == filter ? Colors.white : AppColors.textSecondary,
+      color: _filter == filter ? AppColors.textPrimary : AppColors.textSecondary,
       fontWeight: _filter == filter ? FontWeight.w700 : FontWeight.w500,
       fontSize: 12,
     ),
     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
     side: BorderSide(
-      color: _filter == filter ? AppColors.accent : AppColors.surfaceBorder,
+      color: _filter == filter
+          ? AppColors.borderActiveViolet
+          : AppColors.borderStandard,
       width: 1,
     ),
     onSelected: (_) => setState(() {

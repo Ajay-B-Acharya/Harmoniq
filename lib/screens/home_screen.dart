@@ -9,6 +9,7 @@ import '../services/youtube_catalog.dart';
 import '../theme/app_colors.dart';
 import '../widgets/account_dialog.dart';
 import '../widgets/album_art.dart';
+import '../widgets/avatar_halo.dart';
 import '../widgets/harmoniq_emblem.dart';
 import '../widgets/motion.dart';
 import '../widgets/song_card.dart';
@@ -193,8 +194,9 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                             ),
 
-                            // Profile avatar thumbnail with glowing ring
-                            GestureDetector(
+                            // Profile avatar thumbnail with restrained gradient halo
+                            AvatarHalo(
+                              size: 38,
                               onTap: () {
                                 if (widget.onProfileTap != null) {
                                   widget.onProfileTap!();
@@ -206,28 +208,10 @@ class _HomeScreenState extends State<HomeScreen> {
                                   );
                                 }
                               },
-                              child: Container(
-                                width: 38,
-                                height: 38,
-                                padding: const EdgeInsets.all(2),
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: AppColors.backgroundSurface,
-                                  border: Border.all(
-                                    color: AppColors.surfaceBorder,
-                                  ),
-                                ),
-                                child: Container(
-                                  decoration: const BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: AppColors.backgroundSecondary,
-                                  ),
-                                  child: const Icon(
-                                    Icons.person_rounded,
-                                    size: 20,
-                                    color: AppColors.accentLight,
-                                  ),
-                                ),
+                              child: const Icon(
+                                Icons.person_rounded,
+                                size: 20,
+                                color: AppColors.textPrimary,
                               ),
                             ),
                           ],
@@ -575,11 +559,22 @@ class _HomeScreenState extends State<HomeScreen> {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(22),
         gradient: const LinearGradient(
-          colors: [Color(0xFF293A3E), Color(0xFF182329), Color(0xFF121A20)],
+          colors: [
+            Color(0xFF1B1534), // Deep blue-violet
+            Color(0xFF100E22), // Midnight navy
+            Color(0xFF07080E), // Near-black base
+          ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        border: Border.all(color: AppColors.surfaceBorder),
+        border: Border.all(color: AppColors.borderElevated),
+        boxShadow: const [
+          BoxShadow(
+            color: AppColors.shadowFloating,
+            blurRadius: 20,
+            offset: Offset(0, 8),
+          ),
+        ],
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(22),
@@ -595,7 +590,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   fontSize: 24,
                   fontWeight: FontWeight.w800,
                   height: 1.1,
-                  color: Colors.white,
+                  color: AppColors.textPrimary,
                   letterSpacing: -0.8,
                 ),
               ),
@@ -618,8 +613,22 @@ class _HomeScreenState extends State<HomeScreen> {
                         vertical: 8,
                       ),
                       decoration: BoxDecoration(
-                        color: AppColors.accentLight,
+                        gradient: const LinearGradient(
+                          colors: [
+                            AppColors.primaryViolet,
+                            AppColors.deepViolet,
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
                         borderRadius: BorderRadius.circular(14),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: AppColors.shadowActiveViolet,
+                            blurRadius: 12,
+                            offset: Offset(0, 2),
+                          ),
+                        ],
                       ),
                       child: const Row(
                         mainAxisSize: MainAxisSize.min,
@@ -627,7 +636,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           Icon(
                             Icons.play_arrow_rounded,
                             size: 19,
-                            color: Color(0xFF101717),
+                            color: Colors.white,
                           ),
                           SizedBox(width: 5),
                           Text(
@@ -635,7 +644,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w700,
-                              color: Color(0xFF101717),
+                              color: Colors.white,
                             ),
                           ),
                         ],
@@ -652,8 +661,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         margin: const EdgeInsets.only(left: 4),
                         decoration: BoxDecoration(
                           color: active
-                              ? Colors.white
-                              : Colors.white.withValues(alpha: 0.3),
+                              ? AppColors.primaryViolet
+                              : Colors.white.withValues(alpha: 0.20),
                           borderRadius: BorderRadius.circular(3),
                         ),
                       );
@@ -829,9 +838,9 @@ class _HomeScreenState extends State<HomeScreen> {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppColors.backgroundSurface,
+        color: AppColors.glassSecondary,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.surfaceBorder),
+        border: Border.all(color: AppColors.borderStandard),
       ),
       child: Row(
         children: [
@@ -887,7 +896,7 @@ class _HomeScreenState extends State<HomeScreen> {
               isPlaying
                   ? Icons.pause_circle_filled_rounded
                   : Icons.play_circle_filled_rounded,
-              color: AppColors.accentLight,
+              color: AppColors.primaryViolet,
               size: 38,
             ),
           ),
@@ -908,9 +917,9 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: AppColors.backgroundSurface,
+          color: AppColors.glassSecondary,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: AppColors.surfaceBorder),
+          border: Border.all(color: AppColors.borderStandard),
         ),
         child: Row(
           children: [

@@ -1,9 +1,22 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 
 import '../theme/app_colors.dart';
 import 'motion.dart';
 
-/// Compact, low-profile navigation for the five main destinations.
+/// SPATIAL UI — 8. FLOATING NAVIGATION DOCK
+///
+/// Suspended transparent glass dock with 5 destinations:
+/// Home, Explore, Library, Search, Profile.
+///
+/// Specifications:
+/// - Surface: rgba(15, 17, 30, 0.62)
+/// - Border: rgba(255, 255, 255, 0.16)
+/// - Blur: BackdropFilter sigma 10 (8–12)
+/// - Shadow: Restrained black elevation shadow
+/// - Active Item: rgba(168, 85, 247, 0.13) surface, 0.45 border, 0.16 glow, near-white label
+/// - Inactive Item: rgba(248, 250, 252, 0.60)
 class BottomNav extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int> onTap;
@@ -39,65 +52,174 @@ class BottomNav extends StatelessWidget {
     return RepaintBoundary(
       child: SafeArea(
         top: false,
-        child: Container(
-          decoration: const BoxDecoration(
-            color: AppColors.backgroundSecondary,
-            border: Border(top: BorderSide(color: AppColors.surfaceBorder)),
-          ),
-          padding: const EdgeInsets.fromLTRB(8, 6, 8, 6),
-          child: Row(
-            children: List.generate(_labels.length, (index) {
-              final selected = index == currentIndex;
-              return Expanded(
-                child: Semantics(
-                  label: _labels[index],
-                  selected: selected,
-                  button: true,
-                  excludeSemantics: true,
-                  onTap: () => onTap(index),
-                  child: Pressable(
-                    onTap: () => onTap(index),
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(
-                        minHeight: 48,
-                        minWidth: 48,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(28),
+              boxShadow: const [
+                BoxShadow(
+                  color: AppColors.shadowFloating, // rgba(0, 0, 0, 0.28)
+                  blurRadius: 24,
+                  spreadRadius: -2,
+                  offset: Offset(0, 8),
+                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(28),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                child: CustomPaint(
+                  foregroundPainter: const _DockSpecularHighlightPainter(),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: AppColors.dockSurface, // rgba(15, 17, 30, 0.62)
+                      borderRadius: BorderRadius.circular(28),
+                      border: Border.all(
+                        color: AppColors.dockBorder, // rgba(255, 255, 255, 0.16)
+                        width: 1.0,
                       ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            selected ? _selectedIcons[index] : _icons[index],
-                            size: 21,
-                            color: selected
-                                ? AppColors.accentLight
-                                : AppColors.textMuted,
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            _labels[index],
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontSize: 10.5,
-                              fontWeight: selected
-                                  ? FontWeight.w700
-                                  : FontWeight.w500,
-                              color: selected
-                                  ? AppColors.textPrimary
-                                  : AppColors.textMuted,
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: List.generate(_labels.length, (index) {
+                        final selected = index == currentIndex;
+                        return Expanded(
+                          child: Semantics(
+                            label: _labels[index],
+                            selected: selected,
+                            button: true,
+                            excludeSemantics: true,
+                            onTap: () => onTap(index),
+                            child: Pressable(
+                              onTap: () => onTap(index),
+                              child: AnimatedContainer(
+                                duration: motionDuration(context, 200),
+                                curve: Curves.easeOutCubic,
+                                constraints: const BoxConstraints(
+                                  minHeight: 48,
+                                  minWidth: 48,
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 4,
+                                  vertical: 5,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: selected
+                                      ? AppColors.dockActiveSurface // rgba(168, 85, 247, 0.13)
+                                      : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: selected
+                                      ? Border.all(
+                                          color: AppColors.dockActiveBorder, // rgba(168, 85, 247, 0.45)
+                                          width: 1.0,
+                                        )
+                                      : null,
+                                  boxShadow: selected
+                                      ? const [
+                                          BoxShadow(
+                                            color: AppColors.dockActiveGlow, // rgba(168, 85, 247, 0.16)
+                                            blurRadius: 14,
+                                            offset: Offset(0, 1),
+                                          ),
+                                        ]
+                                      : null,
+                                ),
+                                child: Stack(
+                                  clipBehavior: Clip.none,
+                                  alignment: Alignment.center,
+                                  children: [
+                                    Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Icon(
+                                          selected
+                                              ? _selectedIcons[index]
+                                              : _icons[index],
+                                          size: 21,
+                                          color: selected
+                                              ? AppColors.textPrimary // Near-white
+                                              : AppColors.dockInactive, // rgba(248, 250, 252, 0.60)
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          _labels[index],
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: TextStyle(
+                                            fontSize: 10.5,
+                                            fontWeight: selected
+                                                ? FontWeight.w700
+                                                : FontWeight.w500,
+                                            color: selected
+                                                ? AppColors.textPrimary
+                                                : AppColors.dockInactive,
+                                            letterSpacing: -0.1,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    // Subtle sparkle accent on active profile
+                                    if (index == 4 && selected)
+                                      Positioned(
+                                        top: -2,
+                                        right: 6,
+                                        child: Icon(
+                                          Icons.auto_awesome,
+                                          size: 11,
+                                          color: AppColors.lightCyan.withValues(alpha: 0.9),
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              ),
                             ),
                           ),
-                        ],
-                      ),
+                        );
+                      }),
                     ),
                   ),
                 ),
-              );
-            }),
+              ),
+            ),
           ),
         ),
       ),
     );
   }
+}
+
+class _DockSpecularHighlightPainter extends CustomPainter {
+  const _DockSpecularHighlightPainter();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (size.width <= 0 || size.height <= 0) return;
+    const radius = 28.0;
+    final rrect = RRect.fromRectAndRadius(
+      Offset.zero & size,
+      const Radius.circular(radius),
+    );
+    canvas.save();
+    canvas.clipRect(Rect.fromLTWH(0, 0, size.width, 16));
+    final paint = Paint()
+      ..shader = const LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [
+          AppColors.specularHighlight, // rgba(255, 255, 255, 0.22)
+          Colors.transparent,
+        ],
+      ).createShader(Rect.fromLTWH(0, 0, size.width, 16))
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.0;
+    canvas.drawRRect(rrect.deflate(0.5), paint);
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
