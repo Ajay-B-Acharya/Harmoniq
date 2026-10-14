@@ -42,6 +42,7 @@ class LibraryScreenState extends State<LibraryScreen> {
     'Favorites',
     'Recently Played',
     'Local',
+    'Downloads',
   ];
 
   AudioService? _cachedService;
@@ -305,6 +306,12 @@ class LibraryScreenState extends State<LibraryScreen> {
       case 5:
         return _buildLocalSongsView(
           sortLocalSongs(widget.audioService.localSongs, _localSongSort),
+          currentSong,
+          isPlaying,
+        );
+      case 6:
+        return _buildDownloadsView(
+          widget.audioService.downloadedSongs,
           currentSong,
           isPlaying,
         );
@@ -817,6 +824,235 @@ class LibraryScreenState extends State<LibraryScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildDownloadsView(
+    List<Song> downloadedSongs,
+    Song? currentSong,
+    bool isPlaying,
+  ) {
+    if (downloadedSongs.isEmpty) {
+      return _buildEmptyState(
+        Icons.cloud_download_outlined,
+        'No downloaded songs yet',
+        subtitle:
+            'Download songs from the Now Playing menu for offline listening.',
+      );
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+          child: Row(
+            children: [
+              const Icon(
+                Icons.offline_pin_rounded,
+                size: 16,
+                color: AppColors.accentLight,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                '${downloadedSongs.length} downloaded ${downloadedSongs.length == 1 ? "track" : "tracks"} · Available offline',
+                style: const TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
+        Expanded(
+          child: ListView.builder(
+            physics: const BouncingScrollPhysics(),
+            itemCount: downloadedSongs.length + 1,
+            itemBuilder: (context, index) {
+              if (index == downloadedSongs.length) {
+                return const SizedBox(height: 120);
+              }
+              final song = downloadedSongs[index];
+              final isActive = currentSong?.identity == song.identity;
+              return SongTile(
+                song: song,
+                isActive: isActive,
+                isPlaying: isActive && isPlaying,
+                onTap: () => _onSongTap(song),
+                onFavoriteTap: () => widget.onFavoriteTap(song),
+                onMoreTap: () => _showDownloadOptions(context, song),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _showDownloadOptions(BuildContext context, Song song) {
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: AppColors.sheetSurface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (sheetCtx) => SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                children: [
+                  AlbumArt(
+                    gradientId: song.gradientId,
+                    size: 48,
+                    borderRadius: 10,
+                    showShadow: false,
+                    imageUrl: song.albumArtUrl,
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          song.title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: AppColors.textPrimary,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 15,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          song.downloadQuality != null
+                              ? '${song.artist} · ${song.downloadQuality} Quality'
+                              : song.artist,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const Divider(color: AppColors.glassBorder, height: 28),
+              ListTile(
+                leading: const Icon(Icons.play_arrow_rounded,
+                    color: AppColors.accentLight),
+                title: const Text('Play Now',
+                    style: TextStyle(color: AppColors.textPrimary)),
+                onTap: () {
+                  Navigator.pop(sheetCtx);
+                  _onSongTap(song);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.playlist_add_rounded,
+                    color: AppColors.textSecondary),
+                title: const Text('Add to playlist',
+                    style: TextStyle(color: AppColors.textPrimary)),
+                onTap: () {
+                  Navigator.pop(sheetCtx);
+                  _showAddToPlaylistSelector(context, song);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.delete_outline_rounded,
+                    color: Colors.redAccent),
+                title: const Text('Remove from downloads',
+                    style: TextStyle(color: Colors.redAccent)),
+                onTap: () async {
+                  Navigator.pop(sheetCtx);
+                  await widget.audioService.removeDownloadedSong(song);
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text("Removed '${song.title}' from downloads"),
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                  }
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showAddToPlaylistSelector(BuildContext context, Song song) {
+    final messenger = ScaffoldMessenger.of(context);
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: AppColors.sheetSurface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (sheetContext) => SafeArea(
+        top: false,
+        child: ListView(
+          shrinkWrap: true,
+          padding: const EdgeInsets.all(24),
+          children: [
+            const Text(
+              'Add to playlist',
+              style: TextStyle(
+                color: AppColors.textPrimary,
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 16),
+            if (widget.audioService.playlists.isEmpty)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 24),
+                child: Text(
+                  'No playlists available',
+                  style:
+                      TextStyle(color: AppColors.textSecondary, fontSize: 14),
+                ),
+              )
+            else
+              for (final playlist in widget.audioService.playlists)
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: AlbumArt(
+                    gradientId: playlist.gradientId,
+                    size: 40,
+                    borderRadius: 8,
+                    showShadow: false,
+                  ),
+                  title: Text(
+                    playlist.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                        color: AppColors.textPrimary, fontSize: 14),
+                  ),
+                  onTap: () {
+                    widget.audioService.addSongToPlaylist(song, playlist);
+                    Navigator.pop(sheetContext);
+                    messenger.showSnackBar(
+                      SnackBar(
+                        content: Text("Added to '${playlist.name}'"),
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                  },
+                ),
+          ],
+        ),
       ),
     );
   }

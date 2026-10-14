@@ -3,6 +3,7 @@ package com.example.rachan
 import android.Manifest
 import android.content.ContentResolver
 import android.content.ContentUris
+import android.content.ContentValues
 import android.content.pm.PackageManager
 import android.database.Cursor
 import android.os.Build
@@ -15,6 +16,8 @@ import androidx.core.content.ContextCompat
 import com.ryanheise.audioservice.AudioServiceActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
+import java.io.File
+import java.io.IOException
 import java.util.concurrent.Executors
 
 // audio_service (used by just_audio_background) requires the Activity to
@@ -56,6 +59,22 @@ class MainActivity : AudioServiceActivity() {
                         fetchLocalSongsAsync(result)
                     } else {
                         result.error("PERMISSION_DENIED", "Storage/Media permission is not granted", null)
+                    }
+                }
+                "saveDownloadedAudio" -> {
+                    val title = call.argument<String>("title") ?: "Unknown Title"
+                    val artist = call.argument<String>("artist") ?: "Unknown Artist"
+                    val album = call.argument<String>("album") ?: "Harmoniq"
+                    val durationMs = (call.argument<Number>("durationMs"))?.toLong() ?: 0L
+                    val mimeType = call.argument<String>("mimeType") ?: "audio/mp4"
+                    val displayName = call.argument<String>("displayName") ?: "$title.m4a"
+                    val tempFilePath = call.argument<String>("tempFilePath")
+                    if (tempFilePath == null) {
+                        result.error("INVALID_ARGS", "tempFilePath is required", null)
+                    } else {
+                        saveDownloadedAudioAsync(
+                            title, artist, album, durationMs, mimeType, displayName, tempFilePath, result
+                        )
                     }
                 }
                 else -> {
@@ -250,5 +269,89 @@ class MainActivity : AudioServiceActivity() {
             }
         }
         return songsList
+    }
+
+    private fun saveDownloadedAudioAsync(
+        title: String,
+        artist: String,
+        album: String,
+        durationMs: Long,
+        mimeType: String,
+        displayName: String,
+        tempFilePath: String,
+        result: MethodChannel.Result
+    ) {
+        val resolver = applicationContext.contentResolver
+        scanExecutor.execute {
+            var insertedUri: android.net.Uri? = null
+            try {
+                val tempFile = File(tempFilePath)
+                if (!tempFile.exists()) {
+                    mainHandler.post {
+                        result.error("FILE_NOT_FOUND", "Temporary download file does not exist", null)
+                    }
+                    return@execute
+                }
+
+                val sanitizedDisplayName = sanitizeFileName(displayName)
+                val contentValues = ContentValues().apply {
+                    put(MediaStore.Audio.Media.TITLE, title)
+                    put(MediaStore.Audio.Media.ARTIST, artist)
+                    put(MediaStore.Audio.Media.ALBUM, album)
+                    put(MediaStore.Audio.Media.DISPLAY_NAME, sanitizedDisplayName)
+                    put(MediaStore.Audio.Media.MIME_TYPE, mimeType)
+                    if (durationMs > 0) {
+                        put(MediaStore.Audio.Media.DURATION, durationMs)
+                    }
+                    put(MediaStore.Audio.Media.IS_MUSIC, 1)
+
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                        put(MediaStore.Audio.Media.RELATIVE_PATH, "Music/Harmoniq")
+                        put(MediaStore.Audio.Media.IS_PENDING, 1)
+                    }
+                }
+
+                val collection = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
+                insertedUri = resolver.insert(collection, contentValues)
+                    ?: throw IOException("Failed to create MediaStore entry")
+
+                resolver.openOutputStream(insertedUri)?.use { output ->
+                    tempFile.inputStream().use { input ->
+                        input.copyTo(output)
+                    }
+                    output.flush()
+                } ?: throw IOException("Unable to open output stream for MediaStore URI")
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    val completedValues = ContentValues().apply {
+                        put(MediaStore.Audio.Media.IS_PENDING, 0)
+                    }
+                    resolver.update(insertedUri, completedValues, null, null)
+                }
+
+                // Delete scratch temp file after writing to MediaStore
+                tempFile.delete()
+
+                val uriString = insertedUri.toString()
+                mainHandler.post {
+                    result.success(uriString)
+                }
+            } catch (e: Exception) {
+                // If anything failed, clean up the pending entry if created
+                insertedUri?.let { uri ->
+                    try {
+                        resolver.delete(uri, null, null)
+                    } catch (_: Exception) {}
+                }
+                mainHandler.post {
+                    result.error("SAVE_FAILED", e.message ?: "Failed to save audio file", null)
+                }
+            }
+        }
+    }
+
+    private fun sanitizeFileName(name: String): String {
+        val clean = name.replace(Regex("[\\\\/:*?\"<>|]"), "_").trim()
+        return if (clean.isEmpty()) "download.m4a" else clean
     }
 }

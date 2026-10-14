@@ -218,6 +218,13 @@ class _MainContainerState extends State<MainContainer> {
     });
   }
 
+  void _openDownloads() {
+    _onTabTap(2);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _libraryKey.currentState?.selectCategory(6);
+    });
+  }
+
   @override
   void dispose() {
     _pageController.dispose();
@@ -282,6 +289,7 @@ class _MainContainerState extends State<MainContainer> {
         pageBuilder: (ctx, a1, a2) => NowPlayingScreen(
           audioService: _audioService,
           onClose: () => Navigator.pop(context),
+          onNavigateToDownloads: _openDownloads,
         ),
         transitionsBuilder: (ctx, animation, a2, child) {
           final tween = Tween(

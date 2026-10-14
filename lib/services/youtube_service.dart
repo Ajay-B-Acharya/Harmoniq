@@ -64,7 +64,7 @@ class YoutubeService {
           'videoEmbeddable': 'true',
           'videoSyndicated': 'true',
           'maxResults': '12',
-          if (pageToken != null) 'pageToken': pageToken,
+          'pageToken': ?pageToken,
         },
         onPageToken: (token) {
           if (token != null && token.isNotEmpty) {

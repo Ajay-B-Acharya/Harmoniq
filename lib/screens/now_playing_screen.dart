@@ -4,18 +4,24 @@ import 'package:flutter/material.dart';
 
 import '../models/song.dart';
 import '../services/audio_service.dart';
+import '../services/download_service.dart';
 import '../theme/app_colors.dart';
 import '../widgets/album_art.dart';
+import '../widgets/download_quality_sheet.dart';
 import '../widgets/spatial_background.dart';
 
 class NowPlayingScreen extends StatefulWidget {
   final AudioService audioService;
   final VoidCallback onClose;
+  final DownloadService? downloadService;
+  final VoidCallback? onNavigateToDownloads;
 
   const NowPlayingScreen({
     super.key,
     required this.audioService,
     required this.onClose,
+    this.downloadService,
+    this.onNavigateToDownloads,
   });
 
   @override
@@ -31,6 +37,8 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
   static const _border = AppColors.glassBorder;
 
   AudioService get _svc => widget.audioService;
+  late final DownloadService _downloadService;
+  late final bool _ownsDownloadService;
   late final PageController _carouselController;
   bool _userCarouselDrag = false;
   bool _carouselSyncScheduled = false;
@@ -52,11 +60,19 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
   void initState() {
     super.initState();
     _syncFromService();
+    _ownsDownloadService = widget.downloadService == null;
+    _downloadService = widget.downloadService ??
+        DownloadService(audioService: widget.audioService);
+    _downloadService.addListener(_onDownloadChanged);
     _carouselController = PageController(
       initialPage: _queueIndex >= 0 ? _queueIndex : 0,
       viewportFraction: 0.9,
     );
     _svc.addListener(_onServiceChanged);
+  }
+
+  void _onDownloadChanged() {
+    if (mounted) setState(() {});
   }
 
   @override
@@ -125,6 +141,8 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
 
   @override
   void dispose() {
+    _downloadService.removeListener(_onDownloadChanged);
+    if (_ownsDownloadService) _downloadService.dispose();
     _svc.removeListener(_onServiceChanged);
     _carouselController.dispose();
     _dragPositionNotifier.dispose();
@@ -934,11 +952,217 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
                   _showAddToPlaylistSelector(context, song);
                 },
               ),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: _downloadService.isDownloading(song.identity)
+                    ? const SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: _primary,
+                        ),
+                      )
+                    : Icon(
+                        _svc.isSongDownloaded(song)
+                            ? Icons.download_done_rounded
+                            : Icons.download_rounded,
+                        color: _svc.isSongDownloaded(song) ? _primary : _muted,
+                      ),
+                title: Text(
+                  _downloadService.isDownloading(song.identity)
+                      ? 'Downloading...'
+                      : _svc.isSongDownloaded(song)
+                          ? 'Downloaded'
+                          : 'Download',
+                  style: const TextStyle(color: _foreground, fontSize: 14),
+                ),
+                subtitle: _svc.isSongDownloaded(song)
+                    ? Text(
+                        _svc.getDownloadedSong(song)?.downloadQuality != null
+                            ? '${_svc.getDownloadedSong(song)!.downloadQuality} quality · Saved offline'
+                            : 'Saved for offline listening',
+                        style: const TextStyle(color: _muted, fontSize: 11),
+                      )
+                    : null,
+                onTap: () {
+                  Navigator.pop(sheetContext);
+                  _handleDownloadAction(context, song);
+                },
+              ),
             ],
           ),
         ),
       ),
     );
+  }
+
+  void _handleDownloadAction(BuildContext context, Song song) {
+    if (song.source == SongSource.local && !_svc.isSongDownloaded(song)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('This song is already stored locally on your device.'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
+    if (_downloadService.isDownloading(song.identity)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Download is already in progress for '${song.title}'."),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
+    if (_svc.isSongDownloaded(song)) {
+      final downloadedSong = _svc.getDownloadedSong(song);
+      showDialog<void>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          backgroundColor: _surface,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: const Text(
+            'Song Already Downloaded',
+            style: TextStyle(color: _foreground, fontWeight: FontWeight.bold),
+          ),
+          content: Text(
+            "'${song.title}' is already downloaded in ${downloadedSong?.downloadQuality ?? 'High'} quality for offline listening.",
+            style: const TextStyle(color: _muted, fontSize: 14),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Cancel', style: TextStyle(color: _muted)),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(dialogContext);
+                _promptQualityAndDownload(context, song);
+              },
+              child: const Text('Download Another Quality',
+                  style: TextStyle(color: _primary)),
+            ),
+            FilledButton(
+              style: FilledButton.styleFrom(backgroundColor: _primary),
+              onPressed: () {
+                Navigator.pop(dialogContext);
+                if (downloadedSong != null) {
+                  _svc.playSong(downloadedSong);
+                }
+              },
+              child: const Text(
+                'Play Downloaded Song',
+                style:
+                    TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
+    if (song.source != SongSource.youtube || song.videoId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+              'This sample track does not have an online stream available for download.'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
+    _promptQualityAndDownload(context, song);
+  }
+
+  Future<void> _promptQualityAndDownload(
+      BuildContext context, Song song) async {
+    final preferredQuality = await _downloadService.getPreferredQuality();
+    if (!context.mounted) return;
+
+    final selectedQuality = await DownloadQualitySheet.show(
+      context,
+      song: song,
+      initialQuality: preferredQuality,
+    );
+
+    if (selectedQuality == null || !context.mounted) return;
+
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const SizedBox(
+              width: 16,
+              height: 16,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                "Starting download: '${song.title}' (${selectedQuality.label})...",
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+        duration: const Duration(seconds: 3),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+
+    _downloadService
+        .downloadSong(song, selectedQuality, overrideAudioService: _svc)
+        .then((downloaded) {
+      if (!mounted) return;
+      messenger.hideCurrentSnackBar();
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(
+              "Downloaded '${downloaded.title}' · Saved to Music/Harmoniq"),
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 5),
+          action: SnackBarAction(
+            label: 'View in Downloads',
+            textColor: _primary,
+            onPressed: () {
+              widget.onClose();
+              widget.onNavigateToDownloads?.call();
+            },
+          ),
+        ),
+      );
+    }).catchError((error) {
+      if (!mounted) return;
+      messenger.hideCurrentSnackBar();
+      final isCancelled = error.toString().contains('cancelled');
+      final errorText = isCancelled
+          ? 'Download cancelled'
+          : 'Download failed: ${error.toString().replaceFirst(RegExp(r'^Exception:\s*'), '')}';
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(errorText),
+          behavior: SnackBarBehavior.floating,
+          action: isCancelled
+              ? null
+              : SnackBarAction(
+                  label: 'Retry',
+                  textColor: _primary,
+                  onPressed: () => _promptQualityAndDownload(context, song),
+                ),
+        ),
+      );
+    });
   }
 
   void _showAddToPlaylistSelector(BuildContext context, Song song) {

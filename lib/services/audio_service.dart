@@ -44,10 +44,18 @@ class AudioService extends ChangeNotifier {
   List<Song> _recentlyPlayed = [];
   List<Song> get recentlyPlayed => _recentlyPlayed;
 
+  // ── Persistent Downloaded Songs ──────────────────────────────────────────────
+  static const String _prefsKeyDownloads = 'harmoniq_downloads_v1';
+  final List<Song> _downloadedSongs = [];
+  List<Song> get downloadedSongs => _downloadedSongs;
+  int _downloadsRevision = 0;
+  int get downloadsRevision => _downloadsRevision;
+
   List<Song> get allAvailableSongs {
     final seen = <String>{};
     final result = <Song>[];
     final base = [
+      ..._downloadedSongs,
       ..._localSongs,
       ..._songs,
       ..._favorites,
@@ -142,7 +150,12 @@ class AudioService extends ChangeNotifier {
     _attachPlayerListeners();
     _loadFavorites();
     _loadRecentlyPlayed();
+    _loadDownloads();
   }
+
+  /// Expose the underlying YouTube audio stream resolver for authorized downloads.
+  Future<YoutubeAudioStream> resolveYoutubeStream(String videoId) =>
+      _resolveYoutubeAudio(videoId);
 
   // ── Persistent Favorites Loading & Saving ────────────────────────────────────
   Future<void> _loadFavorites() async {
@@ -245,6 +258,11 @@ class AudioService extends ChangeNotifier {
         isFavorite: favIds.contains(_recentlyPlayed[i].identity),
       );
     }
+    for (int i = 0; i < _downloadedSongs.length; i++) {
+      _downloadedSongs[i] = _downloadedSongs[i].copyWith(
+        isFavorite: favIds.contains(_downloadedSongs[i].identity),
+      );
+    }
     for (final playlist in _playlists.where((p) => p.id != 0)) {
       for (var i = 0; i < playlist.songs.length; i++) {
         final song = playlist.songs[i];
@@ -256,11 +274,108 @@ class AudioService extends ChangeNotifier {
 
     _catalogRevision++;
     _localSongsRevision++;
+    _downloadsRevision++;
 
     // Sync playlist #0 (Favorites)
     final favPlaylist = _playlists.firstWhere((p) => p.id == 0);
     favPlaylist.songs.clear();
     favPlaylist.songs.addAll(_favorites);
+  }
+
+  // ── Persistent Downloaded Songs Loading & Saving ─────────────────────────────
+  Future<void>? _downloadsInitFuture;
+
+  Future<void> _loadDownloads() async {
+    _downloadsInitFuture ??= _doLoadDownloads();
+    return _downloadsInitFuture;
+  }
+
+  Future<void> _doLoadDownloads() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (_disposed) return;
+      final jsonList = prefs.getStringList(_prefsKeyDownloads) ?? [];
+      final loaded = jsonList.map((str) {
+        final map = json.decode(str) as Map<String, dynamic>;
+        final song = Song.fromJson(map);
+        return song.copyWith(isFavorite: isSongFavorite(song));
+      }).toList();
+
+      for (final s in loaded) {
+        if (!_downloadedSongs.any((d) => d.identity == s.identity)) {
+          _downloadedSongs.add(s);
+        }
+      }
+      _downloadsRevision++;
+      notifyListeners();
+    } catch (e) {
+      debugPrint('[AUDIO_SERVICE] Error loading downloads: $e');
+    }
+  }
+
+  Future<void> _saveDownloads() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final jsonList =
+          _downloadedSongs.map((s) => json.encode(s.toJson())).toList();
+      await prefs.setStringList(_prefsKeyDownloads, jsonList);
+    } catch (e) {
+      debugPrint('[AUDIO_SERVICE] Error saving downloads: $e');
+    }
+  }
+
+  Future<void> addDownloadedSong(Song song) async {
+    await _loadDownloads();
+    // Avoid duplicate entries
+    _downloadedSongs.removeWhere(
+      (s) =>
+          s.identity == song.identity ||
+          (song.videoId != null && s.videoId == song.videoId) ||
+          (song.audioPath.isNotEmpty && s.audioPath == song.audioPath),
+    );
+    final songWithFav = song.copyWith(isFavorite: isSongFavorite(song));
+    _downloadedSongs.insert(0, songWithFav);
+    _downloadsRevision++;
+    _catalogRevision++;
+    notifyListeners();
+    await _saveDownloads();
+  }
+
+  Future<void> removeDownloadedSong(Song song) async {
+    await _loadDownloads();
+    _downloadedSongs.removeWhere(
+      (s) =>
+          s.identity == song.identity ||
+          (song.videoId != null && s.videoId == song.videoId) ||
+          (song.audioPath.isNotEmpty && s.audioPath == song.audioPath),
+    );
+    _downloadsRevision++;
+    _catalogRevision++;
+    notifyListeners();
+    await _saveDownloads();
+  }
+
+  bool isSongDownloaded(Song song) {
+    if (song.source == SongSource.local &&
+        _downloadedSongs.any((s) => s.audioPath == song.audioPath && s.audioPath.isNotEmpty)) {
+      return true;
+    }
+    return _downloadedSongs.any(
+      (s) =>
+          s.identity == song.identity ||
+          (song.videoId != null && s.videoId == song.videoId),
+    );
+  }
+
+  Song? getDownloadedSong(Song song) {
+    for (final s in _downloadedSongs) {
+      if (s.identity == song.identity ||
+          (song.videoId != null && s.videoId == song.videoId) ||
+          (song.audioPath.isNotEmpty && s.audioPath == song.audioPath)) {
+        return s;
+      }
+    }
+    return null;
   }
 
   /// Register tracks in input order; later metadata for an identity wins.

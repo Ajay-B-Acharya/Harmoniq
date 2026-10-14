@@ -16,6 +16,7 @@ class Song {
   final String? videoId;
   final String? licenseUrl;
   final bool audioDownloadAllowed;
+  final String? downloadQuality;
 
   const Song({
     required this.id,
@@ -31,6 +32,7 @@ class Song {
     this.videoId,
     this.licenseUrl,
     this.audioDownloadAllowed = false,
+    this.downloadQuality,
   }) : audioPath = source == SongSource.youtube ? '' : audioPath;
 
   factory Song.fromYoutube(YoutubeVideo video) {
@@ -80,6 +82,7 @@ class Song {
     if (sourceUrl != null) 'sourceUrl': sourceUrl,
     'licenseUrl': licenseUrl,
     'audioDownloadAllowed': audioDownloadAllowed,
+    if (downloadQuality != null) 'downloadQuality': downloadQuality,
   };
 
   factory Song.fromJson(Map<String, dynamic> json) {
@@ -103,6 +106,7 @@ class Song {
       videoId: json['videoId'] as String?,
       licenseUrl: json['licenseUrl'] as String?,
       audioDownloadAllowed: json['audioDownloadAllowed'] as bool? ?? false,
+      downloadQuality: json['downloadQuality'] as String?,
     );
   }
 
@@ -120,6 +124,7 @@ class Song {
     String? videoId,
     String? licenseUrl,
     bool? audioDownloadAllowed,
+    String? downloadQuality,
   }) {
     return Song(
       id: id ?? this.id,
@@ -135,6 +140,7 @@ class Song {
       videoId: videoId ?? this.videoId,
       licenseUrl: licenseUrl ?? this.licenseUrl,
       audioDownloadAllowed: audioDownloadAllowed ?? this.audioDownloadAllowed,
+      downloadQuality: downloadQuality ?? this.downloadQuality,
     );
   }
 
