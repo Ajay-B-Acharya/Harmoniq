@@ -22,14 +22,14 @@ class YoutubeCatalog {
   static const _maxInFlight = 8;
 
   final YoutubeService _officialService;
-  final YoutubeMetadataSearch _metadataSearch;
+  final Function _metadataSearch;
   final bool _platformSupported;
   final DateTime Function() _now;
   final _cache = <String, _CachedVideos>{};
   final _inFlight = <String, Future<List<YoutubeVideo>>>{};
 
   YoutubeCatalog({
-    YoutubeMetadataSearch? metadataSearch,
+    Function? metadataSearch,
     YoutubeService? officialService,
     bool? platformSupported,
     DateTime Function()? now,
@@ -46,7 +46,7 @@ class YoutubeCatalog {
       ? 'On-device YouTube search · Music discovery'
       : 'YouTube discovery on web requires YOUTUBE_API_KEY';
 
-  Future<List<YoutubeVideo>> search(String query) async {
+  Future<List<YoutubeVideo>> search(String query, {int page = 1}) async {
     _requireAvailable();
     final normalized = query.trim().replaceAll(RegExp(r'\s+'), ' ');
     if (normalized.isEmpty) return const [];
@@ -56,12 +56,58 @@ class YoutubeCatalog {
       );
     }
     final official = _officialService.isConfigured;
+    final cacheKey = page == 1
+        ? '${official ? 'official' : 'public'}:search:$normalized'
+        : '${official ? 'official' : 'public'}:search:$normalized:p$page';
     return _cached(
-      '${official ? 'official' : 'public'}:search:$normalized',
+      cacheKey,
       () => official
-          ? _officialService.search(normalized)
-          : _metadataSearch(normalized),
+          ? _officialService.search(normalized, page: page)
+          : _invokeMetadataSearch(normalized, page),
     );
+  }
+
+  Future<List<YoutubeVideo>> _invokeMetadataSearch(
+    String query,
+    int page,
+  ) async {
+    try {
+      return await Function.apply(
+        _metadataSearch,
+        [query],
+        {#page: page},
+      ) as List<YoutubeVideo>;
+    } on NoSuchMethodError {
+      try {
+        return await Function.apply(
+          _metadataSearch,
+          [query, page],
+        ) as List<YoutubeVideo>;
+      } on NoSuchMethodError {
+        if (page > 1) return const [];
+        return await Function.apply(_metadataSearch, [query])
+            as List<YoutubeVideo>;
+      } on ArgumentError {
+        if (page > 1) return const [];
+        return await Function.apply(_metadataSearch, [query])
+            as List<YoutubeVideo>;
+      }
+    } on ArgumentError {
+      try {
+        return await Function.apply(
+          _metadataSearch,
+          [query, page],
+        ) as List<YoutubeVideo>;
+      } on NoSuchMethodError {
+        if (page > 1) return const [];
+        return await Function.apply(_metadataSearch, [query])
+            as List<YoutubeVideo>;
+      } on ArgumentError {
+        if (page > 1) return const [];
+        return await Function.apply(_metadataSearch, [query])
+            as List<YoutubeVideo>;
+      }
+    }
   }
 
   /// Public music picks, never personalized recommendations. With an API key,

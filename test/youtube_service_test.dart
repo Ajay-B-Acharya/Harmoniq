@@ -257,6 +257,41 @@ void main() {
       expect(await service.search('music'), hasLength(12));
     });
 
+    test('search passes pageToken on page 2 and stops when no token exists', () async {
+      final requests = <Uri>[];
+      final service = YoutubeService(
+        apiKey: 'key',
+        client: MockClient((request) async {
+          requests.add(request.url);
+          if (request.url.queryParameters['pageToken'] == 'token_p2') {
+            return http.Response(
+              jsonEncode({
+                'items': [_item(id: _secondId)],
+              }),
+              200,
+            );
+          }
+          return http.Response(
+            jsonEncode({
+              'items': [_item(id: _id)],
+              'nextPageToken': 'token_p2',
+            }),
+            200,
+          );
+        }),
+      );
+
+      final p1 = await service.search('query', page: 1);
+      final p2 = await service.search('query', page: 2);
+      final p3 = await service.search('query', page: 3);
+
+      expect(p1.single.id, _id);
+      expect(p2.single.id, _secondId);
+      expect(p3, isEmpty);
+      expect(requests[0].queryParameters['pageToken'], isNull);
+      expect(requests[1].queryParameters['pageToken'], 'token_p2');
+    });
+
     test(
       'deduplicates pending normalized searches and caches results',
       () async {

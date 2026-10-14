@@ -120,4 +120,23 @@ void main() {
       ),
     );
   });
+
+  test('search sends page parameter when page > 1', () async {
+    messenger.setMockMethodCallHandler(channel, (call) async {
+      expect(call.method, 'search');
+      expect(call.arguments, {'query': 'lofi', 'limit': 10, 'page': 2});
+      return [
+        {
+          'id': 'abcdefghij2',
+          'title': 'Lofi Track 2',
+          'artist': 'Channel 2',
+          'thumbnail': 'https://img.example/art2',
+          'duration': 180.0,
+        },
+      ];
+    });
+    final results = await YtDlpChannel.instance.search('lofi', page: 2);
+    expect(results, hasLength(1));
+    expect(results.single.id, 'abcdefghij2');
+  });
 }

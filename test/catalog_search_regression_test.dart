@@ -9,6 +9,7 @@ import 'package:harmoniq/models/youtube_video.dart';
 import 'package:harmoniq/screens/library_screen.dart';
 import 'package:harmoniq/screens/search_screen.dart';
 import 'package:harmoniq/services/audio_service.dart';
+import 'package:harmoniq/services/youtube_service.dart';
 import 'package:harmoniq/widgets/song_tile.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -419,4 +420,53 @@ void main() {
     expect(find.text('Local track 0'), findsOneWidget);
     await tester.pumpWidget(const SizedBox());
   });
+
+  testWidgets(
+    'scrolling down loads more search results like youtube and retries on failure',
+    (tester) async {
+      final pagesRequested = <int>[];
+      var failPage2Once = true;
+      Future<List<YoutubeVideo>> search(String query, [int page = 1]) async {
+        pagesRequested.add(page);
+        if (page == 2 && failPage2Once) {
+          failPage2Once = false;
+          throw const YoutubeSourceException('Network glitch');
+        }
+        return List.generate(
+          10,
+          (index) => video(
+            'video_${page}_$index',
+            'Track $page - $index',
+          ),
+        );
+      }
+
+      await showSearch(tester, search);
+      await tester.enterText(find.byType(TextField), 'rock');
+      await tester.testTextInput.receiveAction(TextInputAction.search);
+      await tester.pumpAndSettle();
+
+      expect(pagesRequested, [1]);
+      expect(find.text('Track 1 - 0'), findsOneWidget);
+      expect(find.text('Track 2 - 0'), findsNothing);
+
+      // Scroll near the bottom to trigger load more
+      await tester.drag(find.byType(CustomScrollView), const Offset(0, -800));
+      await tester.pumpAndSettle();
+
+      expect(pagesRequested, [1, 2]);
+      // First attempt at page 2 failed: retry button should appear
+      expect(find.text('Network glitch'), findsOneWidget);
+
+      // Tap retry to load page 2
+      await tester.tap(find.text('Network glitch'));
+      await tester.pumpAndSettle();
+
+      expect(pagesRequested, [1, 2, 2]);
+      expect(find.text('Network glitch'), findsNothing);
+      expect(find.text('Track 2 - 0'), findsOneWidget);
+
+      await tester.pumpWidget(const SizedBox());
+    },
+  );
 }

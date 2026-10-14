@@ -17,7 +17,11 @@ class YtDlpChannel {
   );
   static final YtDlpChannel instance = YtDlpChannel();
 
-  Future<List<YoutubeVideo>> search(String query) async {
+  Future<List<YoutubeVideo>> search(
+    String query, {
+    int limit = 10,
+    int page = 1,
+  }) async {
     if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) {
       throw const YoutubeSourceException('On-device search requires Android.');
     }
@@ -27,10 +31,17 @@ class YtDlpChannel {
       );
     }
     try {
-      final entries = await _channel.invokeListMethod<Object?>('search', {
+      final arguments = <String, Object?>{
         'query': query,
-        'limit': 10,
-      });
+        'limit': limit,
+      };
+      if (page > 1) {
+        arguments['page'] = page;
+      }
+      final entries = await _channel.invokeListMethod<Object?>(
+        'search',
+        arguments,
+      );
       return List.unmodifiable(
         (entries ?? const []).whereType<Map>().map((entry) {
           final id = entry['id'];

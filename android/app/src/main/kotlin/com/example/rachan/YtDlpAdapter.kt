@@ -83,13 +83,15 @@ internal class YtDlpAdapter(private val context: Context) {
         }
     }
 
-    fun search(query: String, limit: Int): List<Map<String, Any?>> {
+    fun search(query: String, limit: Int = 10, page: Int = 1): List<Map<String, Any?>> {
         require(query.isNotBlank() && query.length <= 200) { "Invalid search query" }
-        require(limit in 1..10) { "Invalid result limit" }
-        val result = extract("ytsearch$limit:${query.trim()}", flat = true)
+        require(limit in 1..25) { "Invalid result limit" }
+        require(page in 1..20) { "Invalid page number" }
+        val maxItems = (page * limit).coerceAtMost(50)
+        val result = extract("ytsearch$maxItems:${query.trim()}", flat = true)
         val entries = result.optJSONArray("entries") ?: return emptyList()
         val videos = ArrayList<Map<String, Any?>>(limit)
-        for (index in 0 until minOf(entries.length(), limit)) {
+        for (index in 0 until minOf(entries.length(), maxItems)) {
             val video = entries.optJSONObject(index) ?: continue
             val id = video.optString("id")
             if (!videoIdPattern.matches(id)) continue
@@ -105,7 +107,9 @@ internal class YtDlpAdapter(private val context: Context) {
                 )
             )
         }
-        return videos
+        val startIndex = (page - 1) * limit
+        if (startIndex >= videos.size) return emptyList()
+        return videos.subList(startIndex, minOf(startIndex + limit, videos.size))
     }
 
     fun resolve(videoId: String): Map<String, Any?> {

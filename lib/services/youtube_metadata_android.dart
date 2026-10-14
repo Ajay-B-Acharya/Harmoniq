@@ -5,5 +5,5 @@ import 'yt_dlp_channel.dart';
 
 bool get isSupported => Platform.isAndroid;
 
-Future<List<YoutubeVideo>> searchYoutubeMetadata(String query) =>
-    YtDlpChannel.instance.search(query);
+Future<List<YoutubeVideo>> searchYoutubeMetadata(String query, {int page = 1}) =>
+    YtDlpChannel.instance.search(query, page: page);

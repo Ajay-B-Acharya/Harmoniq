@@ -245,5 +245,33 @@ void main() {
       expect(await catalog.search('music'), isEmpty);
       expect(calls, 2);
     });
+
+    test('search passes page parameter and caches distinct pages', () async {
+      final requestedPages = <int>[];
+      final catalog = YoutubeCatalog(
+        metadataSearch: (String query, {int page = 1}) async {
+          requestedPages.add(page);
+          return [
+            YoutubeVideo(
+              id: 'video$page',
+              title: 'Track $page',
+              artist: 'Artist',
+              thumbnailUrl: '',
+            ),
+          ];
+        },
+        officialService: YoutubeService(apiKey: ''),
+        platformSupported: true,
+      );
+
+      final p1 = await catalog.search('query', page: 1);
+      final p2 = await catalog.search('query', page: 2);
+      final p2Cached = await catalog.search('query', page: 2);
+
+      expect(p1.single.id, 'video1');
+      expect(p2.single.id, 'video2');
+      expect(p2Cached.single.id, 'video2');
+      expect(requestedPages, [1, 2]);
+    });
   });
 }

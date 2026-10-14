@@ -27,6 +27,7 @@ class YoutubeService {
   final String _apiKey;
   final _cache = <String, _CachedVideos>{};
   final _inFlight = <String, Future<List<YoutubeVideo>>>{};
+  final _searchPageTokens = <String, Map<int, String>>{};
 
   YoutubeService({http.Client? client, String? apiKey})
     : _client = client ?? http.Client(),
@@ -34,7 +35,7 @@ class YoutubeService {
 
   bool get isConfigured => _apiKey.isNotEmpty;
 
-  Future<List<YoutubeVideo>> search(String query) async {
+  Future<List<YoutubeVideo>> search(String query, {int page = 1}) async {
     _requireConfiguration();
     final normalized = query.trim().replaceAll(RegExp(r'\s+'), ' ');
     if (normalized.isEmpty) return const [];
@@ -43,17 +44,35 @@ class YoutubeService {
         'Please shorten your YouTube search to 500 characters or fewer.',
       );
     }
+    String? pageToken;
+    if (page > 1) {
+      pageToken = _searchPageTokens[normalized]?[page];
+      if (pageToken == null) return const [];
+    }
+    final cacheKey = page == 1
+        ? 'search:$normalized'
+        : 'search:$normalized:p$page';
     return _cached(
-      'search:$normalized',
-      () => _request('search', {
-        'part': 'snippet',
-        'q': normalized,
-        'type': 'video',
-        'videoCategoryId': '10',
-        'videoEmbeddable': 'true',
-        'videoSyndicated': 'true',
-        'maxResults': '12',
-      }),
+      cacheKey,
+      () => _request(
+        'search',
+        {
+          'part': 'snippet',
+          'q': normalized,
+          'type': 'video',
+          'videoCategoryId': '10',
+          'videoEmbeddable': 'true',
+          'videoSyndicated': 'true',
+          'maxResults': '12',
+          if (pageToken != null) 'pageToken': pageToken,
+        },
+        onPageToken: (token) {
+          if (token != null && token.isNotEmpty) {
+            _searchPageTokens.putIfAbsent(normalized, () => {})[page + 1] =
+                token;
+          }
+        },
+      ),
     );
   }
 
@@ -126,6 +145,7 @@ class YoutubeService {
     String resource,
     Map<String, String> parameters, {
     bool requireEmbeddable = false,
+    void Function(String?)? onPageToken,
   }) async {
     final uri = Uri.https(
       YoutubeConfig.apiHost,
@@ -153,6 +173,10 @@ class YoutubeService {
         throw const YoutubeSourceException(
           'YouTube returned an invalid response. Please try again.',
         );
+      }
+      final nextToken = decoded['nextPageToken'];
+      if (nextToken is String) {
+        onPageToken?.call(nextToken);
       }
       final videos = <YoutubeVideo>[];
       final ids = <String>{};

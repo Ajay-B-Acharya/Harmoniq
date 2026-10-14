@@ -43,14 +43,20 @@ class SearchScreen extends StatefulWidget {
 
 class SearchScreenState extends State<SearchScreen> {
   final _controller = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
   final FocusNode _focusNode = FocusNode();
   SearchFilter _filter = SearchFilter.all;
   List<Song> _local = [];
   List<YoutubeVideo> _videos = [];
+  final Set<String> _videoIds = <String>{};
   String _query = '';
   String? _submitted;
   String? _error;
+  String? _loadMoreError;
   bool _loading = false;
+  bool _loadingMore = false;
+  bool _hasMore = true;
+  int _currentPage = 1;
   int _generation = 0;
   int _localRevision = -1;
   String? _localQuery;
@@ -64,13 +70,24 @@ class SearchScreenState extends State<SearchScreen> {
   void initState() {
     super.initState();
     _controller.addListener(_changed);
+    _scrollController.addListener(_onScroll);
   }
 
   @override
   void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
     _controller.dispose();
     _focusNode.dispose();
     super.dispose();
+  }
+
+  void _onScroll() {
+    if (!_scrollController.hasClients) return;
+    final position = _scrollController.position;
+    if (position.pixels >= position.maxScrollExtent - 250) {
+      _loadMore();
+    }
   }
 
   void setQuery(String query) {
@@ -85,8 +102,13 @@ class SearchScreenState extends State<SearchScreen> {
       _query = query;
       _generation++;
       _loading = false;
+      _loadingMore = false;
+      _hasMore = true;
+      _currentPage = 1;
       _videos = [];
+      _videoIds.clear();
       _error = null;
+      _loadMoreError = null;
       _submitted = null;
       _refreshLocal();
     });
@@ -112,6 +134,45 @@ class SearchScreenState extends State<SearchScreen> {
               .toList();
   }
 
+  Future<List<YoutubeVideo>> _fetchVideos(String query, int page) async {
+    if (widget.searchVideos != null) {
+      try {
+        return await Function.apply(
+          widget.searchVideos!,
+          [query],
+          {#page: page},
+        ) as List<YoutubeVideo>;
+      } on NoSuchMethodError {
+        try {
+          return await Function.apply(
+            widget.searchVideos!,
+            [query, page],
+          ) as List<YoutubeVideo>;
+        } on NoSuchMethodError {
+          if (page > 1) return const [];
+          return await widget.searchVideos!(query);
+        } on ArgumentError {
+          if (page > 1) return const [];
+          return await widget.searchVideos!(query);
+        }
+      } on ArgumentError {
+        try {
+          return await Function.apply(
+            widget.searchVideos!,
+            [query, page],
+          ) as List<YoutubeVideo>;
+        } on NoSuchMethodError {
+          if (page > 1) return const [];
+          return await widget.searchVideos!(query);
+        } on ArgumentError {
+          if (page > 1) return const [];
+          return await widget.searchVideos!(query);
+        }
+      }
+    }
+    return await YoutubeCatalog.instance.search(query, page: page);
+  }
+
   Future<void> _submit() async {
     if (_query.isEmpty || _filter == SearchFilter.local) return;
     final id = YoutubeLinks.videoIdFromInput(_query);
@@ -131,17 +192,26 @@ class SearchScreenState extends State<SearchScreen> {
     final generation = ++_generation;
     setState(() {
       _loading = true;
+      _loadingMore = false;
+      _hasMore = true;
+      _currentPage = 1;
       _error = null;
+      _loadMoreError = null;
       _submitted = query;
+      _videos = [];
+      _videoIds.clear();
     });
+    if (_scrollController.hasClients) {
+      _scrollController.jumpTo(0);
+    }
     try {
-      final result =
-          await (widget.searchVideos?.call(query) ??
-              YoutubeCatalog.instance.search(query));
+      final result = await _fetchVideos(query, 1);
       if (!mounted || generation != _generation) return;
       setState(() {
         _videos = result;
+        _videoIds.addAll(result.map((v) => v.id));
         _loading = false;
+        _hasMore = result.isNotEmpty;
         _recent.remove(query);
         _recent.insert(0, query);
         if (_recent.length > 8) _recent.removeLast();
@@ -153,6 +223,54 @@ class SearchScreenState extends State<SearchScreen> {
         _error = error is YoutubeSourceException
             ? error.message
             : 'Could not load search results. Please try again.';
+      });
+    }
+  }
+
+  Future<void> _loadMore() async {
+    if (_loading ||
+        _loadingMore ||
+        !_hasMore ||
+        _filter == SearchFilter.local ||
+        _submitted == null ||
+        _submitted!.isEmpty ||
+        !_configured) {
+      return;
+    }
+    final query = _submitted!;
+    final nextPage = _currentPage + 1;
+    final generation = _generation;
+
+    setState(() {
+      _loadingMore = true;
+      _loadMoreError = null;
+    });
+
+    try {
+      final moreVideos = await _fetchVideos(query, nextPage);
+      if (!mounted || generation != _generation) return;
+      final newVideos =
+          moreVideos.where((v) => !_videoIds.contains(v.id)).toList();
+      setState(() {
+        _loadingMore = false;
+        if (newVideos.isEmpty) {
+          _hasMore = false;
+        } else {
+          _currentPage = nextPage;
+          _videos.addAll(newVideos);
+          _videoIds.addAll(newVideos.map((v) => v.id));
+          if (moreVideos.length < 5) {
+            _hasMore = false;
+          }
+        }
+      });
+    } catch (error) {
+      if (!mounted || generation != _generation) return;
+      setState(() {
+        _loadingMore = false;
+        _loadMoreError = error is YoutubeSourceException
+            ? error.message
+            : 'Could not load more songs. Tap to retry.';
       });
     }
   }
@@ -284,8 +402,15 @@ class SearchScreenState extends State<SearchScreen> {
                             _controller.clear();
                             setState(() {
                               _query = '';
+                              _generation++;
+                              _loading = false;
+                              _loadingMore = false;
+                              _hasMore = true;
+                              _currentPage = 1;
                               _videos = [];
+                              _videoIds.clear();
                               _error = null;
+                              _loadMoreError = null;
                             });
                           },
                         )
@@ -650,6 +775,7 @@ class SearchScreenState extends State<SearchScreen> {
     final id = YoutubeLinks.videoIdFromInput(_query);
 
     return CustomScrollView(
+      controller: _scrollController,
       physics: const BouncingScrollPhysics(),
       slivers: [
         if (showOnline) ...[
@@ -733,6 +859,48 @@ class SearchScreenState extends State<SearchScreen> {
                 ),
               ),
             ),
+            if (_loadingMore)
+              const SliverToBoxAdapter(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(vertical: 20),
+                  child: Center(
+                    child: SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.5,
+                        color: AppColors.primaryCyan,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            if (_loadMoreError != null)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 12,
+                    horizontal: 20,
+                  ),
+                  child: Center(
+                    child: TextButton.icon(
+                      onPressed: _loadingMore ? null : _loadMore,
+                      icon: const Icon(
+                        Icons.refresh_rounded,
+                        size: 16,
+                        color: AppColors.softCyan,
+                      ),
+                      label: Text(
+                        _loadMoreError!,
+                        style: const TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
           ],
           if (!_loading &&
               _error == null &&
