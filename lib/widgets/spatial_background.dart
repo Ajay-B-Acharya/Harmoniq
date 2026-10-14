@@ -7,10 +7,10 @@ import '../theme/app_colors.dart';
 /// Deep, almost-black spatial environment with subtle blue-violet atmospheric lighting.
 /// Uses oversized, smoothly blended radial gradients positioned in selected regions
 /// while keeping the center and content regions sufficiently dark for high contrast.
-class SpatialBackground extends StatelessWidget {
+class SpatialNebulaBackground extends StatelessWidget {
   final Widget child;
 
-  const SpatialBackground({super.key, required this.child});
+  const SpatialNebulaBackground({super.key, required this.child});
 
   @override
   Widget build(BuildContext context) {
@@ -21,6 +21,11 @@ class SpatialBackground extends StatelessWidget {
       ),
     );
   }
+}
+
+@Deprecated('Use SpatialNebulaBackground instead.')
+class SpatialBackground extends SpatialNebulaBackground {
+  const SpatialBackground({super.key, required super.child});
 }
 
 class _NebulaAtmospherePainter extends CustomPainter {

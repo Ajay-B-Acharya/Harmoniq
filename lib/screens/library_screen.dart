@@ -91,7 +91,7 @@ class LibraryScreenState extends State<LibraryScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: SpatialBackground(
+      body: SpatialNebulaBackground(
         child: SafeArea(
           bottom: false,
           child: Padding(

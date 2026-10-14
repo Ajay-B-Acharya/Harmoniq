@@ -20,7 +20,6 @@ import 'widgets/auth_gate.dart';
 import 'widgets/bottom_nav.dart';
 import 'widgets/mini_player.dart';
 import 'widgets/motion.dart';
-import 'widgets/spatial_background.dart';
 import 'models/song.dart';
 import 'models/youtube_video.dart';
 import 'widgets/opening_animation.dart';
@@ -303,20 +302,18 @@ class _MainContainerState extends State<MainContainer> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: SpatialBackground(
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 1100),
-            child: PageView(
-              controller: _pageController,
-              onPageChanged: (index) => setState(() => _currentIndex = index),
-              children: List.generate(
-                _pages.length,
-                (index) => _RetainedPage(
-                  child: TickerMode(
-                    enabled: index == _currentIndex,
-                    child: _pages[index],
-                  ),
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1100),
+          child: PageView(
+            controller: _pageController,
+            onPageChanged: (index) => setState(() => _currentIndex = index),
+            children: List.generate(
+              _pages.length,
+              (index) => _RetainedPage(
+                child: TickerMode(
+                  enabled: index == _currentIndex,
+                  child: _pages[index],
                 ),
               ),
             ),

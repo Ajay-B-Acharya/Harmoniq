@@ -169,7 +169,7 @@ class SearchScreenState extends State<SearchScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: SpatialBackground(
+      body: SpatialNebulaBackground(
         child: SafeArea(
           bottom: false,
           child: Column(

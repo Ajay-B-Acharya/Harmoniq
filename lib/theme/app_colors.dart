@@ -6,14 +6,14 @@ class AppColors {
   /// Primary background: #05060A
   static const Color background = Color(0xFF05060A);
 
-  /// Secondary background: #090B14
-  static const Color backgroundSecondary = Color(0xFF090B14);
+  /// Secondary background: #080B16
+  static const Color backgroundSecondary = Color(0xFF080B16);
 
   /// Midnight navy: #0B0E1A
   static const Color midnightNavy = Color(0xFF0B0E1A);
 
-  /// Deep blue-violet: #121025
-  static const Color deepBlueViolet = Color(0xFF121025);
+  /// Deep indigo atmosphere: #100D20
+  static const Color deepBlueViolet = Color(0xFF100D20);
 
   /// Dark purple atmospheric tone: #1A1230
   static const Color darkPurpleAtmosphere = Color(0xFF1A1230);
@@ -21,8 +21,8 @@ class AppColors {
   /// Atmospheric gradient colors (low-opacity lighting)
   static const Color nebulaViolet = Color(0x1A7C3AED); // rgba(124, 58, 237, 0.10)
   static const Color nebulaBlue = Color(0x123B82F6); // rgba(59, 130, 246, 0.07)
-  static const Color nebulaCyan = Color(0x0906B6D4); // rgba(6, 182, 212, 0.035)
-  static const Color nebulaMagenta = Color(0x0AEC4899); // rgba(236, 72, 153, 0.04)
+  static const Color nebulaCyan = Color(0x0606B6D4); // rgba(6, 182, 212, 0.025)
+  static const Color nebulaMagenta = Color(0x09EC4899); // rgba(236, 72, 153, 0.035)
 
   /// Surface fallbacks
   static const Color backgroundSurface = Color(0xFF0D0F1B);

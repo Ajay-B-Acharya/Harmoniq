@@ -104,7 +104,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: SpatialBackground(
+      body: SpatialNebulaBackground(
         child: SafeArea(
           bottom: false,
           child: RefreshIndicator(

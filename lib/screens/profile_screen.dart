@@ -269,7 +269,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
         return Scaffold(
           backgroundColor: AppColors.background,
-          body: SpatialBackground(
+          body: SpatialNebulaBackground(
             child: SafeArea(
               bottom: false,
               child: CustomScrollView(
