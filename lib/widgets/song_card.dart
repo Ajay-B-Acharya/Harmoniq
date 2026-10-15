@@ -56,19 +56,24 @@ class SongCard extends StatelessWidget {
                                 width: 34,
                                 height: 34,
                                 decoration: BoxDecoration(
-                                  color: Colors.white.withValues(alpha: 0.88),
+                                  color: AppColors.background,
                                   shape: BoxShape.circle,
-                                  boxShadow: const [
+                                  boxShadow: [
                                     BoxShadow(
-                                      color: AppColors.shadowFloating,
-                                      blurRadius: 10,
-                                      offset: Offset(0, 3),
+                                      color: Colors.white.withValues(alpha: 0.95),
+                                      offset: const Offset(-2, -2),
+                                      blurRadius: 4,
+                                    ),
+                                    BoxShadow(
+                                      color: AppColors.darkShadow.withValues(alpha: 0.7),
+                                      offset: const Offset(2, 2),
+                                      blurRadius: 4,
                                     ),
                                   ],
                                 ),
                                 child: const Icon(
                                   Icons.play_arrow_rounded,
-                                  color: AppColors.playControlForeground,
+                                  color: AppColors.coral,
                                   size: 20,
                                 ),
                               ),

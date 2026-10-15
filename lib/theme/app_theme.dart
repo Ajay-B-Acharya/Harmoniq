@@ -2,38 +2,42 @@ import 'package:flutter/material.dart';
 
 import 'app_colors.dart';
 
+/// Neumorphism & Soft 3D App Theme
+///
+/// Configures monochromatic soft canvas, crisp slate typography,
+/// tactile button elevation, and signature coral accents.
 class AppTheme {
   static ThemeData get darkTheme => ThemeData(
     useMaterial3: true,
-    brightness: Brightness.dark,
+    brightness: Brightness.light,
     scaffoldBackgroundColor: AppColors.background,
-    colorScheme: const ColorScheme.dark(
-      surface: AppColors.backgroundSecondary,
-      primary: AppColors.primaryCyan,
+    colorScheme: const ColorScheme.light(
+      surface: AppColors.background,
+      primary: AppColors.coral,
       onPrimary: Colors.white,
-      secondary: AppColors.cyan,
+      secondary: AppColors.coralLight,
       onSecondary: Colors.white,
       onSurface: AppColors.textPrimary,
-      outline: AppColors.borderStandard,
+      outline: AppColors.darkShadow,
     ),
     splashFactory: InkSparkle.splashFactory,
     textTheme: const TextTheme(
       headlineLarge: TextStyle(
         color: AppColors.textPrimary,
         fontSize: 32,
-        fontWeight: FontWeight.w700,
+        fontWeight: FontWeight.w800,
         letterSpacing: -1.0,
       ),
       headlineMedium: TextStyle(
         color: AppColors.textPrimary,
         fontSize: 26,
         fontWeight: FontWeight.w700,
-        letterSpacing: -0.7,
+        letterSpacing: -0.6,
       ),
       titleLarge: TextStyle(
         color: AppColors.textPrimary,
-        fontSize: 19,
-        fontWeight: FontWeight.w600,
+        fontSize: 20,
+        fontWeight: FontWeight.w700,
         letterSpacing: -0.3,
       ),
       titleMedium: TextStyle(
@@ -59,67 +63,78 @@ class AppTheme {
     ),
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
-        backgroundColor: AppColors.primaryCyan,
+        backgroundColor: AppColors.coral,
         foregroundColor: Colors.white,
         padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
         textStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13.5),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        elevation: 0,
       ),
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
-        backgroundColor: AppColors.glassElevated,
+        backgroundColor: AppColors.background,
         foregroundColor: AppColors.textPrimary,
         elevation: 0,
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       ),
     ),
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
         foregroundColor: AppColors.textPrimary,
-        side: const BorderSide(color: AppColors.borderStandard),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        side: const BorderSide(color: AppColors.darkShadow, width: 1.2),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       ),
     ),
     chipTheme: ChipThemeData(
-      backgroundColor: AppColors.glassSecondary,
+      backgroundColor: AppColors.background,
       selectedColor: AppColors.glassSelected,
-      side: const BorderSide(color: AppColors.borderStandard),
+      side: BorderSide.none,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      labelStyle: const TextStyle(
+        color: AppColors.textPrimary,
+        fontWeight: FontWeight.w600,
+        fontSize: 13,
+      ),
     ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: AppColors.glassSecondary,
+      fillColor: AppColors.backgroundSecondary,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
-        borderSide: const BorderSide(color: AppColors.borderStandard),
+        borderSide: BorderSide.none,
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
-        borderSide: const BorderSide(color: AppColors.borderStandard),
+        borderSide: BorderSide.none,
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
-        borderSide: const BorderSide(color: AppColors.borderActiveCyan, width: 1.2),
+        borderSide: const BorderSide(color: AppColors.coral, width: 1.5),
+      ),
+      hintStyle: const TextStyle(
+        color: AppColors.textTertiary,
+        fontSize: 13.5,
       ),
     ),
     bottomSheetTheme: const BottomSheetThemeData(
-      backgroundColor: AppColors.backgroundSecondary,
+      backgroundColor: AppColors.background,
       showDragHandle: true,
+      dragHandleColor: AppColors.darkShadow,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
     ),
     sliderTheme: SliderThemeData(
-      activeTrackColor: AppColors.primaryCyan,
-      inactiveTrackColor: Colors.white.withValues(alpha: 0.12),
-      thumbColor: AppColors.textPrimary,
-      overlayColor: AppColors.primaryCyan.withValues(alpha: 0.16),
-      trackHeight: 3,
-      thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
-      overlayShape: const RoundSliderOverlayShape(overlayRadius: 14),
+      activeTrackColor: AppColors.coral,
+      inactiveTrackColor: AppColors.darkShadow.withValues(alpha: 0.35),
+      thumbColor: Colors.white,
+      overlayColor: AppColors.coral.withValues(alpha: 0.16),
+      trackHeight: 6,
+      thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 9),
+      overlayShape: const RoundSliderOverlayShape(overlayRadius: 18),
     ),
     iconTheme: const IconThemeData(color: AppColors.textPrimary),
   );

@@ -28,17 +28,18 @@ class YoutubeCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: AppColors.glassSecondary,
+          color: AppColors.background,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: AppColors.borderStandard,
-            width: 1,
-          ),
-          boxShadow: const [
+          boxShadow: [
             BoxShadow(
-              color: AppColors.shadowStandard,
-              blurRadius: 12,
-              offset: Offset(0, 4),
+              color: AppColors.lightShadow.withValues(alpha: 0.95),
+              offset: const Offset(-3, -3),
+              blurRadius: 7,
+            ),
+            BoxShadow(
+              color: AppColors.darkShadow.withValues(alpha: 0.65),
+              offset: const Offset(3, 3),
+              blurRadius: 7,
             ),
           ],
         ),
@@ -123,16 +124,24 @@ class YoutubeCard extends StatelessWidget {
               width: 36,
               height: 36,
               decoration: BoxDecoration(
-                color: AppColors.surfaceHigh,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.08),
-                  width: 1,
-                ),
+                color: AppColors.background,
+                borderRadius: BorderRadius.circular(10),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.white.withValues(alpha: 0.95),
+                    offset: const Offset(-1.5, -1.5),
+                    blurRadius: 3,
+                  ),
+                  BoxShadow(
+                    color: AppColors.darkShadow.withValues(alpha: 0.65),
+                    offset: const Offset(1.5, 1.5),
+                    blurRadius: 3,
+                  ),
+                ],
               ),
               child: const Icon(
                 Icons.play_arrow_rounded,
-                color: AppColors.accent,
+                color: AppColors.coral,
                 size: 20,
               ),
             ),

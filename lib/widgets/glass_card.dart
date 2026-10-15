@@ -4,16 +4,16 @@ import 'package:flutter/material.dart';
 
 import '../theme/app_colors.dart';
 
-/// Elevation hierarchy for spatial glass materials:
-/// - Level 2 (surface): subtle translucent surface with 1px neutral illuminated edge.
-/// - Level 3 (floating): slightly more visible glass with top-edge specular highlight & elevation shadow.
-/// - Level 4 (active): subtle cyan-tinted glass with controlled accent glow.
+/// Elevation hierarchy for Neumorphic surfaces:
+/// - Level 2 (surface): standard extruded card with soft dual shadows.
+/// - Level 3 (floating): elevated extruded card with deeper dual shadows.
+/// - Level 4 (active): active card with subtle coral accent edge/glow.
 enum GlassLevel { surface, floating, active }
 
 enum GlassTint { neutral, cyan, blue, selected }
 
-/// A rounded physical glass card with precision transparency, physical illuminated
-/// edges, top-edge specular highlight, and optional backdrop blur.
+/// Neumorphic extruded card emerging directly out of the monochromatic background
+/// with dual outer shadows (white highlight at top-left, soft slate shadow at bottom-right).
 class GlassCard extends StatelessWidget {
   final Widget child;
   final double borderRadius;
@@ -35,7 +35,7 @@ class GlassCard extends StatelessWidget {
   const GlassCard({
     super.key,
     required this.child,
-    this.borderRadius = 16,
+    this.borderRadius = 18,
     this.blurSigma = 0,
     this.level = GlassLevel.surface,
     this.tint = GlassTint.neutral,
@@ -43,7 +43,7 @@ class GlassCard extends StatelessWidget {
     this.color,
     this.gradient,
     this.borderColor,
-    this.borderWidth = 1.0,
+    this.borderWidth = 0.8,
     this.glowColor,
     this.padding,
     this.margin,
@@ -53,7 +53,7 @@ class GlassCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 1. Resolve surface color from hierarchy & tinting
+    // 1. Resolve surface color (monochromatic plastic extrusion)
     final Color surfaceColor;
     if (color != null) {
       surfaceColor = color!;
@@ -63,30 +63,17 @@ class GlassCard extends StatelessWidget {
           surfaceColor = AppColors.glassSelected;
           break;
         case GlassLevel.floating:
-          surfaceColor = AppColors.glassElevated; // rgba(255, 255, 255, 0.055)
+          surfaceColor = AppColors.background;
           break;
         case GlassLevel.surface:
-          switch (tint) {
-            case GlassTint.selected:
-              surfaceColor = AppColors.glassSelected;
-              break;
-            case GlassTint.cyan:
-              surfaceColor = AppColors.glassCyanTint;
-              break;
-            case GlassTint.blue:
-              surfaceColor =
-                  AppColors.glassBlueTint; // rgba(96, 165, 250, 0.035)
-              break;
-            case GlassTint.neutral:
-              surfaceColor =
-                  AppColors.glassPrimary; // rgba(255, 255, 255, 0.025)
-              break;
-          }
+          surfaceColor = tint == GlassTint.selected
+              ? AppColors.glassSelected
+              : AppColors.background;
           break;
       }
     }
 
-    // 2. Resolve border color
+    // 2. Resolve border (subtle light highlight for crisp bevel)
     final Color effectiveBorderColor;
     if (borderColor != null) {
       effectiveBorderColor = borderColor!;
@@ -96,61 +83,82 @@ class GlassCard extends StatelessWidget {
           effectiveBorderColor = AppColors.borderActiveCyan;
           break;
         case GlassLevel.floating:
-          effectiveBorderColor =
-              AppColors.borderElevated; // rgba(255, 255, 255, 0.20)
+          effectiveBorderColor = Colors.white.withValues(alpha: 0.5);
           break;
         case GlassLevel.surface:
-          effectiveBorderColor =
-              AppColors.borderStandard; // rgba(255, 255, 255, 0.14)
+          effectiveBorderColor = Colors.white.withValues(alpha: 0.35);
           break;
       }
     }
 
-    // 3. Resolve shadows
+    // 3. Resolve dual Neumorphic shadows
+    final double depth;
+    switch (level) {
+      case GlassLevel.floating:
+        depth = 6.0;
+        break;
+      case GlassLevel.active:
+      case GlassLevel.surface:
+        depth = 4.5;
+        break;
+    }
+
     final List<BoxShadow> shadows;
     if (glowColor != null) {
       shadows = [
-        const BoxShadow(
-          color: AppColors.shadowStandard,
-          blurRadius: 14,
-          offset: Offset(0, 4),
+        BoxShadow(
+          color: AppColors.lightShadow.withValues(alpha: 0.95),
+          offset: Offset(-depth, -depth),
+          blurRadius: depth * 2.2,
+          spreadRadius: 0.5,
         ),
         BoxShadow(
-          color: glowColor!.withValues(alpha: 0.20),
-          blurRadius: 16,
+          color: AppColors.darkShadow.withValues(alpha: 0.65),
+          offset: Offset(depth, depth),
+          blurRadius: depth * 2.2,
+          spreadRadius: 0.5,
+        ),
+        BoxShadow(
+          color: glowColor!.withValues(alpha: 0.25),
+          blurRadius: 14,
+          offset: const Offset(0, 2),
+        ),
+      ];
+    } else if (level == GlassLevel.active) {
+      shadows = [
+        BoxShadow(
+          color: AppColors.lightShadow.withValues(alpha: 0.95),
+          offset: Offset(-depth, -depth),
+          blurRadius: depth * 2.2,
+          spreadRadius: 0.5,
+        ),
+        BoxShadow(
+          color: AppColors.darkShadow.withValues(alpha: 0.65),
+          offset: Offset(depth, depth),
+          blurRadius: depth * 2.2,
+          spreadRadius: 0.5,
+        ),
+        BoxShadow(
+          color: AppColors.coral.withValues(alpha: 0.18),
+          blurRadius: 12,
           offset: const Offset(0, 1),
         ),
       ];
     } else {
-      switch (level) {
-        case GlassLevel.active:
-          shadows = const [
-            BoxShadow(
-              color: AppColors.shadowActiveCyan,
-              blurRadius: 14,
-              offset: Offset(0, 1),
-            ),
-          ];
-          break;
-        case GlassLevel.floating:
-          shadows = const [
-            BoxShadow(
-              color: AppColors.shadowFloating, // rgba(0, 0, 0, 0.28)
-              blurRadius: 24,
-              offset: Offset(0, 10),
-            ),
-          ];
-          break;
-        case GlassLevel.surface:
-          shadows = const [
-            BoxShadow(
-              color: AppColors.shadowStandard, // rgba(0, 0, 0, 0.18)
-              blurRadius: 14,
-              offset: Offset(0, 6),
-            ),
-          ];
-          break;
-      }
+      shadows = [
+        BoxShadow(
+          color: AppColors.lightShadow.withValues(alpha: 0.95),
+          offset: Offset(-depth, -depth),
+          blurRadius: depth * 2.2,
+          spreadRadius: 0.5,
+        ),
+        BoxShadow(
+          color: AppColors.darkShadow.withValues(alpha: 0.65),
+          offset: Offset(depth, depth),
+          blurRadius: depth * 2.2,
+          spreadRadius: 0.5,
+        ),
+      ];
     }
 
     final hasSpecular = specularHighlight ?? (level == GlassLevel.floating);
@@ -197,7 +205,7 @@ class GlassCard extends StatelessWidget {
   }
 }
 
-/// Paints a subtle upper-edge reflection (specular highlight) resembling physical illuminated glass edges.
+/// Paints a subtle upper-edge reflection resembling soft plastic specular highlights.
 class _SpecularTopHighlightPainter extends CustomPainter {
   final double borderRadius;
   final Color highlightColor;

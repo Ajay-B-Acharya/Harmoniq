@@ -129,7 +129,7 @@ class MiniPlayer extends StatelessWidget {
                     IconButton(
                       tooltip: showPause ? 'Pause' : 'Play',
                       style: IconButton.styleFrom(
-                        backgroundColor: AppColors.primaryCyan,
+                        backgroundColor: AppColors.coral,
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
@@ -156,7 +156,7 @@ class MiniPlayer extends StatelessWidget {
                       tooltip: 'Next track',
                       icon: const Icon(
                         Icons.skip_next_rounded,
-                        color: Colors.white,
+                        color: AppColors.textPrimary,
                         size: 26,
                       ),
                       onPressed: onNextTap,
@@ -231,9 +231,9 @@ class MiniPlayer extends StatelessWidget {
                           semanticsLabel: isLoading
                               ? 'Loading audio'
                               : 'Playback progress',
-                          backgroundColor: Colors.white.withValues(alpha: 0.08),
+                          backgroundColor: AppColors.darkShadow.withValues(alpha: 0.3),
                           valueColor: const AlwaysStoppedAnimation<Color>(
-                            AppColors.primaryCyan,
+                            AppColors.coral,
                           ),
                           minHeight: 2.5,
                         );

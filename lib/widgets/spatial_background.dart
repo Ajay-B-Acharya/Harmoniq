@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../theme/app_colors.dart';
 
+/// Neumorphic soft canvas background providing uniform monochromatic surface
+/// and subtle top-left ambient illumination for soft 3D plastic extrusion.
 class SpatialNebulaBackground extends StatelessWidget {
   final Widget child;
 
@@ -11,7 +13,7 @@ class SpatialNebulaBackground extends StatelessWidget {
   Widget build(BuildContext context) {
     return RepaintBoundary(
       child: CustomPaint(
-        painter: const _NebulaAtmospherePainter(),
+        painter: const _NeumorphicCanvasPainter(),
         child: child,
       ),
     );
@@ -23,78 +25,29 @@ class SpatialBackground extends SpatialNebulaBackground {
   const SpatialBackground({super.key, required super.child});
 }
 
-class _NebulaAtmospherePainter extends CustomPainter {
-  const _NebulaAtmospherePainter();
+class _NeumorphicCanvasPainter extends CustomPainter {
+  const _NeumorphicCanvasPainter();
 
   @override
   void paint(Canvas canvas, Size size) {
     final rect = Offset.zero & size;
+    // Base monochromatic soft canvas
     canvas.drawRect(
       rect,
       Paint()
         ..shader = const LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
           colors: [
-            AppColors.backgroundSecondary,
+            Color(0xFFEFF3F8), // Subtle highlight in top-left
             AppColors.background,
-            AppColors.background,
+            Color(0xFFE2E7ED), // Subtle shadow depth in bottom-right
           ],
-          stops: [0, 0.48, 1],
+          stops: [0.0, 0.45, 1.0],
         ).createShader(rect),
     );
-
-    if (size.isEmpty) return;
-
-    _paintCloud(
-      canvas,
-      center: Offset(size.width * 0.04, size.height * 0.12),
-      radius: size.width * 1.25,
-      colors: [
-        AppColors.nebulaBlue,
-        AppColors.nebulaCoolBlue,
-        Colors.transparent,
-      ],
-      stops: const [0, 0.46, 1],
-    );
-    _paintCloud(
-      canvas,
-      center: Offset(size.width * 0.93, size.height * 0.18),
-      radius: size.width * 1.08,
-      colors: [
-        AppColors.nebulaCyan,
-        AppColors.nebulaCoolBlue.withValues(alpha: 0.035),
-        Colors.transparent,
-      ],
-      stops: const [0, 0.48, 1],
-    );
-    _paintCloud(
-      canvas,
-      center: Offset(size.width * 0.44, size.height * 0.50),
-      radius: size.width * 1.15,
-      colors: [
-        AppColors.nebulaCoolBlue.withValues(alpha: 0.045),
-        Colors.transparent,
-      ],
-      stops: const [0, 1],
-    );
-  }
-
-  void _paintCloud(
-    Canvas canvas, {
-    required Offset center,
-    required double radius,
-    required List<Color> colors,
-    required List<double> stops,
-  }) {
-    final paint = Paint()
-      ..shader = RadialGradient(
-        colors: colors,
-        stops: stops,
-      ).createShader(Rect.fromCircle(center: center, radius: radius));
-    canvas.drawCircle(center, radius, paint);
   }
 
   @override
-  bool shouldRepaint(covariant _NebulaAtmospherePainter oldDelegate) => false;
+  bool shouldRepaint(covariant _NeumorphicCanvasPainter oldDelegate) => false;
 }

@@ -3,8 +3,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:harmoniq/models/playlist.dart';
 import 'package:harmoniq/models/song.dart';
 import 'package:harmoniq/screens/explore_screen.dart';
+import 'package:harmoniq/screens/history_screen.dart';
 import 'package:harmoniq/screens/home_screen.dart';
 import 'package:harmoniq/screens/library_screen.dart';
+import 'package:harmoniq/screens/main_card_screen.dart';
 import 'package:harmoniq/screens/now_playing_screen.dart';
 import 'package:harmoniq/screens/profile_screen.dart';
 import 'package:harmoniq/screens/search_screen.dart';
@@ -294,6 +296,60 @@ void main() {
     await expectLater(
       find.byKey(repaintKey),
       matchesGoldenFile('goldens/screenshot_06_now_playing.png'),
+    );
+  });
+
+  testWidgets('Capture Main Card Screen screenshot', (tester) async {
+    final repaintKey = GlobalKey();
+    tester.view.devicePixelRatio = 2.0;
+    tester.view.physicalSize = const Size(420 * 2.0, 840 * 2.0);
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.darkTheme,
+        debugShowCheckedModeBanner: false,
+        home: RepaintBoundary(
+          key: repaintKey,
+          child: const MainCardScreen(),
+        ),
+      ),
+    );
+
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 200));
+
+    await expectLater(
+      find.byKey(repaintKey),
+      matchesGoldenFile('goldens/screenshot_07_main_card.png'),
+    );
+  });
+
+  testWidgets('Capture History Screen screenshot', (tester) async {
+    final repaintKey = GlobalKey();
+    tester.view.devicePixelRatio = 2.0;
+    tester.view.physicalSize = const Size(420 * 2.0, 840 * 2.0);
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.darkTheme,
+        debugShowCheckedModeBanner: false,
+        home: RepaintBoundary(
+          key: repaintKey,
+          child: const HistoryScreen(),
+        ),
+      ),
+    );
+
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 200));
+
+    await expectLater(
+      find.byKey(repaintKey),
+      matchesGoldenFile('goldens/screenshot_08_history.png'),
     );
   });
 }

@@ -348,18 +348,19 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
                         boxShadow: isCurrent
                             ? [
                                 BoxShadow(
-                                  color: AppColors.primaryCyan.withValues(
-                                    alpha: 0.35,
-                                  ),
-                                  blurRadius: 36,
-                                  spreadRadius: 2,
+                                  color: Colors.white.withValues(alpha: 0.95),
+                                  offset: const Offset(-6, -6),
+                                  blurRadius: 16,
                                 ),
                                 BoxShadow(
-                                  color: AppColors.softCyan.withValues(
-                                    alpha: 0.15,
-                                  ),
+                                  color: AppColors.darkShadow.withValues(alpha: 0.7),
+                                  offset: const Offset(6, 6),
+                                  blurRadius: 16,
+                                ),
+                                BoxShadow(
+                                  color: AppColors.coral.withValues(alpha: 0.2),
                                   blurRadius: 24,
-                                  spreadRadius: -4,
+                                  offset: const Offset(0, 4),
                                 ),
                               ]
                             : null,
@@ -623,15 +624,25 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             gradient: const LinearGradient(
-              colors: [AppColors.primaryCyan, AppColors.electricBlue],
+              colors: [AppColors.coralLight, AppColors.coral],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
             boxShadow: [
               BoxShadow(
-                color: AppColors.primaryCyan.withValues(alpha: 0.45),
-                blurRadius: 22,
-                spreadRadius: 2,
+                color: Colors.white.withValues(alpha: 0.95),
+                offset: const Offset(-3, -3),
+                blurRadius: 8,
+              ),
+              BoxShadow(
+                color: AppColors.darkShadow.withValues(alpha: 0.75),
+                offset: const Offset(3, 4),
+                blurRadius: 8,
+              ),
+              BoxShadow(
+                color: AppColors.coral.withValues(alpha: 0.35),
+                blurRadius: 16,
+                offset: const Offset(0, 4),
               ),
             ],
           ),
