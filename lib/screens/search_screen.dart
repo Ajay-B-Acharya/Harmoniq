@@ -85,7 +85,7 @@ class SearchScreenState extends State<SearchScreen> {
   void _onScroll() {
     if (!_scrollController.hasClients) return;
     final position = _scrollController.position;
-    if (position.pixels >= position.maxScrollExtent - 250) {
+    if (position.pixels >= position.maxScrollExtent - 400) {
       _loadMore();
     }
   }
@@ -832,12 +832,12 @@ class SearchScreenState extends State<SearchScreen> {
               ),
             ),
           if (_videos.isNotEmpty) ...[
-            const SliverPadding(
-              padding: EdgeInsets.fromLTRB(20, 4, 20, 10),
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(20, 4, 20, 10),
               sliver: SliverToBoxAdapter(
                 child: Text(
-                  'STREAMING RESULTS',
-                  style: TextStyle(
+                  'STREAMING RESULTS · ${_videos.length}',
+                  style: const TextStyle(
                     color: AppColors.primaryCyan,
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
@@ -870,6 +870,46 @@ class SearchScreenState extends State<SearchScreen> {
                       child: CircularProgressIndicator(
                         strokeWidth: 2.5,
                         color: AppColors.primaryCyan,
+                      ),
+                    ),
+                  ),
+                ),
+              )
+            else if (_hasMore)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 14,
+                    horizontal: 20,
+                  ),
+                  child: Center(
+                    child: OutlinedButton.icon(
+                      onPressed: _loadMore,
+                      icon: const Icon(
+                        Icons.expand_more_rounded,
+                        size: 18,
+                        color: AppColors.coral,
+                      ),
+                      label: const Text(
+                        'Load more songs',
+                        style: TextStyle(
+                          color: AppColors.textPrimary,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
+                        ),
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(
+                          color: AppColors.glassBorder,
+                          width: 1,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 10,
+                        ),
                       ),
                     ),
                   ),

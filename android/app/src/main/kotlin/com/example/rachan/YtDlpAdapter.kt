@@ -83,11 +83,11 @@ internal class YtDlpAdapter(private val context: Context) {
         }
     }
 
-    fun search(query: String, limit: Int = 10, page: Int = 1): List<Map<String, Any?>> {
+    fun search(query: String, limit: Int = 25, page: Int = 1): List<Map<String, Any?>> {
         require(query.isNotBlank() && query.length <= 200) { "Invalid search query" }
-        require(limit in 1..25) { "Invalid result limit" }
-        require(page in 1..20) { "Invalid page number" }
-        val maxItems = (page * limit).coerceAtMost(50)
+        require(limit in 1..50) { "Invalid result limit" }
+        require(page in 1..50) { "Invalid page number" }
+        val maxItems = (page * limit).coerceAtMost(100)
         val result = extract("ytsearch$maxItems:${query.trim()}", flat = true)
         val entries = result.optJSONArray("entries") ?: return emptyList()
         val videos = ArrayList<Map<String, Any?>>(limit)

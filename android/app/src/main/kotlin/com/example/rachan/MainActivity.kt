@@ -93,7 +93,7 @@ class MainActivity : AudioServiceActivity() {
                             "smoke" -> ytDlpAdapter.smoke()
                             "search" -> ytDlpAdapter.search(
                                 call.argument<String>("query") ?: "",
-                                call.argument<Int>("limit") ?: 10,
+                                call.argument<Int>("limit") ?: 25,
                                 call.argument<Int>("page") ?: 1
                             )
                             "resolve" -> ytDlpAdapter.resolve(call.argument<String>("id") ?: "")

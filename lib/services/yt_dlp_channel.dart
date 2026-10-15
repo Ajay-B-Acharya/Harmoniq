@@ -19,7 +19,7 @@ class YtDlpChannel {
 
   Future<List<YoutubeVideo>> search(
     String query, {
-    int limit = 10,
+    int limit = 25,
     int page = 1,
   }) async {
     if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) {

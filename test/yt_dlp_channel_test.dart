@@ -46,7 +46,7 @@ void main() {
   test('search maps bounded metadata and omits invalid identities', () async {
     messenger.setMockMethodCallHandler(channel, (call) async {
       expect(call.method, 'search');
-      expect(call.arguments, {'query': 'jazz', 'limit': 10});
+      expect(call.arguments, {'query': 'jazz', 'limit': 25});
       return [
         {
           'id': 'abcdefghijk',
@@ -124,7 +124,7 @@ void main() {
   test('search sends page parameter when page > 1', () async {
     messenger.setMockMethodCallHandler(channel, (call) async {
       expect(call.method, 'search');
-      expect(call.arguments, {'query': 'lofi', 'limit': 10, 'page': 2});
+      expect(call.arguments, {'query': 'lofi', 'limit': 25, 'page': 2});
       return [
         {
           'id': 'abcdefghij2',

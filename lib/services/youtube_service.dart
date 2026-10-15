@@ -63,7 +63,7 @@ class YoutubeService {
           'videoCategoryId': '10',
           'videoEmbeddable': 'true',
           'videoSyndicated': 'true',
-          'maxResults': '12',
+          'maxResults': '25',
           'pageToken': ?pageToken,
         },
         onPageToken: (token) {
