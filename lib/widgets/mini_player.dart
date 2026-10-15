@@ -60,7 +60,6 @@ class MiniPlayer extends StatelessWidget {
             level: GlassLevel.floating,
             specularHighlight: true,
             padding: const EdgeInsets.fromLTRB(10, 8, 10, 6),
-            color: AppColors.floatingGlass,
             borderColor: isPlaying
                 ? AppColors.borderActiveCyan
                 : AppColors.dockBorder,

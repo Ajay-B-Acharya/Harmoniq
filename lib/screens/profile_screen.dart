@@ -5,6 +5,7 @@ import '../models/song.dart';
 import '../services/audio_service.dart';
 import '../services/auth_service.dart';
 import '../theme/app_colors.dart';
+import '../theme/theme_controller.dart';
 import '../widgets/account_dialog.dart';
 import '../widgets/avatar_halo.dart';
 import '../widgets/motion.dart';
@@ -75,9 +76,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
         backgroundColor: AppColors.backgroundSecondary,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
-          side: const BorderSide(color: AppColors.glassBorder),
+          side: BorderSide(color: AppColors.glassBorder),
         ),
-        title: const Text(
+        title: Text(
           'Streaming Quality',
           style: TextStyle(color: AppColors.textPrimary, fontSize: 18),
         ),
@@ -112,6 +113,141 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  void _showThemeDialog() {
+    final isDark = ThemeController.instance.isDark;
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: isDark
+            ? AppDarkColors.backgroundSecondary
+            : AppColors.backgroundSecondary,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: BorderSide(
+            color: isDark ? AppDarkColors.borderStandard : AppColors.glassBorder,
+          ),
+        ),
+        title: Text(
+          'App Theme',
+          style: TextStyle(
+            color: isDark ? AppDarkColors.textPrimary : AppColors.textPrimary,
+            fontSize: 18,
+          ),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading:
+                  const Icon(Icons.light_mode_rounded, color: AppColors.coral),
+              title: Text(
+                'Light Theme',
+                style: TextStyle(
+                  color: ThemeController.instance.themeMode == ThemeMode.light
+                      ? AppColors.coral
+                      : (isDark
+                          ? AppDarkColors.textPrimary
+                          : AppColors.textPrimary),
+                  fontWeight:
+                      ThemeController.instance.themeMode == ThemeMode.light
+                          ? FontWeight.w700
+                          : FontWeight.w400,
+                ),
+              ),
+              subtitle: Text(
+                'Soft Neumorphic light canvas',
+                style: TextStyle(
+                  color: isDark
+                      ? AppDarkColors.textSecondary
+                      : AppColors.textSecondary,
+                  fontSize: 12,
+                ),
+              ),
+              trailing: ThemeController.instance.themeMode == ThemeMode.light
+                  ? const Icon(Icons.check_circle_rounded,
+                      color: AppColors.coral)
+                  : null,
+              onTap: () {
+                ThemeController.instance.setThemeMode(ThemeMode.light);
+                Navigator.pop(ctx);
+              },
+            ),
+            ListTile(
+              leading:
+                  const Icon(Icons.dark_mode_rounded, color: AppColors.coral),
+              title: Text(
+                'Dark Theme',
+                style: TextStyle(
+                  color: ThemeController.instance.themeMode == ThemeMode.dark
+                      ? AppColors.coral
+                      : (isDark
+                          ? AppDarkColors.textPrimary
+                          : AppColors.textPrimary),
+                  fontWeight:
+                      ThemeController.instance.themeMode == ThemeMode.dark
+                          ? FontWeight.w700
+                          : FontWeight.w400,
+                ),
+              ),
+              subtitle: Text(
+                'Deep Neumorphic dark canvas',
+                style: TextStyle(
+                  color: isDark
+                      ? AppDarkColors.textSecondary
+                      : AppColors.textSecondary,
+                  fontSize: 12,
+                ),
+              ),
+              trailing: ThemeController.instance.themeMode == ThemeMode.dark
+                  ? const Icon(Icons.check_circle_rounded,
+                      color: AppColors.coral)
+                  : null,
+              onTap: () {
+                ThemeController.instance.setThemeMode(ThemeMode.dark);
+                Navigator.pop(ctx);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.brightness_auto_rounded,
+                  color: AppColors.coral),
+              title: Text(
+                'System Default',
+                style: TextStyle(
+                  color: ThemeController.instance.themeMode == ThemeMode.system
+                      ? AppColors.coral
+                      : (isDark
+                          ? AppDarkColors.textPrimary
+                          : AppColors.textPrimary),
+                  fontWeight:
+                      ThemeController.instance.themeMode == ThemeMode.system
+                          ? FontWeight.w700
+                          : FontWeight.w400,
+                ),
+              ),
+              subtitle: Text(
+                'Matches your device theme',
+                style: TextStyle(
+                  color: isDark
+                      ? AppDarkColors.textSecondary
+                      : AppColors.textSecondary,
+                  fontSize: 12,
+                ),
+              ),
+              trailing: ThemeController.instance.themeMode == ThemeMode.system
+                  ? const Icon(Icons.check_circle_rounded,
+                      color: AppColors.coral)
+                  : null,
+              onTap: () {
+                ThemeController.instance.setThemeMode(ThemeMode.system);
+                Navigator.pop(ctx);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   void _showPrivacyDialog() {
     showDialog<void>(
       context: context,
@@ -119,13 +255,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
         backgroundColor: AppColors.backgroundSecondary,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
-          side: const BorderSide(color: AppColors.glassBorder),
+          side: BorderSide(color: AppColors.glassBorder),
         ),
-        title: const Text(
+        title: Text(
           'Privacy & Security',
           style: TextStyle(color: AppColors.textPrimary, fontSize: 18),
         ),
-        content: const Text(
+        content: Text(
           'Your listening history and playlists are stored locally and synced only with your authenticated Supabase account. No third-party tracking is enabled.',
           style: TextStyle(
             color: AppColors.textSecondary,
@@ -162,9 +298,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
         backgroundColor: AppColors.backgroundSecondary,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
-          side: const BorderSide(color: AppColors.glassBorder),
+          side: BorderSide(color: AppColors.glassBorder),
         ),
-        title: const Text(
+        title: Text(
           'Log Out',
           style: TextStyle(color: AppColors.textPrimary, fontSize: 18),
         ),
@@ -247,7 +383,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
-      listenable: Listenable.merge([widget.authService, widget.audioService]),
+      listenable: Listenable.merge(
+          [widget.authService, widget.audioService, ThemeController.instance]),
       builder: (context, _) {
         final user = widget.authService.currentUser;
         final isAuthenticated = user != null;
@@ -266,9 +403,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
         final topGenre = _calculateTopGenre(combinedActivity);
         final topArtists = _calculateTopArtists(combinedActivity);
         final listeningTimeStr = _calculateListeningTime(history);
+        final isDark = ThemeController.instance.isDark;
 
         return Scaffold(
-          backgroundColor: AppColors.background,
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           body: SpatialNebulaBackground(
             child: SafeArea(
               bottom: false,
@@ -287,20 +425,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             width: 36,
                             height: 36,
                             decoration: BoxDecoration(
-                              color: AppColors.backgroundSurface,
+                              color: isDark
+                                  ? AppDarkColors.backgroundSurface
+                                  : AppColors.backgroundSurface,
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
-                                color: AppColors.surfaceBorder,
+                                color: isDark
+                                    ? AppDarkColors.borderStandard
+                                    : AppColors.surfaceBorder,
                               ),
                             ),
-                            child: const Icon(
+                            child: Icon(
                               Icons.grid_view_rounded,
                               size: 18,
-                              color: AppColors.textPrimary,
+                              color: isDark
+                                  ? AppDarkColors.textPrimary
+                                  : AppColors.textPrimary,
                             ),
                           ),
                           const SizedBox(width: 8),
-                          const Expanded(
+                          Expanded(
                             child: Text(
                               'Harmoniq',
                               maxLines: 1,
@@ -309,8 +453,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 fontSize: 19,
                                 fontWeight: FontWeight.w700,
                                 letterSpacing: -0.5,
-                                color: AppColors.textPrimary,
+                                color: isDark
+                                    ? AppDarkColors.textPrimary
+                                    : AppColors.textPrimary,
                               ),
+                            ),
+                          ),
+                          IconButton(
+                            tooltip: isDark
+                                ? 'Switch to Light Theme'
+                                : 'Switch to Dark Theme',
+                            onPressed: () =>
+                                ThemeController.instance.toggleTheme(),
+                            icon: Icon(
+                              isDark
+                                  ? Icons.light_mode_rounded
+                                  : Icons.dark_mode_rounded,
+                              size: 21,
+                              color: isDark
+                                  ? const Color(0xFFFFD13B)
+                                  : AppColors.accentLight,
                             ),
                           ),
                           IconButton(
@@ -368,8 +530,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           Text(
                             username,
                             textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              color: AppColors.textPrimary,
+                            style: TextStyle(
+                              color: isDark
+                                  ? AppDarkColors.textPrimary
+                                  : AppColors.textPrimary,
                               fontSize: 22,
                               fontWeight: FontWeight.w700,
                               letterSpacing: -0.4,
@@ -384,12 +548,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               vertical: 5,
                             ),
                             decoration: BoxDecoration(
-                              color: AppColors.glassSecondary,
+                              color: isDark
+                                  ? AppDarkColors.backgroundSecondary
+                                  : AppColors.glassSecondary,
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
                                 color: isAuthenticated
                                     ? AppColors.silver.withValues(alpha: 0.5)
-                                    : AppColors.borderStandard,
+                                    : (isDark
+                                        ? AppDarkColors.borderStandard
+                                        : AppColors.borderStandard),
                               ),
                             ),
                             child: Row(
@@ -410,7 +578,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   style: TextStyle(
                                     color: isAuthenticated
                                         ? AppColors.silver
-                                        : AppColors.textSecondary,
+                                        : (isDark
+                                            ? AppDarkColors.textSecondary
+                                            : AppColors.textSecondary),
                                     fontSize: 11.5,
                                     fontWeight: FontWeight.w600,
                                     letterSpacing: 0.2,
@@ -429,10 +599,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               vertical: 10,
                             ),
                             decoration: BoxDecoration(
-                              color: AppColors.glassSecondary,
+                              color: isDark
+                                  ? AppDarkColors.backgroundSecondary
+                                  : AppColors.glassSecondary,
                               borderRadius: BorderRadius.circular(16),
                               border: Border.all(
-                                color: AppColors.borderStandard,
+                                color: isDark
+                                    ? AppDarkColors.borderStandard
+                                    : AppColors.borderStandard,
                               ),
                             ),
                             child: Row(
@@ -441,6 +615,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   child: _statSegment(
                                     '${favorites.length}',
                                     'Liked',
+                                    isDark,
                                   ),
                                 ),
                                 _statDivider(),
@@ -448,6 +623,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   child: _statSegment(
                                     '${playlists.length}',
                                     'Playlists',
+                                    isDark,
                                   ),
                                 ),
                                 _statDivider(),
@@ -455,6 +631,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   child: _statSegment(
                                     '${history.length}',
                                     'History',
+                                    isDark,
                                   ),
                                 ),
                               ],
@@ -469,10 +646,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   SliverPadding(
                     padding: const EdgeInsets.fromLTRB(20, 24, 20, 12),
                     sliver: SliverToBoxAdapter(
-                      child: const Text(
+                      child: Text(
                         'My Activities',
                         style: TextStyle(
-                          color: AppColors.textPrimary,
+                          color: isDark
+                              ? AppDarkColors.textPrimary
+                              : AppColors.textPrimary,
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
                           letterSpacing: -0.2,
@@ -515,7 +694,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     '$listeningTimeStr recently',
                                     maxLines: 2,
                                     overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       color: AppColors.textMuted,
                                       fontSize: 11,
                                       fontWeight: FontWeight.w500,
@@ -657,6 +836,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             ),
                             _settingsDivider(),
                             _settingsTile(
+                              icon: ThemeController.instance.isDark
+                                  ? Icons.dark_mode_rounded
+                                  : Icons.light_mode_rounded,
+                              title: 'Theme',
+                              trailing: Text(
+                                '${ThemeController.instance.themeModeName} >',
+                                style: const TextStyle(
+                                  color: AppColors.accentLight,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              onTap: _showThemeDialog,
+                            ),
+                            _settingsDivider(),
+                            _settingsTile(
                               icon: Icons.graphic_eq_rounded,
                               title: 'Audio Quality',
                               trailing: Text(
@@ -768,14 +963,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _statSegment(String count, String label) {
+  Widget _statSegment(String count, String label, [bool isDark = false]) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(
           count,
-          style: const TextStyle(
-            color: AppColors.textPrimary,
+          style: TextStyle(
+            color: isDark ? AppDarkColors.textPrimary : AppColors.textPrimary,
             fontSize: 14,
             fontWeight: FontWeight.w700,
           ),
@@ -783,29 +978,40 @@ class _ProfileScreenState extends State<ProfileScreen> {
         const SizedBox(height: 2),
         Text(
           label,
-          style: const TextStyle(color: AppColors.textMuted, fontSize: 11),
+          style: TextStyle(
+            color: isDark ? AppDarkColors.textSecondary : AppColors.textMuted,
+            fontSize: 11,
+          ),
         ),
       ],
     );
   }
 
   Widget _statDivider() {
+    final isDark = ThemeController.instance.isDark;
     return Container(
       width: 1,
       height: 20,
       margin: const EdgeInsets.symmetric(horizontal: 6),
-      color: AppColors.glassBorder,
+      color: isDark ? AppDarkColors.borderStandard : AppColors.glassBorder,
     );
   }
 
   Widget _activityCard({required String title, required Widget content}) {
+    final isDark = ThemeController.instance.isDark;
     return Container(
       width: 148,
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color: AppColors.backgroundSurface,
+        color: isDark
+            ? AppDarkColors.backgroundSecondary
+            : AppColors.backgroundSurface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.surfaceBorder),
+        border: Border.all(
+          color: isDark
+              ? AppDarkColors.borderStandard
+              : AppColors.surfaceBorder,
+        ),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -815,8 +1021,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             title,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              color: AppColors.textMuted,
+            style: TextStyle(
+              color: isDark ? AppDarkColors.textSecondary : AppColors.textMuted,
               fontSize: 11,
               fontWeight: FontWeight.w500,
             ),
@@ -845,26 +1051,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
     required String title,
     Widget? trailing,
     VoidCallback? onTap,
+    bool? isDark,
   }) {
+    final dark = isDark ?? ThemeController.instance.isDark;
     return Material(
       color: Colors.transparent,
       child: ListTile(
         onTap: onTap,
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
-        leading: Icon(icon, color: AppColors.textSecondary, size: 22),
+        leading: Icon(
+          icon,
+          color: dark ? AppDarkColors.textSecondary : AppColors.textSecondary,
+          size: 22,
+        ),
         title: Text(
           title,
-          style: const TextStyle(
-            color: AppColors.textPrimary,
+          style: TextStyle(
+            color: dark ? AppDarkColors.textPrimary : AppColors.textPrimary,
             fontSize: 14,
             fontWeight: FontWeight.w500,
           ),
         ),
-        trailing:
-            trailing ??
-            const Icon(
+        trailing: trailing ??
+            Icon(
               Icons.chevron_right_rounded,
-              color: AppColors.textMuted,
+              color: dark ? AppDarkColors.textSecondary : AppColors.textMuted,
               size: 20,
             ),
       ),
@@ -872,8 +1083,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _settingsDivider() {
-    return const Divider(
-      color: AppColors.glassBorder,
+    final isDark = ThemeController.instance.isDark;
+    return Divider(
+      color: isDark ? AppDarkColors.borderStandard : AppColors.glassBorder,
       height: 1,
       indent: 16,
       endIndent: 16,

@@ -1,5 +1,37 @@
 import 'package:flutter/material.dart';
 
+/// Dark Theme Neumorphic Palette Tokens
+class AppDarkColors {
+  const AppDarkColors._();
+
+  static const Color background = Color(0xFF1E222B);
+  static const Color backgroundSecondary = Color(0xFF181B22);
+  static const Color backgroundSurface = Color(0xFF232833);
+  static const Color surface = background;
+  static const Color surfaceHigh = Color(0xFF262C37);
+  static const Color lightShadow = Color(0xFF282F3C);
+  static const Color darkShadow = Color(0xFF0F1217);
+  static const Color darkShadowSubtle = Color(0xFF14171E);
+  static const Color shadowStandard = Color(0x60000000);
+  static const Color shadowFloating = Color(0x80000000);
+  static const Color insetTrack = Color(0xFF15181F);
+  static const Color insetHighlight = Color(0xFF262C38);
+  static const Color insetShadow = Color(0xFF0B0D11);
+  static const Color textPrimary = Color(0xFFF1F5F9);
+  static const Color textSecondary = Color(0xFF94A3B8);
+  static const Color textTertiary = Color(0xFF64748B);
+  static const Color textMuted = textTertiary;
+  static const Color silver = Color(0xFF2A313E);
+  static const Color borderStandard = Color(0x18FFFFFF);
+  static const Color borderElevated = Color(0x28FFFFFF);
+  static const Color divider = Color(0x20FFFFFF);
+  static const Color dockSurface = Color(0xFF1E222B);
+  static const Color dockActiveSurface = Color(0xFF282F3C);
+  static const Color dockInactive = Color(0xFF64748B);
+  static const Color playControlSurface = background;
+  static const Color playControlForeground = textPrimary;
+}
+
 /// Neumorphism & Soft 3D UI Color Palette
 ///
 /// Monochromatic soft surfaces, dual outer shadows for extruded plastic-like
@@ -32,11 +64,11 @@ class AppColors {
   static const Color midnightNavy = Color(0xFF1E293B);
   static const Color deepBlue = Color(0xFF2C3E50);
 
-  // Signature Coral / Orange Accent (from reference toggles, active tracks & badges)
+  // Signature Coral / Orange Accent
   static const Color coral = Color(0xFFFF6444);
   static const Color coralLight = Color(0xFFFF856A);
   static const Color coralDark = Color(0xFFE04A2B);
-  static const Color primaryCyan = coral; // Replaced cyan accent with signature coral
+  static const Color primaryCyan = coral;
   static const Color accent = coral;
   static const Color accentLight = coralLight;
   static const Color accentDark = coralDark;
@@ -50,7 +82,7 @@ class AppColors {
   static const Color error = Color(0xFFF87171);
   static const Color success = Color(0xFF34D399);
 
-  // Rainbow 3D Spectrum (from the reference 3D Donut Chart)
+  // Rainbow 3D Spectrum
   static const Color chartCoral = Color(0xFFFF5252);
   static const Color chartOrange = Color(0xFFFF7A30);
   static const Color chartAmber = Color(0xFFFFD13B);
@@ -174,4 +206,30 @@ class AppColors {
 
   static List<Color> getGradientForId(int id) =>
       allGradients[id % allGradients.length];
+
+  // Context-aware theme color helpers
+  static Color backgroundOf(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark
+          ? AppDarkColors.background
+          : background;
+
+  static Color lightShadowOf(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark
+          ? AppDarkColors.lightShadow
+          : lightShadow;
+
+  static Color darkShadowOf(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark
+          ? AppDarkColors.darkShadow
+          : darkShadow;
+
+  static Color textPrimaryOf(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark
+          ? AppDarkColors.textPrimary
+          : textPrimary;
+
+  static Color textSecondaryOf(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark
+          ? AppDarkColors.textSecondary
+          : textSecondary;
 }

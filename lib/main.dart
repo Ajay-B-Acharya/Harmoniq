@@ -5,8 +5,8 @@ import 'package:flutter/services.dart';
 import 'package:just_audio_background/just_audio_background.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'theme/app_colors.dart';
 import 'theme/app_theme.dart';
+import 'theme/theme_controller.dart';
 import 'services/audio_service.dart';
 import 'services/auth_service.dart';
 import 'services/supabase_service.dart';
@@ -63,6 +63,7 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     super.initState();
     _authService = AuthService();
+    ThemeController.instance.init();
   }
 
   @override
@@ -73,11 +74,18 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Harmoniq',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.darkTheme,
-      home: SplashScreen(authService: _authService),
+    return ListenableBuilder(
+      listenable: ThemeController.instance,
+      builder: (context, _) {
+        return MaterialApp(
+          title: 'Harmoniq',
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.lightTheme,
+          darkTheme: AppTheme.darkTheme,
+          themeMode: ThemeController.instance.themeMode,
+          home: SplashScreen(authService: _authService),
+        );
+      },
     );
   }
 }
@@ -309,7 +317,7 @@ class _MainContainerState extends State<MainContainer> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 1100),

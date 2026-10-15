@@ -7,6 +7,7 @@ import '../services/audio_service.dart';
 import '../services/auth_service.dart';
 import '../services/youtube_catalog.dart';
 import '../theme/app_colors.dart';
+import '../theme/theme_controller.dart';
 import '../widgets/account_dialog.dart';
 import '../widgets/album_art.dart';
 import '../widgets/avatar_halo.dart';
@@ -66,6 +67,8 @@ class _HomeScreenState extends State<HomeScreen> {
   bool get _configured =>
       widget.youtubeConfigured ?? YoutubeCatalog.instance.isAvailable;
 
+  bool get isDark => ThemeController.instance.isDark;
+
   @override
   void initState() {
     super.initState();
@@ -121,17 +124,21 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = ThemeController.instance.isDark;
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SpatialNebulaBackground(
         child: SafeArea(
           bottom: false,
           child: RefreshIndicator(
             color: AppColors.primaryCyan,
-            backgroundColor: AppColors.backgroundSecondary,
+            backgroundColor: isDark
+                ? AppDarkColors.backgroundSecondary
+                : AppColors.backgroundSecondary,
             onRefresh: () => _load(refresh: true),
             child: ListenableBuilder(
-              listenable: widget.audioService,
+              listenable: Listenable.merge(
+                  [widget.audioService, ThemeController.instance]),
               builder: (context, _) {
                 final currentSong = widget.audioService.currentSong;
                 final isPlaying = widget.audioService.isPlaying;
@@ -164,16 +171,26 @@ class _HomeScreenState extends State<HomeScreen> {
                                 width: 36,
                                 height: 36,
                                 decoration: BoxDecoration(
-                                  color: AppColors.background,
+                                  color: isDark
+                                      ? AppDarkColors.background
+                                      : AppColors.background,
                                   borderRadius: BorderRadius.circular(10),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.white.withValues(alpha: 0.95),
+                                      color: (isDark
+                                              ? AppDarkColors.lightShadow
+                                              : Colors.white)
+                                          .withValues(
+                                              alpha: isDark ? 0.90 : 0.95),
                                       offset: const Offset(-2, -2),
                                       blurRadius: 4,
                                     ),
                                     BoxShadow(
-                                      color: AppColors.darkShadow.withValues(alpha: 0.65),
+                                      color: (isDark
+                                              ? AppDarkColors.darkShadow
+                                              : AppColors.darkShadow)
+                                          .withValues(
+                                              alpha: isDark ? 0.85 : 0.65),
                                       offset: const Offset(2, 2),
                                       blurRadius: 4,
                                     ),
@@ -186,7 +203,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             const SizedBox(width: 10),
 
                             // Brand Title
-                            const Expanded(
+                            Expanded(
                               child: Text(
                                 'Harmoniq',
                                 maxLines: 1,
@@ -195,22 +212,67 @@ class _HomeScreenState extends State<HomeScreen> {
                                   fontSize: 22,
                                   fontWeight: FontWeight.w700,
                                   letterSpacing: -0.5,
-                                  color: AppColors.textPrimary,
+                                  color: isDark
+                                      ? AppDarkColors.textPrimary
+                                      : AppColors.textPrimary,
                                 ),
                               ),
                             ),
                             const SizedBox(width: 6),
 
-                            // Search music action button
-                            IconButton(
-                              tooltip: 'Search music',
-                              onPressed: () => widget.onSearchTap?.call(''),
-                              icon: const Icon(
-                                Icons.search_rounded,
-                                size: 22,
-                                color: AppColors.textPrimary,
+                            // Dark / Light Theme Toggle Button
+                            NeumorphicButton(
+                              width: 38,
+                              height: 38,
+                              borderRadius: 12,
+                              depth: 3.5,
+                              padding: EdgeInsets.zero,
+                              tooltip: isDark
+                                  ? 'Switch to Light Theme'
+                                  : 'Switch to Dark Theme',
+                              onTap: () =>
+                                  ThemeController.instance.toggleTheme(),
+                              child: AnimatedSwitcher(
+                                duration: const Duration(milliseconds: 250),
+                                transitionBuilder: (child, anim) =>
+                                    RotationTransition(
+                                  turns: Tween(begin: 0.75, end: 1.0)
+                                      .animate(anim),
+                                  child: FadeTransition(
+                                      opacity: anim, child: child),
+                                ),
+                                child: Icon(
+                                  isDark
+                                      ? Icons.light_mode_rounded
+                                      : Icons.dark_mode_rounded,
+                                  key: ValueKey(isDark),
+                                  size: 20,
+                                  color: isDark
+                                      ? const Color(0xFFFFD13B)
+                                      : AppColors.coral,
+                                ),
                               ),
                             ),
+                            const SizedBox(width: 8),
+
+                            // Search music action button
+                            NeumorphicButton(
+                              width: 38,
+                              height: 38,
+                              borderRadius: 12,
+                              depth: 3.5,
+                              padding: EdgeInsets.zero,
+                              tooltip: 'Search music',
+                              onTap: () => widget.onSearchTap?.call(''),
+                              child: Icon(
+                                Icons.search_rounded,
+                                size: 20,
+                                color: isDark
+                                    ? AppDarkColors.textPrimary
+                                    : AppColors.textPrimary,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
 
                             // Profile avatar thumbnail with restrained gradient halo
                             AvatarHalo(
@@ -226,10 +288,12 @@ class _HomeScreenState extends State<HomeScreen> {
                                   );
                                 }
                               },
-                              child: const Icon(
+                              child: Icon(
                                 Icons.person_rounded,
                                 size: 20,
-                                color: AppColors.textPrimary,
+                                color: isDark
+                                    ? AppDarkColors.textPrimary
+                                    : AppColors.textPrimary,
                               ),
                             ),
                           ],
@@ -592,9 +656,11 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _openNeumorphicMenu() {
+    final isDark = ThemeController.instance.isDark;
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppColors.background,
+      backgroundColor:
+          isDark ? AppDarkColors.background : AppColors.background,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -608,25 +674,41 @@ class _HomeScreenState extends State<HomeScreen> {
                 width: 36,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: AppColors.darkShadow,
+                  color:
+                      isDark ? AppDarkColors.darkShadow : AppColors.darkShadow,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
               const SizedBox(height: 16),
-              const Text(
+              Text(
                 'Neumorphic Experience',
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w800,
-                  color: AppColors.textPrimary,
+                  color: isDark
+                      ? AppDarkColors.textPrimary
+                      : AppColors.textPrimary,
                 ),
               ),
               const SizedBox(height: 16),
               ListTile(
-                leading: const Icon(Icons.credit_card_rounded, color: AppColors.coral),
-                title: const Text('Main Card (VISA)', style: TextStyle(fontWeight: FontWeight.w600)),
-                subtitle: const Text('Toggles, limits & card controls'),
-                trailing: const Icon(Icons.chevron_right_rounded),
+                leading: const Icon(Icons.credit_card_rounded,
+                    color: AppColors.coral),
+                title: Text('Main Card (VISA)',
+                    style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: isDark
+                            ? AppDarkColors.textPrimary
+                            : AppColors.textPrimary)),
+                subtitle: Text('Toggles, limits & card controls',
+                    style: TextStyle(
+                        color: isDark
+                            ? AppDarkColors.textSecondary
+                            : AppColors.textSecondary)),
+                trailing: Icon(Icons.chevron_right_rounded,
+                    color: isDark
+                        ? AppDarkColors.textSecondary
+                        : AppColors.textSecondary),
                 onTap: () {
                   Navigator.pop(ctx);
                   Navigator.of(context).push(
@@ -635,10 +717,23 @@ class _HomeScreenState extends State<HomeScreen> {
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.bar_chart_rounded, color: AppColors.coral),
-                title: const Text('History & 3D Analytics', style: TextStyle(fontWeight: FontWeight.w600)),
-                subtitle: const Text('3D Rainbow Donut Chart & Activity'),
-                trailing: const Icon(Icons.chevron_right_rounded),
+                leading: const Icon(Icons.bar_chart_rounded,
+                    color: AppColors.coral),
+                title: Text('History & 3D Analytics',
+                    style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: isDark
+                            ? AppDarkColors.textPrimary
+                            : AppColors.textPrimary)),
+                subtitle: Text('3D Rainbow Donut Chart & Activity',
+                    style: TextStyle(
+                        color: isDark
+                            ? AppDarkColors.textSecondary
+                            : AppColors.textSecondary)),
+                trailing: Icon(Icons.chevron_right_rounded,
+                    color: isDark
+                        ? AppDarkColors.textSecondary
+                        : AppColors.textSecondary),
                 onTap: () {
                   Navigator.pop(ctx);
                   Navigator.of(context).push(
@@ -647,13 +742,61 @@ class _HomeScreenState extends State<HomeScreen> {
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.folder_open_rounded, color: AppColors.coral),
-                title: const Text('Local Device Music', style: TextStyle(fontWeight: FontWeight.w600)),
-                subtitle: const Text('Browse stored audio files'),
-                trailing: const Icon(Icons.chevron_right_rounded),
+                leading: const Icon(Icons.folder_open_rounded,
+                    color: AppColors.coral),
+                title: Text('Local Device Music',
+                    style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: isDark
+                            ? AppDarkColors.textPrimary
+                            : AppColors.textPrimary)),
+                subtitle: Text('Browse stored audio files',
+                    style: TextStyle(
+                        color: isDark
+                            ? AppDarkColors.textSecondary
+                            : AppColors.textSecondary)),
+                trailing: Icon(Icons.chevron_right_rounded,
+                    color: isDark
+                        ? AppDarkColors.textSecondary
+                        : AppColors.textSecondary),
                 onTap: () {
                   Navigator.pop(ctx);
                   widget.onLocalTap?.call();
+                },
+              ),
+              ListTile(
+                leading: Icon(
+                  isDark
+                      ? Icons.light_mode_rounded
+                      : Icons.dark_mode_rounded,
+                  color: AppColors.coral,
+                ),
+                title: Text(
+                  isDark
+                      ? 'Switch to Light Theme'
+                      : 'Switch to Dark Theme',
+                  style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: isDark
+                          ? AppDarkColors.textPrimary
+                          : AppColors.textPrimary),
+                ),
+                subtitle: Text(
+                  isDark
+                      ? 'Soft Neumorphic light canvas'
+                      : 'Deep Neumorphic dark canvas',
+                  style: TextStyle(
+                      color: isDark
+                          ? AppDarkColors.textSecondary
+                          : AppColors.textSecondary),
+                ),
+                trailing: Icon(Icons.swap_horiz_rounded,
+                    color: isDark
+                        ? AppDarkColors.textSecondary
+                        : AppColors.textSecondary),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  ThemeController.instance.toggleTheme();
                 },
               ),
             ],
@@ -892,6 +1035,51 @@ class _HomeScreenState extends State<HomeScreen> {
                         color: AppColors.coral,
                       ),
                     ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+
+              // Dark Mode Row
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Row(
+                      children: [
+                        Icon(
+                          isDark
+                              ? Icons.dark_mode_rounded
+                              : Icons.light_mode_rounded,
+                          size: 18,
+                          color: AppColors.coral,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Dark mode',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: isDark
+                                  ? AppDarkColors.textPrimary
+                                  : AppColors.textPrimary,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  NeumorphicSwitch(
+                    value: isDark,
+                    onChanged: (val) {
+                      ThemeController.instance.setThemeMode(
+                        val ? ThemeMode.dark : ThemeMode.light,
+                      );
+                    },
                   ),
                 ],
               ),
@@ -1194,7 +1382,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Container(
       decoration: BoxDecoration(
         border: showDivider
-            ? const Border(bottom: BorderSide(color: AppColors.divider))
+            ? Border(bottom: BorderSide(color: AppColors.divider))
             : null,
       ),
       padding: const EdgeInsets.symmetric(vertical: 7),
@@ -1229,7 +1417,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     song.title,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: AppColors.textPrimary,
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
@@ -1240,7 +1428,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     song.artist,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: AppColors.textSecondary,
                       fontSize: 12,
                     ),
@@ -1275,7 +1463,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 color: Colors.white.withValues(alpha: 0.88),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.play_arrow_rounded,
                 color: AppColors.playControlForeground,
                 size: 20,
@@ -1365,14 +1553,21 @@ class _HomeScreenState extends State<HomeScreen> {
     required Color iconColor,
     VoidCallback? onTap,
   }) {
+    final isDark = ThemeController.instance.isDark;
     return Pressable(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: AppColors.glassSecondary,
+          color: isDark
+              ? AppDarkColors.backgroundSecondary
+              : AppColors.glassSecondary,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: AppColors.borderStandard),
+          border: Border.all(
+            color: isDark
+                ? AppDarkColors.borderStandard
+                : AppColors.borderStandard,
+          ),
         ),
         child: Row(
           children: [
@@ -1387,10 +1582,12 @@ class _HomeScreenState extends State<HomeScreen> {
                     title,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
+                      color: isDark
+                          ? AppDarkColors.textPrimary
+                          : AppColors.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 2),
@@ -1398,9 +1595,11 @@ class _HomeScreenState extends State<HomeScreen> {
                     subtitle,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 10.5,
-                      color: AppColors.textMuted,
+                      color: isDark
+                          ? AppDarkColors.textSecondary
+                          : AppColors.textMuted,
                     ),
                   ),
                 ],

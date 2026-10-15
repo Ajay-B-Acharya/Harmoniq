@@ -93,4 +93,25 @@ void main() {
     );
     expect(songs.map((song) => song.id), [1, 2, 3]);
   });
+
+  test('sorts local songs by latest added and oldest added', () {
+    expect(
+      sortLocalSongs(
+        songs,
+        LocalSongSort.latestAdded,
+      ).map((song) => song.id),
+      [3, 2, 1],
+    );
+    expect(
+      sortLocalSongs(
+        songs,
+        LocalSongSort.oldestAdded,
+      ).map((song) => song.id),
+      [1, 2, 3],
+    );
+    expect(LocalSongSort.latestAdded.shortLabel, 'Latest Adds');
+    expect(LocalSongSort.latestAdded.label, 'Date Added — Latest first');
+    expect(LocalSongSort.oldestAdded.shortLabel, 'Oldest Adds');
+    expect(LocalSongSort.oldestAdded.label, 'Date Added — Oldest first');
+  });
 }

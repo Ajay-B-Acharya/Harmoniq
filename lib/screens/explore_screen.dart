@@ -103,7 +103,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
     final catalogue = _getAllAvailable();
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SpatialNebulaBackground(
         child: SafeArea(
           bottom: false,

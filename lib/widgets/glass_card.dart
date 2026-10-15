@@ -53,6 +53,13 @@ class GlassCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bg = isDark ? AppDarkColors.background : AppColors.background;
+    final shadowLight =
+        isDark ? AppDarkColors.lightShadow : AppColors.lightShadow;
+    final shadowDark =
+        isDark ? AppDarkColors.darkShadow : AppColors.darkShadow;
+
     // 1. Resolve surface color (monochromatic plastic extrusion)
     final Color surfaceColor;
     if (color != null) {
@@ -60,15 +67,19 @@ class GlassCard extends StatelessWidget {
     } else {
       switch (level) {
         case GlassLevel.active:
-          surfaceColor = AppColors.glassSelected;
+          surfaceColor = isDark
+              ? AppDarkColors.dockActiveSurface
+              : AppColors.glassSelected;
           break;
         case GlassLevel.floating:
-          surfaceColor = AppColors.background;
+          surfaceColor = bg;
           break;
         case GlassLevel.surface:
           surfaceColor = tint == GlassTint.selected
-              ? AppColors.glassSelected
-              : AppColors.background;
+              ? (isDark
+                  ? AppDarkColors.dockActiveSurface
+                  : AppColors.glassSelected)
+              : bg;
           break;
       }
     }
@@ -83,10 +94,10 @@ class GlassCard extends StatelessWidget {
           effectiveBorderColor = AppColors.borderActiveCyan;
           break;
         case GlassLevel.floating:
-          effectiveBorderColor = Colors.white.withValues(alpha: 0.5);
+          effectiveBorderColor = Colors.white.withValues(alpha: isDark ? 0.2 : 0.5);
           break;
         case GlassLevel.surface:
-          effectiveBorderColor = Colors.white.withValues(alpha: 0.35);
+          effectiveBorderColor = Colors.white.withValues(alpha: isDark ? 0.15 : 0.35);
           break;
       }
     }
@@ -107,13 +118,13 @@ class GlassCard extends StatelessWidget {
     if (glowColor != null) {
       shadows = [
         BoxShadow(
-          color: AppColors.lightShadow.withValues(alpha: 0.95),
+          color: shadowLight.withValues(alpha: isDark ? 0.90 : 0.95),
           offset: Offset(-depth, -depth),
           blurRadius: depth * 2.2,
           spreadRadius: 0.5,
         ),
         BoxShadow(
-          color: AppColors.darkShadow.withValues(alpha: 0.65),
+          color: shadowDark.withValues(alpha: isDark ? 0.85 : 0.65),
           offset: Offset(depth, depth),
           blurRadius: depth * 2.2,
           spreadRadius: 0.5,
@@ -127,13 +138,13 @@ class GlassCard extends StatelessWidget {
     } else if (level == GlassLevel.active) {
       shadows = [
         BoxShadow(
-          color: AppColors.lightShadow.withValues(alpha: 0.95),
+          color: shadowLight.withValues(alpha: isDark ? 0.90 : 0.95),
           offset: Offset(-depth, -depth),
           blurRadius: depth * 2.2,
           spreadRadius: 0.5,
         ),
         BoxShadow(
-          color: AppColors.darkShadow.withValues(alpha: 0.65),
+          color: shadowDark.withValues(alpha: isDark ? 0.85 : 0.65),
           offset: Offset(depth, depth),
           blurRadius: depth * 2.2,
           spreadRadius: 0.5,
@@ -147,13 +158,13 @@ class GlassCard extends StatelessWidget {
     } else {
       shadows = [
         BoxShadow(
-          color: AppColors.lightShadow.withValues(alpha: 0.95),
+          color: shadowLight.withValues(alpha: isDark ? 0.90 : 0.95),
           offset: Offset(-depth, -depth),
           blurRadius: depth * 2.2,
           spreadRadius: 0.5,
         ),
         BoxShadow(
-          color: AppColors.darkShadow.withValues(alpha: 0.65),
+          color: shadowDark.withValues(alpha: isDark ? 0.85 : 0.65),
           offset: Offset(depth, depth),
           blurRadius: depth * 2.2,
           spreadRadius: 0.5,

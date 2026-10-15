@@ -11,9 +11,10 @@ class SpatialNebulaBackground extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return RepaintBoundary(
       child: CustomPaint(
-        painter: const _NeumorphicCanvasPainter(),
+        painter: _NeumorphicCanvasPainter(isDark: isDark),
         child: child,
       ),
     );
@@ -26,28 +27,37 @@ class SpatialBackground extends SpatialNebulaBackground {
 }
 
 class _NeumorphicCanvasPainter extends CustomPainter {
-  const _NeumorphicCanvasPainter();
+  final bool isDark;
+  const _NeumorphicCanvasPainter({this.isDark = false});
 
   @override
   void paint(Canvas canvas, Size size) {
     final rect = Offset.zero & size;
-    // Base monochromatic soft canvas
+    final colors = isDark
+        ? const [
+            Color(0xFF242A35),
+            Color(0xFF1E222B),
+            Color(0xFF15181F),
+          ]
+        : const [
+            Color(0xFFEFF3F8),
+            AppColors.background,
+            Color(0xFFE2E7ED),
+          ];
+
     canvas.drawRect(
       rect,
       Paint()
-        ..shader = const LinearGradient(
+        ..shader = LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            Color(0xFFEFF3F8), // Subtle highlight in top-left
-            AppColors.background,
-            Color(0xFFE2E7ED), // Subtle shadow depth in bottom-right
-          ],
-          stops: [0.0, 0.45, 1.0],
+          colors: colors,
+          stops: const [0.0, 0.45, 1.0],
         ).createShader(rect),
     );
   }
 
   @override
-  bool shouldRepaint(covariant _NeumorphicCanvasPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _NeumorphicCanvasPainter oldDelegate) =>
+      oldDelegate.isDark != isDark;
 }

@@ -47,7 +47,13 @@ class NeumorphicBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final effectiveColor = color ?? AppColors.background;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final effectiveColor =
+        color ?? (isDark ? AppDarkColors.background : AppColors.background);
+    final shadowLight =
+        isDark ? AppDarkColors.lightShadow : AppColors.lightShadow;
+    final shadowDark =
+        isDark ? AppDarkColors.darkShadow : AppColors.darkShadow;
 
     Widget container = Container(
       width: width,
@@ -66,13 +72,13 @@ class NeumorphicBox extends StatelessWidget {
             ? null
             : [
                 BoxShadow(
-                  color: AppColors.lightShadow.withValues(alpha: 0.95),
+                  color: shadowLight.withValues(alpha: isDark ? 0.90 : 0.95),
                   offset: Offset(-depth, -depth),
                   blurRadius: depth * 2.2,
                   spreadRadius: 0.5,
                 ),
                 BoxShadow(
-                  color: AppColors.darkShadow.withValues(alpha: 0.65),
+                  color: shadowDark.withValues(alpha: isDark ? 0.85 : 0.65),
                   offset: Offset(depth, depth),
                   blurRadius: depth * 2.2,
                   spreadRadius: 0.5,
@@ -84,8 +90,10 @@ class NeumorphicBox extends StatelessWidget {
               foregroundPainter: _NeumorphicInnerShadowPainter(
                 borderRadius: borderRadius,
                 shape: shape,
-                shadowColor: AppColors.darkShadow.withValues(alpha: 0.8),
-                highlightColor: AppColors.lightShadow.withValues(alpha: 0.95),
+                shadowColor:
+                    shadowDark.withValues(alpha: isDark ? 0.85 : 0.8),
+                highlightColor:
+                    shadowLight.withValues(alpha: isDark ? 0.90 : 0.95),
                 depth: depth,
               ),
               child: child,

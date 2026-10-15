@@ -42,6 +42,13 @@ class BottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final dockBg = isDark ? AppDarkColors.dockSurface : AppColors.dockSurface;
+    final shadowLight =
+        isDark ? AppDarkColors.lightShadow : AppColors.lightShadow;
+    final shadowDark =
+        isDark ? AppDarkColors.darkShadow : AppColors.darkShadow;
+
     return RepaintBoundary(
       child: SafeArea(
         top: false,
@@ -49,17 +56,17 @@ class BottomNav extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
           child: Container(
             decoration: BoxDecoration(
-              color: AppColors.dockSurface,
+              color: dockBg,
               borderRadius: BorderRadius.circular(28),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.lightShadow.withValues(alpha: 0.95),
+                  color: shadowLight.withValues(alpha: isDark ? 0.90 : 0.95),
                   offset: const Offset(-6, -6),
                   blurRadius: 14,
                   spreadRadius: 1,
                 ),
                 BoxShadow(
-                  color: AppColors.darkShadow.withValues(alpha: 0.65),
+                  color: shadowDark.withValues(alpha: isDark ? 0.85 : 0.65),
                   offset: const Offset(6, 6),
                   blurRadius: 14,
                   spreadRadius: 1,
@@ -96,18 +103,22 @@ class BottomNav extends StatelessWidget {
                         ),
                         decoration: BoxDecoration(
                           color: selected
-                              ? AppColors.background
+                              ? (isDark
+                                  ? AppDarkColors.background
+                                  : AppColors.background)
                               : Colors.transparent,
                           borderRadius: BorderRadius.circular(18),
                           boxShadow: selected
                               ? [
                                   BoxShadow(
-                                    color: AppColors.lightShadow.withValues(alpha: 0.95),
+                                    color: shadowLight.withValues(
+                                        alpha: isDark ? 0.90 : 0.95),
                                     offset: const Offset(-2, -2),
                                     blurRadius: 5,
                                   ),
                                   BoxShadow(
-                                    color: AppColors.darkShadow.withValues(alpha: 0.60),
+                                    color: shadowDark.withValues(
+                                        alpha: isDark ? 0.85 : 0.60),
                                     offset: const Offset(2, 2),
                                     blurRadius: 5,
                                   ),

@@ -9,6 +9,8 @@ enum LocalSongSort {
   albumDescending,
   durationAscending,
   durationDescending,
+  latestAdded,
+  oldestAdded,
 }
 
 extension LocalSongSortLabel on LocalSongSort {
@@ -21,6 +23,8 @@ extension LocalSongSortLabel on LocalSongSort {
     LocalSongSort.albumDescending => 'Album Z–A',
     LocalSongSort.durationAscending => 'Duration ↑',
     LocalSongSort.durationDescending => 'Duration ↓',
+    LocalSongSort.latestAdded => 'Latest Adds',
+    LocalSongSort.oldestAdded => 'Oldest Adds',
   };
 
   String get label => switch (this) {
@@ -32,6 +36,8 @@ extension LocalSongSortLabel on LocalSongSort {
     LocalSongSort.albumDescending => 'Album — Z to A',
     LocalSongSort.durationAscending => 'Duration — Shortest first',
     LocalSongSort.durationDescending => 'Duration — Longest first',
+    LocalSongSort.latestAdded => 'Date Added — Latest first',
+    LocalSongSort.oldestAdded => 'Date Added — Oldest first',
   };
 }
 
@@ -82,6 +88,16 @@ List<Song> sortLocalSongs(Iterable<Song> songs, LocalSongSort sort) {
         left,
         right,
         (a, b) => b.duration.compareTo(a.duration),
+      ),
+      LocalSongSort.latestAdded => compareWithTitle(
+        left,
+        right,
+        (a, b) => b.id.compareTo(a.id),
+      ),
+      LocalSongSort.oldestAdded => compareWithTitle(
+        left,
+        right,
+        (a, b) => a.id.compareTo(b.id),
       ),
     },
   );
