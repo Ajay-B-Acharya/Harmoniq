@@ -26,17 +26,17 @@ class BottomNav extends StatelessWidget {
 
   static const List<IconData> _icons = [
     Icons.home_outlined,
-    Icons.credit_card_outlined,
-    Icons.bar_chart_outlined,
-    Icons.notifications_none_rounded,
+    Icons.explore_outlined,
+    Icons.library_music_outlined,
+    Icons.search_rounded,
     Icons.person_outline_rounded,
   ];
 
   static const List<IconData> _selectedIcons = [
     Icons.home_rounded,
-    Icons.credit_card_rounded,
-    Icons.bar_chart_rounded,
-    Icons.notifications_rounded,
+    Icons.explore_rounded,
+    Icons.library_music_rounded,
+    Icons.search_rounded,
     Icons.person_rounded,
   ];
 

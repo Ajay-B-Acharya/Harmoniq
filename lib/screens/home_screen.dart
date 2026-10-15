@@ -19,7 +19,6 @@ import '../widgets/song_card.dart';
 import '../widgets/spatial_background.dart';
 import '../widgets/youtube_card.dart';
 import 'history_screen.dart';
-import 'main_card_screen.dart';
 
 /// Redesigned Spatial UI Home screen inspired by the SoundWave reference.
 /// Features atmospheric ambient lighting, "Good Vibes Only" hero carousel,
@@ -61,8 +60,8 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _loading = false;
   String? _error;
   final int _bannerIndex = 0;
-  bool _fastBlocking = true;
-  double _transactionLimit = 2000.0;
+  bool _audioEnhancer = true;
+  double _bassBoost = 4.0;
 
   bool get _configured =>
       widget.youtubeConfigured ?? YoutubeCatalog.instance.isAvailable;
@@ -692,31 +691,6 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               const SizedBox(height: 16),
               ListTile(
-                leading: const Icon(Icons.credit_card_rounded,
-                    color: AppColors.coral),
-                title: Text('Main Card (VISA)',
-                    style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        color: isDark
-                            ? AppDarkColors.textPrimary
-                            : AppColors.textPrimary)),
-                subtitle: Text('Toggles, limits & card controls',
-                    style: TextStyle(
-                        color: isDark
-                            ? AppDarkColors.textSecondary
-                            : AppColors.textSecondary)),
-                trailing: Icon(Icons.chevron_right_rounded,
-                    color: isDark
-                        ? AppDarkColors.textSecondary
-                        : AppColors.textSecondary),
-                onTap: () {
-                  Navigator.pop(ctx);
-                  Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const MainCardScreen()),
-                  );
-                },
-              ),
-              ListTile(
                 leading: const Icon(Icons.bar_chart_rounded,
                     color: AppColors.coral),
                 title: Text('History & 3D Analytics',
@@ -810,7 +784,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Two quick feature cards: Main Card & History (horizontally scrollable for small screens)
+        // Two quick feature cards: Local Audio & Explore (horizontally scrollable for small screens)
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           physics: const BouncingScrollPhysics(),
@@ -822,9 +796,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   borderRadius: 20,
                   depth: 4.5,
                   padding: const EdgeInsets.all(16),
-                  onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const MainCardScreen()),
-                  ),
+                  onTap: widget.onLocalTap,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -851,87 +823,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ],
                               ),
                               child: const Text(
-                                'VISA',
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  fontFamily: 'sans-serif',
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w900,
-                                  fontStyle: FontStyle.italic,
-                                  color: Color(0xFF1E3A8A),
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 4),
-                          const Icon(
-                            Icons.arrow_forward_ios_rounded,
-                            size: 13,
-                            color: AppColors.coral,
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      const Text(
-                        'Main Card',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      const Text(
-                        '**** 1385',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 1.2,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              SizedBox(
-                width: 164,
-                child: NeumorphicButton(
-                  borderRadius: 20,
-                  depth: 4.5,
-                  padding: const EdgeInsets.all(16),
-                  onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const HistoryScreen()),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Flexible(
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: AppColors.background,
-                                borderRadius: BorderRadius.circular(8),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.white.withValues(alpha: 0.9),
-                                    offset: const Offset(-1, -1),
-                                    blurRadius: 2,
-                                  ),
-                                  BoxShadow(
-                                    color: AppColors.darkShadow.withValues(alpha: 0.6),
-                                    offset: const Offset(1, 1),
-                                    blurRadius: 2,
-                                  ),
-                                ],
-                              ),
-                              child: const Text(
-                                '3D CHART',
+                                'DEVICE',
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
@@ -952,7 +844,82 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       const SizedBox(height: 12),
                       const Text(
-                        'History',
+                        'Local Audio',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        '${widget.audioService.localSongs.length} songs',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              SizedBox(
+                width: 164,
+                child: NeumorphicButton(
+                  borderRadius: 20,
+                  depth: 4.5,
+                  padding: const EdgeInsets.all(16),
+                  onTap: () => widget.onSearchTap?.call(''),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Flexible(
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: AppColors.background,
+                                borderRadius: BorderRadius.circular(8),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.white.withValues(alpha: 0.9),
+                                    offset: const Offset(-1, -1),
+                                    blurRadius: 2,
+                                  ),
+                                  BoxShadow(
+                                    color: AppColors.darkShadow.withValues(alpha: 0.6),
+                                    offset: const Offset(1, 1),
+                                    blurRadius: 2,
+                                  ),
+                                ],
+                              ),
+                              child: const Text(
+                                'ONLINE',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.w800,
+                                  color: AppColors.coral,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          const Icon(
+                            Icons.arrow_forward_ios_rounded,
+                            size: 13,
+                            color: AppColors.coral,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      const Text(
+                        'Explore Music',
                         style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w700,
@@ -961,7 +928,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       const SizedBox(height: 2),
                       const Text(
-                        '30% (Food)',
+                        'Stream & Hi-Fi',
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
@@ -977,7 +944,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         const SizedBox(height: 16),
 
-        // Neumorphic Controls Card (Fast blocking & Transaction limit)
+        // Neumorphic Controls Card (Theme & Audio controls)
         NeumorphicBox(
           borderRadius: 22,
           depth: 4.5,
@@ -1085,18 +1052,18 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               const SizedBox(height: 14),
 
-              // Fast blocking Row
+              // Audio Enhancer Row
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Expanded(
                     child: Row(
                       children: [
-                        Icon(Icons.lock_outline_rounded, size: 18, color: AppColors.textPrimary),
+                        Icon(Icons.graphic_eq_rounded, size: 18, color: AppColors.textPrimary),
                         SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            'Fast blocking',
+                            'Audio Enhancer',
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
@@ -1111,20 +1078,20 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   const SizedBox(width: 8),
                   NeumorphicSwitch(
-                    value: _fastBlocking,
-                    onChanged: (val) => setState(() => _fastBlocking = val),
+                    value: _audioEnhancer,
+                    onChanged: (val) => setState(() => _audioEnhancer = val),
                   ),
                 ],
               ),
               const SizedBox(height: 14),
 
-              // Transaction Limit Slider Row
+              // Bass Boost Slider Row
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Expanded(
                     child: Text(
-                      'Transaction Limit:',
+                      'Bass Boost:',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
@@ -1136,7 +1103,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   const SizedBox(width: 6),
                   Text(
-                    '\$${_transactionLimit.toInt()}',
+                    '+${_bassBoost.toInt()} dB',
                     style: const TextStyle(
                       fontSize: 14.5,
                       fontWeight: FontWeight.w800,
@@ -1147,10 +1114,10 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               const SizedBox(height: 8),
               NeumorphicSlider(
-                value: _transactionLimit,
-                min: 500,
-                max: 5000,
-                onChanged: (val) => setState(() => _transactionLimit = val),
+                value: _bassBoost,
+                min: 0,
+                max: 12,
+                onChanged: (val) => setState(() => _bassBoost = val),
               ),
             ],
           ),
