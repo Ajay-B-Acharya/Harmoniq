@@ -14,6 +14,7 @@ import '../models/song.dart';
 import '../models/playlist.dart';
 import '../data/sample_data.dart';
 import 'playback_failure.dart';
+import 'related_songs_service.dart';
 import 'youtube_audio_stream_resolver.dart' as youtube;
 import 'yt_dlp_channel.dart';
 
@@ -85,6 +86,18 @@ class AudioService extends ChangeNotifier {
   final AudioPlayer _player;
   final Future<YoutubeAudioStream> Function(String videoId, {String? quality})
       _resolveYoutubeAudio;
+  final Future<List<Song>> Function(
+    Song currentSong, {
+    List<Song>? currentQueue,
+    int limit,
+  })? _findRelatedSongs;
+
+  // Pre-resolved stream cache for instant next track playback
+  final Map<String, _PreloadedStream> _preloadedStreams = {};
+  String? _preloadingVideoId;
+  bool _fetchingRelatedSongs = false;
+  bool _autoQueueRelated = false;
+  bool get autoQueueRelated => _autoQueueRelated;
   Future<void> _playerMutations = Future<void>.value();
   int _generation = 0;
   int? _readyGeneration;
@@ -138,6 +151,7 @@ class AudioService extends ChangeNotifier {
     Future<Uri> Function(String videoId)? resolveYoutubeAudio,
     Function? resolveYoutubeStream,
     AudioPlayer? audioPlayer,
+    this._findRelatedSongs,
   }) : _player = audioPlayer ?? AudioPlayer(),
        _resolveYoutubeAudio = _wrapResolver(
          resolveYoutubeStream: resolveYoutubeStream,
@@ -177,6 +191,7 @@ class AudioService extends ChangeNotifier {
   Future<void> setAudioQuality(String quality) async {
     if (_audioQuality == quality) return;
     _audioQuality = quality;
+    _preloadedStreams.clear();
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(prefAudioQualityKey, quality);
@@ -197,6 +212,8 @@ class AudioService extends ChangeNotifier {
         resumeAt: _playbackPosition,
         wantsToPlay: _wantsToPlay,
       );
+    } else {
+      _preloadNextTrack();
     }
   }
 
@@ -564,8 +581,13 @@ class AudioService extends ChangeNotifier {
         RegExp(r'^[A-Za-z]:[\\/]').hasMatch(path);
   }
 
-  Future<void> playSong(Song song, {List<Song>? contextQueue}) async {
+  Future<void> playSong(
+    Song song, {
+    List<Song>? contextQueue,
+    bool autoQueueRelated = false,
+  }) async {
     if (_disposed || !_canPlay(song)) return;
+    _autoQueueRelated = autoQueueRelated;
     _registerSongs([song]);
     if (contextQueue != null) {
       _queue = contextQueue.where(_canPlay).toList();
@@ -576,6 +598,10 @@ class AudioService extends ChangeNotifier {
       _currentQueueIndex = _queue.length - 1;
     }
     await _selectSong(song);
+
+    if (_autoQueueRelated) {
+      unawaited(_fetchAndAppendRelatedSongs(song));
+    }
   }
 
   Future<void> skipToIndex(int index) async {
@@ -625,11 +651,22 @@ class AudioService extends ChangeNotifier {
       final Uri uri;
       Map<String, String> headers = const {};
       if (song.source == SongSource.youtube) {
-        final stream = await _resolveYoutubeAudio(
-          song.videoId!,
-          quality: _audioQuality,
-        ).timeout(const Duration(seconds: 20));
-        if (!_isCurrent(generation)) return;
+        YoutubeAudioStream? stream;
+        final cached = _preloadedStreams[song.videoId];
+        if (!retry && cached != null && cached.isValid(_audioQuality)) {
+          stream = cached.stream;
+        } else {
+          stream = await _resolveYoutubeAudio(
+            song.videoId!,
+            quality: _audioQuality,
+          ).timeout(const Duration(seconds: 20));
+          if (!_isCurrent(generation)) return;
+          _preloadedStreams[song.videoId!] = _PreloadedStream(
+            stream: stream,
+            quality: _audioQuality,
+            resolvedAt: DateTime.now(),
+          );
+        }
         uri = stream.uri;
         headers = stream.headers;
         if (uri.scheme != 'https' ||
@@ -677,6 +714,7 @@ class AudioService extends ChangeNotifier {
         _isLoading = false;
         notifyListeners();
         if (_isCurrent(generation) && _wantsToPlay) _startPlaying(generation);
+        _preloadNextTrack();
       });
     } catch (error) {
       if (song.source == SongSource.youtube && loadingSource) {
@@ -724,6 +762,9 @@ class AudioService extends ChangeNotifier {
         (!duringLoad && _readyGeneration != generation)) {
       return;
     }
+    if (_currentSong?.videoId != null) {
+      _preloadedStreams.remove(_currentSong!.videoId);
+    }
     if (!_retryAttempted && _currentSong?.source == SongSource.youtube) {
       _retryAttempted = true;
       // A 403 can mean an expired URL; refresh once, using the stable video ID.
@@ -740,6 +781,9 @@ class AudioService extends ChangeNotifier {
 
   void _failPlayback(int generation, {Object? error}) {
     if (!_isCurrent(generation)) return;
+    if (_currentSong?.videoId != null) {
+      _preloadedStreams.remove(_currentSong!.videoId);
+    }
     _readyGeneration = null;
     _isLoading = false;
     _isPlaying = false;
@@ -785,6 +829,9 @@ class AudioService extends ChangeNotifier {
 
   Future<void> retryPlayback() async {
     if (_disposed || _currentSong == null || !_canPlay(_currentSong!)) return;
+    if (_currentSong?.videoId != null) {
+      _preloadedStreams.remove(_currentSong!.videoId);
+    }
     await _selectSong(_currentSong!, resumeAt: _playbackPosition);
   }
 
@@ -832,6 +879,7 @@ class AudioService extends ChangeNotifier {
     _playbackError = null;
     _wantsToPlay = false;
     _isPlaying = false;
+    _preloadingVideoId = null;
     _playbackPosition = Duration.zero;
     playbackPositionNotifier.value = Duration.zero;
     notifyListeners();
@@ -864,6 +912,18 @@ class AudioService extends ChangeNotifier {
 
   Future<void> next() async {
     if (_disposed || _queue.isEmpty) return;
+    if (_repeatEnabled && _currentSong != null) {
+      await _restart(_generation);
+      return;
+    }
+
+    // Proactively fetch more related songs if we are at the end of the queue and auto-queue is enabled
+    if (_autoQueueRelated && !_shuffleEnabled && _currentQueueIndex + 1 >= _queue.length) {
+      if (_currentSong != null) {
+        await _fetchAndAppendRelatedSongs(_currentSong!);
+      }
+    }
+
     final index = _shuffleEnabled
         ? Random().nextInt(_queue.length)
         : (_currentQueueIndex + 1) % _queue.length;
@@ -889,11 +949,112 @@ class AudioService extends ChangeNotifier {
   void toggleShuffle() {
     _shuffleEnabled = !_shuffleEnabled;
     notifyListeners();
+    _preloadNextTrack();
   }
 
   void toggleRepeat() {
     _repeatEnabled = !_repeatEnabled;
     notifyListeners();
+  }
+
+  /// Proactively resolves and caches the next track's audio stream in the background
+  /// so that when the next track starts or is triggered, there is zero loading latency.
+  void _preloadNextTrack() {
+    if (_disposed || _queue.isEmpty) return;
+    final nextIndex = _shuffleEnabled ? -1 : (_currentQueueIndex + 1);
+
+    if (nextIndex < 0 || nextIndex >= _queue.length) {
+      if (_autoQueueRelated && _currentSong != null && !_fetchingRelatedSongs) {
+        unawaited(_fetchAndAppendRelatedSongs(_currentSong!));
+      }
+      return;
+    }
+
+    final nextSong = _queue[nextIndex];
+    if (nextSong.source != SongSource.youtube || nextSong.videoId == null) {
+      return;
+    }
+    final videoId = nextSong.videoId!;
+    final cached = _preloadedStreams[videoId];
+    if (cached != null && cached.isValid(_audioQuality)) {
+      return;
+    }
+    if (_preloadingVideoId == videoId) {
+      return;
+    }
+
+    _preloadingVideoId = videoId;
+    final quality = _audioQuality;
+    unawaited(
+      _resolveYoutubeAudio(videoId, quality: quality).then((stream) {
+        if (_disposed) return;
+        _preloadedStreams[videoId] = _PreloadedStream(
+          stream: stream,
+          quality: quality,
+          resolvedAt: DateTime.now(),
+        );
+        // Maintain a bounded cache
+        if (_preloadedStreams.length > 10) {
+          final oldestKey = _preloadedStreams.keys.first;
+          _preloadedStreams.remove(oldestKey);
+        }
+      }).catchError((_) {
+        // Ignored; fallback on-demand resolution will run when track is selected
+      }).whenComplete(() {
+        if (_preloadingVideoId == videoId) {
+          _preloadingVideoId = null;
+        }
+      }),
+    );
+  }
+
+  /// Discovers related songs based on the current track (same movie/soundtrack,
+  /// same artist, or similar language/genre) and appends them to the queue.
+  Future<void> _fetchAndAppendRelatedSongs(Song song) async {
+    if (_disposed || _fetchingRelatedSongs) return;
+    _fetchingRelatedSongs = true;
+    try {
+      List<Song> related = const [];
+      if (song.source == SongSource.youtube) {
+        final finder = _findRelatedSongs;
+        if (finder != null) {
+          related = await finder(song, currentQueue: _queue);
+        } else {
+          related = await RelatedSongsService.instance.findRelatedSongs(
+            song,
+            currentQueue: _queue,
+          );
+        }
+      } else if (song.source == SongSource.local) {
+        related = RelatedSongsService.instance.findRelatedLocalSongs(
+          song,
+          [..._localSongs, ..._songs],
+          currentQueue: _queue,
+        );
+      }
+
+      if (_disposed || related.isEmpty) return;
+
+      final currentIdentities = _queue.map((s) => s.identity).toSet();
+      final newTracks = related
+          .where((s) => !currentIdentities.contains(s.identity))
+          .toList();
+      if (newTracks.isEmpty) return;
+
+      _registerSongs(newTracks);
+      final insertPos =
+          (_currentQueueIndex >= 0 && _currentQueueIndex < _queue.length)
+              ? _currentQueueIndex + 1
+              : _queue.length;
+      _queue.insertAll(insertPos, newTracks);
+      notifyListeners();
+
+      _preloadNextTrack();
+    } catch (e) {
+      debugPrint('[AUDIO_SERVICE] Could not load related songs: $e');
+    } finally {
+      _fetchingRelatedSongs = false;
+    }
   }
 
   void toggleFavorite(Song song) {
@@ -1021,11 +1182,29 @@ class AudioService extends ChangeNotifier {
     _isPlaying = false;
     _wantsToPlay = false;
     playbackPositionNotifier.dispose();
+    _preloadedStreams.clear();
     unawaited(_playerStateSub?.cancel());
     unawaited(_positionSub?.cancel());
     unawaited(_playerCompleteSub?.cancel());
     unawaited(_playbackErrorSub?.cancel());
     unawaited(_mutatePlayer(_player.dispose).catchError((Object _) {}));
     super.dispose();
+  }
+}
+
+class _PreloadedStream {
+  final YoutubeAudioStream stream;
+  final String quality;
+  final DateTime resolvedAt;
+
+  _PreloadedStream({
+    required this.stream,
+    required this.quality,
+    required this.resolvedAt,
+  });
+
+  bool isValid(String currentQuality) {
+    if (quality != currentQuality) return false;
+    return DateTime.now().difference(resolvedAt) < const Duration(hours: 2);
   }
 }

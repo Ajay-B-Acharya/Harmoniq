@@ -519,10 +519,7 @@ class SearchScreenState extends State<SearchScreen> {
                     if (_query.isEmpty) {
                       return _buildDiscoveryLanding();
                     }
-                    if (_filter == SearchFilter.local || _submitted == _query) {
-                      return _buildSearchResults();
-                    }
-                    return _buildSuggestionsView();
+                    return _buildSearchResults();
                   },
                 ),
               ),
@@ -561,218 +558,6 @@ class SearchScreenState extends State<SearchScreen> {
       }
     }),
   );
-
-  // ── Live Search Suggestions View ───────────────────────────────────────────
-  Widget _buildSuggestionsView() {
-    final showLocal = _filter != SearchFilter.online;
-
-    return ListView(
-      physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(20, 6, 20, 96),
-      children: [
-        // "Search online for ..." primary action tile
-        Container(
-          margin: const EdgeInsets.only(bottom: 12),
-          decoration: BoxDecoration(
-            color: AppColors.glassSecondary,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.borderActiveCyan, width: 1),
-            boxShadow: const [
-              BoxShadow(
-                color: AppColors.shadowStandard,
-                blurRadius: 10,
-                offset: Offset(0, 3),
-              ),
-            ],
-          ),
-          child: Material(
-            color: Colors.transparent,
-            child: ListTile(
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
-              leading: Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: AppColors.glassSelected,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Icon(
-                  Icons.search_rounded,
-                  color: AppColors.primaryCyan,
-                  size: 20,
-                ),
-              ),
-              title: RichText(
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                text: TextSpan(
-                  style: const TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: 14.5,
-                  ),
-                  children: [
-                    const TextSpan(text: 'Search online for "'),
-                    TextSpan(
-                      text: _query,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.primaryCyan,
-                      ),
-                    ),
-                    const TextSpan(text: '"'),
-                  ],
-                ),
-              ),
-              trailing: _loadingSuggestions
-                  ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: AppColors.primaryCyan,
-                      ),
-                    )
-                  : const Icon(
-                      Icons.arrow_forward_ios_rounded,
-                      size: 14,
-                      color: AppColors.textMuted,
-                    ),
-              onTap: _submit,
-            ),
-          ),
-        ),
-
-        // Live Suggestions List
-        if (_suggestions.isNotEmpty) ...[
-          const Padding(
-            padding: EdgeInsets.only(left: 4, bottom: 8, top: 4),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.auto_awesome_rounded,
-                  size: 14,
-                  color: AppColors.softCyan,
-                ),
-                SizedBox(width: 6),
-                Text(
-                  'SONG & SEARCH SUGGESTIONS',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 1.1,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          ..._suggestions.map((suggestion) {
-            final icon = switch (suggestion.type) {
-              SuggestionType.library => Icons.music_note_rounded,
-              SuggestionType.recent => Icons.history_rounded,
-              SuggestionType.online => Icons.search_rounded,
-            };
-            final iconColor = switch (suggestion.type) {
-              SuggestionType.library => AppColors.coral,
-              SuggestionType.recent => AppColors.textMuted,
-              SuggestionType.online => AppColors.softCyan,
-            };
-
-            return Container(
-              margin: const EdgeInsets.only(bottom: 6),
-              decoration: BoxDecoration(
-                color: AppColors.glassBackground,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: AppColors.glassBorder),
-              ),
-              child: Material(
-                color: Colors.transparent,
-                child: ListTile(
-                  dense: true,
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
-                  leading: Icon(icon, color: iconColor, size: 20),
-                  title: Text(
-                    suggestion.text,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: AppColors.textPrimary,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  subtitle: suggestion.type == SuggestionType.library &&
-                          suggestion.song != null
-                      ? Text(
-                          '${suggestion.song!.artist} · In Library',
-                          style: const TextStyle(
-                            color: AppColors.textMuted,
-                            fontSize: 11,
-                          ),
-                        )
-                      : null,
-                  trailing: IconButton(
-                    icon: const Icon(
-                      Icons.north_west_rounded,
-                      size: 16,
-                      color: AppColors.textMuted,
-                    ),
-                    tooltip: 'Insert into search bar',
-                    onPressed: () => _insertSuggestion(suggestion.text),
-                  ),
-                  onTap: () {
-                    if (suggestion.type == SuggestionType.library &&
-                        suggestion.song != null) {
-                      widget.onSongTap(suggestion.song!);
-                    } else {
-                      _selectSuggestion(suggestion.text);
-                    }
-                  },
-                ),
-              ),
-            );
-          }),
-        ],
-
-        // Matching local device tracks if any
-        if (showLocal && _local.isNotEmpty) ...[
-          const SizedBox(height: 12),
-          Padding(
-            padding: const EdgeInsets.only(left: 4, bottom: 8),
-            child: Row(
-              children: [
-                const Icon(
-                  Icons.folder_open_rounded,
-                  size: 14,
-                  color: AppColors.accentLight,
-                ),
-                const SizedBox(width: 6),
-                Text(
-                  'MATCHES ON YOUR DEVICE · ${_local.length}',
-                  style: const TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 1.1,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          ..._local.map((song) => Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: SongTile(
-                  song: song,
-                  onTap: () => widget.onSongTap(song),
-                  onFavoriteTap: () => widget.onFavoriteTap(song),
-                ),
-              )),
-        ],
-      ],
-    );
-  }
 
   // ── Discovery Landing View (Screenshot 2: Recent, Categories, Trending) ───
   Widget _buildDiscoveryLanding() {
@@ -1077,18 +862,198 @@ class SearchScreenState extends State<SearchScreen> {
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: FilledButton.icon(
-                    onPressed: _loading ? null : _submit,
-                    icon: const Icon(Icons.search_rounded, size: 17),
-                    label: Text(
-                      _error != null ? 'Retry search' : 'Search online',
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    FilledButton.icon(
+                      onPressed: _loading ? null : _submit,
+                      icon: const Icon(Icons.search_rounded, size: 17),
+                      label: Text(
+                        _error != null ? 'Retry search' : 'Search online',
+                      ),
                     ),
+                    if (_query.isNotEmpty && _submitted != _query) ...[
+                      const SizedBox(height: 8),
+                      RichText(
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        text: TextSpan(
+                          style: const TextStyle(
+                            color: AppColors.textPrimary,
+                            fontSize: 13,
+                          ),
+                          children: [
+                            const TextSpan(text: 'Search online for "'),
+                            TextSpan(
+                              text: _query,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.primaryCyan,
+                              ),
+                            ),
+                            const TextSpan(text: '"'),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            )
+          else if (_query.isNotEmpty && _submitted != _query)
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+                child: RichText(
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  text: TextSpan(
+                    style: const TextStyle(
+                      color: AppColors.textPrimary,
+                      fontSize: 13,
+                    ),
+                    children: [
+                      const TextSpan(text: 'Search online for "'),
+                      TextSpan(
+                        text: _query,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.primaryCyan,
+                        ),
+                      ),
+                      const TextSpan(text: '"'),
+                    ],
                   ),
                 ),
               ),
             ),
+          if (_suggestions.isNotEmpty && _submitted != _query) ...[
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+              sliver: SliverToBoxAdapter(
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.auto_awesome_rounded,
+                      size: 14,
+                      color: AppColors.softCyan,
+                    ),
+                    const SizedBox(width: 6),
+                    const Text(
+                      'SONG & SEARCH SUGGESTIONS',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 1.1,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                    if (_loadingSuggestions) ...[
+                      const SizedBox(width: 8),
+                      const SizedBox(
+                        width: 10,
+                        height: 10,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 1.5,
+                          color: AppColors.primaryCyan,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              sliver: SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) {
+                    final visibleSuggestions = _suggestions
+                        .where((s) => !_local.any(
+                              (l) =>
+                                  l.title.toLowerCase() ==
+                                  s.text.toLowerCase(),
+                            ))
+                        .toList();
+                    if (index >= visibleSuggestions.length) return null;
+                    final suggestion = visibleSuggestions[index];
+                    final icon = switch (suggestion.type) {
+                      SuggestionType.library => Icons.music_note_rounded,
+                      SuggestionType.recent => Icons.history_rounded,
+                      SuggestionType.online => Icons.search_rounded,
+                    };
+                    final iconColor = switch (suggestion.type) {
+                      SuggestionType.library => AppColors.coral,
+                      SuggestionType.recent => AppColors.textMuted,
+                      SuggestionType.online => AppColors.softCyan,
+                    };
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 6),
+                      decoration: BoxDecoration(
+                        color: AppColors.glassBackground,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: AppColors.glassBorder),
+                      ),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: ListTile(
+                          dense: true,
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 2,
+                          ),
+                          leading: Icon(icon, color: iconColor, size: 20),
+                          title: Text(
+                            suggestion.text,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: AppColors.textPrimary,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          subtitle: suggestion.type == SuggestionType.library &&
+                                  suggestion.song != null
+                              ? Text(
+                                  '${suggestion.song!.artist} · In Library',
+                                  style: const TextStyle(
+                                    color: AppColors.textMuted,
+                                    fontSize: 11,
+                                  ),
+                                )
+                              : null,
+                          trailing: IconButton(
+                            icon: const Icon(
+                              Icons.north_west_rounded,
+                              size: 16,
+                              color: AppColors.textMuted,
+                            ),
+                            tooltip: 'Insert into search bar',
+                            onPressed: () => _insertSuggestion(suggestion.text),
+                          ),
+                          onTap: () {
+                            if (suggestion.type == SuggestionType.library &&
+                                suggestion.song != null) {
+                              widget.onSongTap(suggestion.song!);
+                            } else {
+                              _selectSuggestion(suggestion.text);
+                            }
+                          },
+                        ),
+                      ),
+                    );
+                  },
+                  childCount: _suggestions
+                      .where((s) => !_local.any(
+                            (l) =>
+                                l.title.toLowerCase() == s.text.toLowerCase(),
+                          ))
+                      .length,
+                ),
+              ),
+            ),
+          ],
           if (_loading)
             const SliverToBoxAdapter(
               child: Center(

@@ -117,7 +117,11 @@ class _FakeAudioService extends AudioService {
   }
 
   @override
-  Future<void> playSong(Song song, {List<Song>? contextQueue}) async {
+  Future<void> playSong(
+    Song song, {
+    List<Song>? contextQueue,
+    bool autoQueueRelated = false,
+  }) async {
     playRequests.add(song.identity);
     if (contextQueue != null) testQueue = List.of(contextQueue);
     externalJump(

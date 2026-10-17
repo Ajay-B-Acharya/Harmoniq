@@ -1260,66 +1260,73 @@ class _HomeScreenState extends State<HomeScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Pressable(
-                        onTap: _playHeroBanner,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 9,
-                          ),
-                          decoration: BoxDecoration(
-                            color: isDark
-                                ? AppDarkColors.cardSurface
-                                : AppColors.cardSurface,
-                            borderRadius: BorderRadius.circular(14),
-                            border: Border.all(
-                              color: isDark
-                                  ? AppDarkColors.cardBorder
-                                  : AppColors.cardBorder,
-                              width: 1.0,
+                      Flexible(
+                        child: Pressable(
+                          onTap: _playHeroBanner,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 8,
                             ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: (isDark
-                                        ? AppDarkColors.lightShadow
-                                        : AppColors.lightShadow)
-                                    .withValues(alpha: isDark ? 0.70 : 0.90),
-                                offset: const Offset(-2, -2),
-                                blurRadius: 4,
+                            decoration: BoxDecoration(
+                              color: isDark
+                                  ? AppDarkColors.cardSurface
+                                  : AppColors.cardSurface,
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(
+                                color: isDark
+                                    ? AppDarkColors.cardBorder
+                                    : AppColors.cardBorder,
+                                width: 1.0,
                               ),
-                              BoxShadow(
-                                color: (isDark
-                                        ? AppDarkColors.darkShadow
-                                        : AppColors.darkShadow)
-                                    .withValues(alpha: isDark ? 0.85 : 0.45),
-                                offset: const Offset(2, 2),
-                                blurRadius: 4,
-                              ),
-                            ],
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(
-                                Icons.play_arrow_rounded,
-                                size: 18,
-                                color: AppColors.coral,
-                              ),
-                              const SizedBox(width: 5),
-                              Text(
-                                'Play Now',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w700,
-                                  color: isDark
-                                      ? AppDarkColors.textPrimary
-                                      : AppColors.textPrimary,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: (isDark
+                                          ? AppDarkColors.lightShadow
+                                          : AppColors.lightShadow)
+                                      .withValues(alpha: isDark ? 0.70 : 0.90),
+                                  offset: const Offset(-2, -2),
+                                  blurRadius: 4,
                                 ),
-                              ),
-                            ],
+                                BoxShadow(
+                                  color: (isDark
+                                          ? AppDarkColors.darkShadow
+                                          : AppColors.darkShadow)
+                                      .withValues(alpha: isDark ? 0.85 : 0.45),
+                                  offset: const Offset(2, 2),
+                                  blurRadius: 4,
+                                ),
+                              ],
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Icons.play_arrow_rounded,
+                                  size: 18,
+                                  color: AppColors.coral,
+                                ),
+                                const SizedBox(width: 5),
+                                Flexible(
+                                  child: Text(
+                                    'Play Now',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w700,
+                                      color: isDark
+                                          ? AppDarkColors.textPrimary
+                                          : AppColors.textPrimary,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ),
+                      const SizedBox(width: 8),
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: List.generate(3, (i) {

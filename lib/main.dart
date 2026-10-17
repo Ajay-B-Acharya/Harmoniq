@@ -286,6 +286,7 @@ class _MainContainerState extends State<MainContainer> {
       _audioService.playSong(
         song,
         contextQueue: videos.map(Song.fromYoutube).toList(),
+        autoQueueRelated: true,
       ),
     );
     _openNowPlaying();

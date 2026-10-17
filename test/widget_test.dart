@@ -60,7 +60,11 @@ class _RoutingAudioService extends AudioService {
   String? get playbackError => null;
 
   @override
-  Future<void> playSong(Song song, {List<Song>? contextQueue}) async {
+  Future<void> playSong(
+    Song song, {
+    List<Song>? contextQueue,
+    bool autoQueueRelated = false,
+  }) async {
     requests.add(song);
     _selected = song;
     _requestedQueue = List.of(contextQueue ?? [song]);
