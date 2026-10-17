@@ -46,15 +46,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final prefs = await SharedPreferences.getInstance();
     if (mounted) {
       setState(() {
-        _audioQuality = prefs.getString('pref_audio_quality') ?? 'High';
+        _audioQuality = widget.audioService.audioQuality.isNotEmpty
+            ? widget.audioService.audioQuality
+            : (prefs.getString('pref_audio_quality') ?? 'High');
         _offlineMode = prefs.getBool('pref_offline_mode') ?? false;
       });
     }
   }
 
   Future<void> _setAudioQuality(String quality) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('pref_audio_quality', quality);
+    await widget.audioService.setAudioQuality(quality);
     if (mounted) {
       setState(() => _audioQuality = quality);
     }

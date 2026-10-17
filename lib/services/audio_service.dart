@@ -78,9 +78,13 @@ class AudioService extends ChangeNotifier {
   bool _isScanning = false;
   bool get isScanning => _isScanning;
 
-  // ── Real audio player ────────────────────────────────────────────────────────
+  static const String prefAudioQualityKey = 'pref_audio_quality';
+  String _audioQuality = 'High';
+  String get audioQuality => _audioQuality;
+
   final AudioPlayer _player;
-  final Future<YoutubeAudioStream> Function(String) _resolveYoutubeAudio;
+  final Future<YoutubeAudioStream> Function(String videoId, {String? quality})
+      _resolveYoutubeAudio;
   Future<void> _playerMutations = Future<void>.value();
   int _generation = 0;
   int? _readyGeneration;
@@ -132,15 +136,13 @@ class AudioService extends ChangeNotifier {
 
   AudioService({
     Future<Uri> Function(String videoId)? resolveYoutubeAudio,
-    Future<YoutubeAudioStream> Function(String videoId)? resolveYoutubeStream,
+    Function? resolveYoutubeStream,
     AudioPlayer? audioPlayer,
   }) : _player = audioPlayer ?? AudioPlayer(),
-       _resolveYoutubeAudio =
-           resolveYoutubeStream ??
-           (resolveYoutubeAudio == null
-               ? youtube.resolveYoutubeStream
-               : (id) async =>
-                     YoutubeAudioStream(await resolveYoutubeAudio(id))) {
+       _resolveYoutubeAudio = _wrapResolver(
+         resolveYoutubeStream: resolveYoutubeStream,
+         resolveYoutubeAudio: resolveYoutubeAudio,
+       ) {
     _playlists = [
       Playlist(id: 0, name: "Favorites", songs: [], gradientId: 0),
       Playlist(id: 1, name: "Chill Vibes", songs: [], gradientId: 1),
@@ -152,11 +154,84 @@ class AudioService extends ChangeNotifier {
     _loadFavorites();
     _loadRecentlyPlayed();
     _loadDownloads();
+    _loadAudioQuality();
   }
 
   /// Expose the underlying YouTube audio stream resolver for authorized downloads.
-  Future<YoutubeAudioStream> resolveYoutubeStream(String videoId) =>
-      _resolveYoutubeAudio(videoId);
+  Future<YoutubeAudioStream> resolveYoutubeStream(
+    String videoId, {
+    String? quality,
+  }) => _resolveYoutubeAudio(videoId, quality: quality ?? _audioQuality);
+
+  Future<void> _loadAudioQuality() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (_disposed) return;
+      _audioQuality = prefs.getString(prefAudioQualityKey) ?? 'High';
+      notifyListeners();
+    } catch (e) {
+      debugPrint('[AUDIO_SERVICE] Error loading audio quality preference: $e');
+    }
+  }
+
+  Future<void> setAudioQuality(String quality) async {
+    if (_audioQuality == quality) return;
+    _audioQuality = quality;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(prefAudioQualityKey, quality);
+    } catch (e) {
+      debugPrint('[AUDIO_SERVICE] Error saving audio quality preference: $e');
+    }
+    notifyListeners();
+
+    // If currently playing or loading an online YouTube song, seamlessly reload
+    // at the newly selected stream quality while preserving the current playback position.
+    final current = _currentSong;
+    if (!_disposed &&
+        current != null &&
+        current.source == SongSource.youtube &&
+        _canPlay(current)) {
+      await _selectSong(
+        current,
+        resumeAt: _playbackPosition,
+        wantsToPlay: _wantsToPlay,
+      );
+    }
+  }
+
+  static Future<YoutubeAudioStream> Function(String videoId, {String? quality})
+      _wrapResolver({
+    Function? resolveYoutubeStream,
+    Future<Uri> Function(String videoId)? resolveYoutubeAudio,
+  }) {
+    if (resolveYoutubeStream != null) {
+      if (resolveYoutubeStream
+          is Future<YoutubeAudioStream> Function(String, {String? quality})) {
+        return resolveYoutubeStream;
+      }
+      if (resolveYoutubeStream is Future<YoutubeAudioStream> Function(String)) {
+        return (id, {quality}) => resolveYoutubeStream(id);
+      }
+      return (id, {quality}) async {
+        try {
+          return await Function.apply(
+            resolveYoutubeStream,
+            [id],
+            {#quality: quality},
+          ) as YoutubeAudioStream;
+        } catch (_) {
+          return await Function.apply(resolveYoutubeStream, [id])
+              as YoutubeAudioStream;
+        }
+      };
+    }
+    if (resolveYoutubeAudio != null) {
+      return (id, {quality}) async =>
+          YoutubeAudioStream(await resolveYoutubeAudio(id));
+    }
+    return youtube.resolveYoutubeStream;
+  }
 
   // ── Persistent Favorites Loading & Saving ────────────────────────────────────
   Future<void> _loadFavorites() async {
@@ -550,8 +625,10 @@ class AudioService extends ChangeNotifier {
       final Uri uri;
       Map<String, String> headers = const {};
       if (song.source == SongSource.youtube) {
-        final stream = await _resolveYoutubeAudio(song.videoId!)
-            .timeout(const Duration(seconds: 20));
+        final stream = await _resolveYoutubeAudio(
+          song.videoId!,
+          quality: _audioQuality,
+        ).timeout(const Duration(seconds: 20));
         if (!_isCurrent(generation)) return;
         uri = stream.uri;
         headers = stream.headers;

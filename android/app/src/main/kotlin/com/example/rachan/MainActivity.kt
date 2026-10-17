@@ -96,7 +96,10 @@ class MainActivity : AudioServiceActivity() {
                                 call.argument<Int>("limit") ?: 25,
                                 call.argument<Int>("page") ?: 1
                             )
-                            "resolve" -> ytDlpAdapter.resolve(call.argument<String>("id") ?: "")
+                            "resolve" -> ytDlpAdapter.resolve(
+                                call.argument<String>("id") ?: "",
+                                call.argument<String>("quality")
+                            )
                             else -> ytDlpAdapter.initialize()
                         }
                         mainHandler.post { if (ytDlpActive) result.success(response) }

@@ -112,11 +112,11 @@ internal class YtDlpAdapter(private val context: Context) {
         return videos.subList(startIndex, minOf(startIndex + limit, videos.size))
     }
 
-    fun resolve(videoId: String): Map<String, Any?> {
+    fun resolve(videoId: String, quality: String? = null): Map<String, Any?> {
         require(videoIdPattern.matches(videoId)) { "Invalid YouTube video ID" }
-        val info = extract("https://www.youtube.com/watch?v=$videoId", flat = false)
+        val info = extract("https://www.youtube.com/watch?v=$videoId", flat = false, quality = quality)
         require(info.optString("id") == videoId) { "Unexpected video identity" }
-        val format = findAudioFormat(info)
+        val format = findAudioFormat(info, quality)
             ?: throw IllegalStateException("No directly playable audio-only stream")
 
         val formatHeaders = format.optJSONObject("http_headers")
@@ -133,7 +133,7 @@ internal class YtDlpAdapter(private val context: Context) {
             playbackHeaders["User-Agent"] = "Mozilla/5.0 (Linux; Android 13; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Mobile Safari/537.36"
         }
         if (context.applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE != 0) {
-            android.util.Log.i("YtDlpAdapter", "Resolved $videoId, audio format ${format.optString("format_id")}")
+            android.util.Log.i("YtDlpAdapter", "Resolved $videoId, quality=$quality, audio format ${format.optString("format_id")}")
         }
         return mapOf(
             "id" to videoId,
@@ -146,10 +146,11 @@ internal class YtDlpAdapter(private val context: Context) {
         )
     }
 
-    private fun findAudioFormat(info: JSONObject): JSONObject? {
-        if (isPlayableAudioFormat(info)) return info
-
+    private fun findAudioFormat(info: JSONObject, quality: String? = null): JSONObject? {
+        val formats = info.optJSONArray("formats")
         val requested = info.optJSONArray("requested_formats")
+
+        // First check requested_formats if populated
         if (requested != null) {
             for (i in 0 until requested.length()) {
                 val fmt = requested.optJSONObject(i) ?: continue
@@ -157,23 +158,34 @@ internal class YtDlpAdapter(private val context: Context) {
             }
         }
 
-        val formats = info.optJSONArray("formats")
         if (formats != null) {
-            var bestFormat: JSONObject? = null
-            var bestTbr = -1.0
+            val playable = ArrayList<JSONObject>()
             for (i in 0 until formats.length()) {
                 val fmt = formats.optJSONObject(i) ?: continue
                 if (isPlayableAudioFormat(fmt)) {
-                    val tbr = fmt.optDouble("tbr", fmt.optDouble("abr", 0.0))
-                    if (bestFormat == null || tbr > bestTbr) {
-                        bestFormat = fmt
-                        bestTbr = tbr
+                    playable.add(fmt)
+                }
+            }
+
+            if (playable.isNotEmpty()) {
+                // Sort by tbr ascending
+                playable.sortBy { it.optDouble("tbr", it.optDouble("abr", 0.0)) }
+                return when (quality?.lowercase()) {
+                    "standard", "low", "medium" -> playable.first() // lowest bitrate playable audio (~50-96 kbps)
+                    "very high", "lossless", "high" -> playable.last() // highest bitrate playable audio (~160-256 kbps)
+                    else -> {
+                        // Default / balanced: pick format closest to 128-160 kbps or highest
+                        if (quality?.lowercase() == "balanced") {
+                            playable.minByOrNull { Math.abs(it.optDouble("tbr", it.optDouble("abr", 128.0)) - 128.0) } ?: playable.last()
+                        } else {
+                            playable.last()
+                        }
                     }
                 }
             }
-            if (bestFormat != null) return bestFormat
         }
 
+        if (isPlayableAudioFormat(info)) return info
         return null
     }
 
@@ -193,11 +205,11 @@ internal class YtDlpAdapter(private val context: Context) {
                 (protocol == "https" || protocol == "http" || protocol.isEmpty())
     }
 
-    private fun extract(url: String, flat: Boolean): JSONObject {
+    private fun extract(url: String, flat: Boolean, quality: String? = null): JSONObject {
         initialize()
         val python = Python.getInstance()
         val json = python.getModule("json")
-        val options = pythonOptions(flat)
+        val options = pythonOptions(flat, quality)
         val downloader = python.getModule("yt_dlp").callAttr("YoutubeDL", options)
         try {
             val info = downloader.callAttr("extract_info", url, false)
@@ -209,32 +221,42 @@ internal class YtDlpAdapter(private val context: Context) {
         }
     }
 
-    private fun pythonOptions(flat: Boolean): com.chaquo.python.PyObject {
+    private fun pythonOptions(flat: Boolean, quality: String? = null): com.chaquo.python.PyObject {
         val python = Python.getInstance()
-        val options = python.getModule("json").callAttr("loads", baseOptions(flat).toString())
+        val options = python.getModule("json").callAttr("loads", baseOptions(flat, quality).toString())
         val logger = python.getModule("logging").callAttr("getLogger", "harmoniq.ytdlp")
         logger.callAttr("setLevel", 100)
         options.callAttr("__setitem__", "logger", logger)
         return options
     }
 
-    private fun baseOptions(flat: Boolean): JSONObject = JSONObject()
-        .put("quiet", true)
-        .put("no_warnings", true)
-        .put("ignoreerrors", false)
-        .put("simulate", true)
-        .put("skip_download", true)
-        .put("check_formats", false)
-        .put("format", "bestaudio[ext=m4a][protocol=https]/bestaudio[protocol=https]")
-        .put("js_runtimes", JSONObject().put("quickjs", JSONObject().put("path", quickJs.absolutePath)))
-        .put("remote_components", org.json.JSONArray())
-        .put("cachedir", false)
-        .put("socket_timeout", 12)
-        .put("retries", 0)
-        .put("extractor_retries", 0)
-        .put("fragment_retries", 0)
-        .put("noplaylist", !flat)
-        .put("extract_flat", flat)
+    private fun baseOptions(flat: Boolean, quality: String? = null): JSONObject {
+        val formatSelector = when (quality?.lowercase()) {
+            "standard", "low", "medium" ->
+                "worstaudio[ext=m4a][protocol=https]/worstaudio[protocol=https]/bestaudio[ext=m4a][protocol=https]/bestaudio[protocol=https]"
+            "very high", "lossless", "high" ->
+                "bestaudio[ext=m4a][protocol=https]/bestaudio[protocol=https]"
+            else ->
+                "bestaudio[ext=m4a][protocol=https]/bestaudio[protocol=https]"
+        }
+        return JSONObject()
+            .put("quiet", true)
+            .put("no_warnings", true)
+            .put("ignoreerrors", false)
+            .put("simulate", true)
+            .put("skip_download", true)
+            .put("check_formats", false)
+            .put("format", formatSelector)
+            .put("js_runtimes", JSONObject().put("quickjs", JSONObject().put("path", quickJs.absolutePath)))
+            .put("remote_components", org.json.JSONArray())
+            .put("cachedir", false)
+            .put("socket_timeout", 12)
+            .put("retries", 0)
+            .put("extractor_retries", 0)
+            .put("fragment_retries", 0)
+            .put("noplaylist", !flat)
+            .put("extract_flat", flat)
+    }
 
     private fun thumbnail(video: JSONObject): String? {
         safeHttps(video.optString("thumbnail"))?.let { return it }

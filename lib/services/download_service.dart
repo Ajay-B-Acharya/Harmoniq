@@ -264,9 +264,11 @@ class DownloadService extends ChangeNotifier {
           throw StateError('AudioService is required for stream resolution.');
         }
 
-        // 1. Resolve online audio resource
-        final youtubeStream =
-            await effectiveAudioService.resolveYoutubeStream(song.videoId!);
+        // 1. Resolve online audio resource at the requested quality
+        final youtubeStream = await effectiveAudioService.resolveYoutubeStream(
+          song.videoId!,
+          quality: quality.label,
+        );
         final uri = youtubeStream.uri;
         final headers = Map<String, String>.from(youtubeStream.headers);
 

@@ -182,6 +182,51 @@ void main() {
       final prefs = await SharedPreferences.getInstance();
       expect(prefs.getBool('pref_low_contrast'), isFalse);
     });
+
+    testWidgets('ProfileScreen displays Audio Quality tile and changes quality via dialog',
+        (tester) async {
+      final fakeAudio = _FakeAudioService();
+      await fakeAudio.setAudioQuality('High');
+
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.lightTheme,
+          darkTheme: AppTheme.darkTheme,
+          themeMode: ThemeMode.light,
+          home: ProfileScreen(
+            audioService: fakeAudio,
+            authService: _FakeAuthService(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.scrollUntilVisible(
+        find.text('Audio Quality'),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Audio Quality'), findsOneWidget);
+      expect(find.text('High >'), findsOneWidget);
+
+      await tester.tap(find.text('Audio Quality'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Streaming Quality'), findsOneWidget);
+      expect(find.text('Standard'), findsOneWidget);
+      expect(find.text('High'), findsOneWidget);
+      expect(find.text('Very High (Lossless)'), findsOneWidget);
+
+      await tester.tap(find.text('Standard'));
+      await tester.pumpAndSettle();
+
+      expect(fakeAudio.audioQuality, 'Standard');
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getString('pref_audio_quality'), 'Standard');
+      expect(find.text('Standard >'), findsOneWidget);
+    });
   });
 
   group('Neumorphic dynamic theming', () {

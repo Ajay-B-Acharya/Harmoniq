@@ -75,7 +75,7 @@ class YtDlpChannel {
     }
   }
 
-  Future<YoutubeAudioStream> resolve(String id) async {
+  Future<YoutubeAudioStream> resolve(String id, {String? quality}) async {
     if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) {
       throw UnsupportedError('On-device YouTube audio requires Android.');
     }
@@ -83,9 +83,13 @@ class YtDlpChannel {
       throw const FormatException('Invalid YouTube video ID.');
     }
     try {
+      final arguments = <String, Object?>{'id': id};
+      if (quality != null && quality.isNotEmpty) {
+        arguments['quality'] = quality;
+      }
       final result = await _channel.invokeMapMethod<String, Object?>(
         'resolve',
-        {'id': id},
+        arguments,
       );
       if (result?['id'] != id) {
         throw const FormatException('Unexpected video identity.');

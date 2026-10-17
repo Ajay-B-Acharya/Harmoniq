@@ -3,5 +3,8 @@ import 'youtube_audio_other.dart'
     as platform;
 import 'yt_dlp_channel.dart';
 
-Future<YoutubeAudioStream> resolveYoutubeStream(String videoId) =>
-    platform.resolveYoutubeStream(videoId);
+Future<YoutubeAudioStream> resolveYoutubeStream(
+  String videoId, {
+  String? quality,
+}) => platform.resolveYoutubeStream(videoId, quality: quality);
+

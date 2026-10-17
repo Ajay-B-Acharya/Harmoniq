@@ -1,6 +1,9 @@
 import 'yt_dlp_channel.dart';
 
-Future<YoutubeAudioStream> resolveYoutubeStream(String videoId) async {
+Future<YoutubeAudioStream> resolveYoutubeStream(
+  String videoId, {
+  String? quality,
+}) async {
   if (!RegExp(r'^[A-Za-z0-9_-]{11}$').hasMatch(videoId)) {
     throw const FormatException('Invalid YouTube video ID.');
   }

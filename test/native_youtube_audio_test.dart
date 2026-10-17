@@ -203,15 +203,14 @@ void main() {
     expect(Song.fromJson({...local.toJson(), 'source': 'jamendo'}), legacy);
   });
 
-  test('resolver rejects invalid IDs offline and web is unsupported', () async {
+  test('resolver rejects invalid IDs offline and non-Android resolves fallback stream', () async {
     await expectLater(
       native.resolveYoutubeStream('invalid'),
       throwsFormatException,
     );
-    await expectLater(
-      web.resolveYoutubeStream('abcdefghijk'),
-      throwsUnsupportedError,
-    );
+    final fallback = await web.resolveYoutubeStream('abcdefghijk');
+    expect(fallback.uri.scheme, 'https');
+    expect(fallback.headers, contains('User-Agent'));
   });
 
   test(
