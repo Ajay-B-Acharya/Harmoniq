@@ -58,6 +58,10 @@ class BottomNav extends StatelessWidget {
             decoration: BoxDecoration(
               color: dockBg,
               borderRadius: BorderRadius.circular(28),
+              border: Border.all(
+                color: isDark ? AppDarkColors.dockBorder : AppColors.dockBorder,
+                width: 1.0,
+              ),
               boxShadow: [
                 BoxShadow(
                   color: shadowLight.withValues(alpha: isDark ? 0.90 : 0.95),
@@ -81,6 +85,8 @@ class BottomNav extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: List.generate(_labels.length, (index) {
                 final selected = index == currentIndex;
+                final inactiveColor =
+                    isDark ? AppDarkColors.dockInactive : AppColors.dockInactive;
                 return Expanded(
                   child: Semantics(
                     label: _labels[index],
@@ -140,7 +146,7 @@ class BottomNav extends StatelessWidget {
                                   size: 22,
                                   color: selected
                                       ? AppColors.coral
-                                      : AppColors.textSecondary,
+                                      : inactiveColor,
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
@@ -153,8 +159,10 @@ class BottomNav extends StatelessWidget {
                                         ? FontWeight.w700
                                         : FontWeight.w500,
                                     color: selected
-                                        ? AppColors.textPrimary
-                                        : AppColors.textSecondary,
+                                        ? (isDark
+                                            ? AppDarkColors.textPrimary
+                                            : AppColors.textPrimary)
+                                        : inactiveColor,
                                     letterSpacing: -0.1,
                                   ),
                                 ),
@@ -171,16 +179,20 @@ class BottomNav extends StatelessWidget {
                                     vertical: 1,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: AppColors.background,
+                                    color: isDark
+                                        ? AppDarkColors.background
+                                        : AppColors.background,
                                     borderRadius: BorderRadius.circular(8),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: Colors.white.withValues(alpha: 0.95),
+                                        color: shadowLight.withValues(
+                                            alpha: isDark ? 0.70 : 0.95),
                                         offset: const Offset(-1, -1),
                                         blurRadius: 2,
                                       ),
                                       BoxShadow(
-                                        color: AppColors.darkShadow.withValues(alpha: 0.6),
+                                        color: shadowDark.withValues(
+                                            alpha: isDark ? 0.85 : 0.6),
                                         offset: const Offset(1, 1),
                                         blurRadius: 2,
                                       ),

@@ -289,7 +289,7 @@ class NeumorphicIconButton extends StatelessWidget {
         child: Icon(
           icon,
           size: iconSize,
-          color: iconColor ?? AppColors.textPrimary,
+          color: iconColor ?? AppColors.textPrimaryOf(context),
         ),
       ),
     );
@@ -300,7 +300,7 @@ class NeumorphicIconButton extends StatelessWidget {
 ///
 /// Faithfully reproduces the tactile toggle from the reference image:
 /// Recessed groove track that illuminates with vibrant coral when active,
-/// and an extruded circular white knob with dual outer shadow that glides smoothly.
+/// and an extruded circular knob with dual outer shadow that glides smoothly.
 class NeumorphicSwitch extends StatefulWidget {
   final bool value;
   final ValueChanged<bool> onChanged;
@@ -322,6 +322,14 @@ class _NeumorphicSwitchState extends State<NeumorphicSwitch> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final trackInactive =
+        isDark ? AppDarkColors.insetTrack : AppColors.insetTrack;
+    final shadowDark =
+        isDark ? AppDarkColors.darkShadow : AppColors.darkShadow;
+    final shadowLight =
+        isDark ? AppDarkColors.lightShadow : Colors.white;
+
     return Semantics(
       toggled: widget.value,
       button: true,
@@ -337,9 +345,7 @@ class _NeumorphicSwitchState extends State<NeumorphicSwitch> {
           height: _trackHeight,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(_trackHeight / 2),
-            color: widget.value
-                ? AppColors.coral
-                : AppColors.insetTrack,
+            color: widget.value ? AppColors.coral : trackInactive,
             boxShadow: [
               if (widget.value)
                 BoxShadow(
@@ -355,10 +361,10 @@ class _NeumorphicSwitchState extends State<NeumorphicSwitch> {
               shape: BoxShape.rectangle,
               shadowColor: widget.value
                   ? AppColors.coralDark.withValues(alpha: 0.5)
-                  : AppColors.darkShadow.withValues(alpha: 0.75),
+                  : shadowDark.withValues(alpha: 0.75),
               highlightColor: widget.value
                   ? Colors.white.withValues(alpha: 0.3)
-                  : Colors.white.withValues(alpha: 0.85),
+                  : shadowLight.withValues(alpha: isDark ? 0.35 : 0.85),
               depth: 3.5,
             ),
             child: AnimatedAlign(
@@ -374,15 +380,15 @@ class _NeumorphicSwitchState extends State<NeumorphicSwitch> {
                   height: _knobDiameter,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: Colors.white,
+                    color: isDark ? const Color(0xFFD4DCE8) : Colors.white,
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.14),
+                        color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.14),
                         offset: const Offset(1, 2),
                         blurRadius: 4,
                       ),
                       BoxShadow(
-                        color: Colors.white.withValues(alpha: 0.8),
+                        color: shadowLight.withValues(alpha: isDark ? 0.40 : 0.8),
                         offset: const Offset(-1, -1),
                         blurRadius: 3,
                       ),
@@ -438,6 +444,15 @@ class _NeumorphicSliderState extends State<NeumorphicSlider> {
   Widget build(BuildContext context) {
     final range = widget.max - widget.min;
     final fraction = range > 0 ? ((widget.value - widget.min) / range).clamp(0.0, 1.0) : 0.0;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final trackInactive =
+        isDark ? AppDarkColors.insetTrack : AppColors.insetTrack;
+    final knobColor =
+        isDark ? AppDarkColors.background : AppColors.background;
+    final shadowDark =
+        isDark ? AppDarkColors.darkShadow : AppColors.darkShadow;
+    final shadowLight =
+        isDark ? AppDarkColors.lightShadow : Colors.white;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -462,14 +477,14 @@ class _NeumorphicSliderState extends State<NeumorphicSlider> {
                     height: _trackHeight,
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(_trackHeight / 2),
-                      color: AppColors.insetTrack,
+                      color: trackInactive,
                     ),
                     child: CustomPaint(
                       foregroundPainter: _NeumorphicInnerShadowPainter(
                         borderRadius: _trackHeight / 2,
                         shape: BoxShape.rectangle,
-                        shadowColor: AppColors.darkShadow.withValues(alpha: 0.7),
-                        highlightColor: Colors.white.withValues(alpha: 0.9),
+                        shadowColor: shadowDark.withValues(alpha: 0.7),
+                        highlightColor: shadowLight.withValues(alpha: isDark ? 0.35 : 0.9),
                         depth: 2.5,
                       ),
                       child: FractionallySizedBox(
@@ -494,16 +509,16 @@ class _NeumorphicSliderState extends State<NeumorphicSlider> {
                     width: _knobSize,
                     height: _knobSize,
                     decoration: BoxDecoration(
-                      color: AppColors.background,
+                      color: knobColor,
                       borderRadius: BorderRadius.circular(8),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.white.withValues(alpha: 0.95),
+                          color: shadowLight.withValues(alpha: isDark ? 0.40 : 0.95),
                           offset: const Offset(-2, -2),
                           blurRadius: 5,
                         ),
                         BoxShadow(
-                          color: AppColors.darkShadow.withValues(alpha: 0.75),
+                          color: shadowDark.withValues(alpha: isDark ? 0.85 : 0.75),
                           offset: const Offset(2, 3),
                           blurRadius: 5,
                         ),
@@ -516,18 +531,18 @@ class _NeumorphicSliderState extends State<NeumorphicSlider> {
                           Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              _buildGripDot(),
+                              _buildGripDot(context),
                               const SizedBox(width: 3),
-                              _buildGripDot(),
+                              _buildGripDot(context),
                             ],
                           ),
                           const SizedBox(height: 3),
                           Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              _buildGripDot(),
+                              _buildGripDot(context),
                               const SizedBox(width: 3),
-                              _buildGripDot(),
+                              _buildGripDot(context),
                             ],
                           ),
                         ],
@@ -543,11 +558,11 @@ class _NeumorphicSliderState extends State<NeumorphicSlider> {
     );
   }
 
-  Widget _buildGripDot() => Container(
+  Widget _buildGripDot(BuildContext context) => Container(
         width: 3,
         height: 3,
-        decoration: const BoxDecoration(
-          color: AppColors.textSecondary,
+        decoration: BoxDecoration(
+          color: AppColors.textSecondaryOf(context),
           shape: BoxShape.circle,
         ),
       );
@@ -603,8 +618,8 @@ class NeumorphicSegmentedControl extends StatelessWidget {
                       fontSize: 13,
                       fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
                       color: isSelected
-                          ? AppColors.textPrimary
-                          : AppColors.textSecondary,
+                          ? AppColors.textPrimaryOf(context)
+                          : AppColors.textSecondaryOf(context),
                     ),
                   ),
                 ),
@@ -891,7 +906,7 @@ class NeumorphicSettingRow extends StatelessWidget {
             child: Icon(
               icon,
               size: 20,
-              color: AppColors.textPrimary,
+              color: AppColors.textPrimaryOf(context),
             ),
           ),
           const SizedBox(width: 14),
@@ -902,19 +917,19 @@ class NeumorphicSettingRow extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 14.5,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
+                    color: AppColors.textPrimaryOf(context),
                   ),
                 ),
                 if (subtitle != null) ...[
                   const SizedBox(height: 2),
                   Text(
                     subtitle!,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 12,
-                      color: AppColors.textSecondary,
+                      color: AppColors.textSecondaryOf(context),
                     ),
                   ),
                 ],

@@ -424,13 +424,15 @@ class _HomeScreenState extends State<HomeScreen> {
                         sliver: SliverToBoxAdapter(
                           child: Row(
                             children: [
-                              const Expanded(
+                              Expanded(
                                 child: Text(
                                   'Available Streams',
                                   style: TextStyle(
                                     fontSize: 17,
                                     fontWeight: FontWeight.w700,
-                                    color: AppColors.textPrimary,
+                                    color: isDark
+                                        ? AppDarkColors.textPrimary
+                                        : AppColors.textPrimary,
                                     letterSpacing: -0.3,
                                   ),
                                 ),
@@ -575,12 +577,14 @@ class _HomeScreenState extends State<HomeScreen> {
                     SliverPadding(
                       padding: const EdgeInsets.fromLTRB(20, 28, 20, 12),
                       sliver: SliverToBoxAdapter(
-                        child: const Text(
+                        child: Text(
                           'Collections',
                           style: TextStyle(
                             fontSize: 17,
                             fontWeight: FontWeight.w700,
-                            color: AppColors.textPrimary,
+                            color: isDark
+                                ? AppDarkColors.textPrimary
+                                : AppColors.textPrimary,
                             letterSpacing: -0.3,
                           ),
                         ),
@@ -807,16 +811,24 @@ class _HomeScreenState extends State<HomeScreen> {
                             child: Container(
                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                               decoration: BoxDecoration(
-                                color: AppColors.background,
+                                color: isDark
+                                    ? AppDarkColors.cardSurface
+                                    : AppColors.background,
                                 borderRadius: BorderRadius.circular(8),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.white.withValues(alpha: 0.9),
+                                    color: (isDark
+                                            ? AppDarkColors.lightShadow
+                                            : Colors.white)
+                                        .withValues(alpha: isDark ? 0.7 : 0.9),
                                     offset: const Offset(-1, -1),
                                     blurRadius: 2,
                                   ),
                                   BoxShadow(
-                                    color: AppColors.darkShadow.withValues(alpha: 0.6),
+                                    color: (isDark
+                                            ? AppDarkColors.darkShadow
+                                            : AppColors.darkShadow)
+                                        .withValues(alpha: isDark ? 0.85 : 0.6),
                                     offset: const Offset(1, 1),
                                     blurRadius: 2,
                                   ),
@@ -843,21 +855,25 @@ class _HomeScreenState extends State<HomeScreen> {
                         ],
                       ),
                       const SizedBox(height: 12),
-                      const Text(
+                      Text(
                         'Local Audio',
                         style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w700,
-                          color: AppColors.textPrimary,
+                          color: isDark
+                              ? AppDarkColors.textPrimary
+                              : AppColors.textPrimary,
                         ),
                       ),
                       const SizedBox(height: 2),
                       Text(
                         '${widget.audioService.localSongs.length} songs',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
-                          color: AppColors.textSecondary,
+                          color: isDark
+                              ? AppDarkColors.textSecondary
+                              : AppColors.textSecondary,
                         ),
                       ),
                     ],
@@ -882,16 +898,24 @@ class _HomeScreenState extends State<HomeScreen> {
                             child: Container(
                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                               decoration: BoxDecoration(
-                                color: AppColors.background,
+                                color: isDark
+                                    ? AppDarkColors.cardSurface
+                                    : AppColors.background,
                                 borderRadius: BorderRadius.circular(8),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.white.withValues(alpha: 0.9),
+                                    color: (isDark
+                                            ? AppDarkColors.lightShadow
+                                            : Colors.white)
+                                        .withValues(alpha: isDark ? 0.7 : 0.9),
                                     offset: const Offset(-1, -1),
                                     blurRadius: 2,
                                   ),
                                   BoxShadow(
-                                    color: AppColors.darkShadow.withValues(alpha: 0.6),
+                                    color: (isDark
+                                            ? AppDarkColors.darkShadow
+                                            : AppColors.darkShadow)
+                                        .withValues(alpha: isDark ? 0.85 : 0.6),
                                     offset: const Offset(1, 1),
                                     blurRadius: 2,
                                   ),
@@ -918,21 +942,25 @@ class _HomeScreenState extends State<HomeScreen> {
                         ],
                       ),
                       const SizedBox(height: 12),
-                      const Text(
+                      Text(
                         'Explore Music',
                         style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w700,
-                          color: AppColors.textPrimary,
+                          color: isDark
+                              ? AppDarkColors.textPrimary
+                              : AppColors.textPrimary,
                         ),
                       ),
                       const SizedBox(height: 2),
-                      const Text(
+                      Text(
                         'Stream & Hi-Fi',
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
-                          color: AppColors.textSecondary,
+                          color: isDark
+                              ? AppDarkColors.textSecondary
+                              : AppColors.textSecondary,
                         ),
                       ),
                     ],
@@ -1145,6 +1173,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildHeroBanner(Song? featuredSong) {
+    final isDark = ThemeController.instance.isDark;
     final textScale = MediaQuery.textScalerOf(context).scale(16) / 16;
     final bannerHeight = 200 + (textScale - 1).clamp(0, 1).toDouble() * 260;
 
@@ -1153,7 +1182,7 @@ class _HomeScreenState extends State<HomeScreen> {
       blurSigma: 5,
       level: GlassLevel.floating,
       tint: GlassTint.cyan,
-      borderColor: AppColors.borderElevated,
+      borderColor: isDark ? AppDarkColors.cardBorder : AppColors.borderElevated,
       child: SizedBox(
         height: bannerHeight,
         child: Stack(
@@ -1180,11 +1209,13 @@ class _HomeScreenState extends State<HomeScreen> {
                   begin: Alignment.centerLeft,
                   end: Alignment.centerRight,
                   colors: [
-                    AppColors.background.withValues(alpha: 0.72),
-                    AppColors.background.withValues(alpha: 0.36),
+                    (isDark ? AppDarkColors.background : AppColors.background)
+                        .withValues(alpha: isDark ? 0.88 : 0.76),
+                    (isDark ? AppDarkColors.background : AppColors.background)
+                        .withValues(alpha: isDark ? 0.45 : 0.36),
                     Colors.transparent,
                   ],
-                  stops: const [0, 0.56, 1],
+                  stops: const [0, 0.58, 1],
                 ),
               ),
             ),
@@ -1194,7 +1225,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Column(
+                  Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
@@ -1203,11 +1234,13 @@ class _HomeScreenState extends State<HomeScreen> {
                           fontSize: 24,
                           fontWeight: FontWeight.w800,
                           height: 1.08,
-                          color: AppColors.textPrimary,
+                          color: isDark
+                              ? AppDarkColors.textPrimary
+                              : AppColors.textPrimary,
                           letterSpacing: -0.8,
                         ),
                       ),
-                      SizedBox(height: 7),
+                      const SizedBox(height: 7),
                       SizedBox(
                         width: 190,
                         child: Text(
@@ -1215,7 +1248,10 @@ class _HomeScreenState extends State<HomeScreen> {
                           style: TextStyle(
                             fontSize: 12,
                             height: 1.35,
-                            color: AppColors.textSecondary,
+                            color: isDark
+                                ? AppDarkColors.textSecondary
+                                : AppColors.textSecondary,
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
                       ),
@@ -1228,38 +1264,56 @@ class _HomeScreenState extends State<HomeScreen> {
                         onTap: _playHeroBanner,
                         child: Container(
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 15,
-                            vertical: 8,
+                            horizontal: 16,
+                            vertical: 9,
                           ),
                           decoration: BoxDecoration(
-                            color: AppColors.glassSelected,
+                            color: isDark
+                                ? AppDarkColors.cardSurface
+                                : AppColors.cardSurface,
                             borderRadius: BorderRadius.circular(14),
                             border: Border.all(
-                              color: AppColors.dockActiveBorder,
+                              color: isDark
+                                  ? AppDarkColors.cardBorder
+                                  : AppColors.cardBorder,
+                              width: 1.0,
                             ),
-                            boxShadow: const [
+                            boxShadow: [
                               BoxShadow(
-                                color: AppColors.shadowActiveCyan,
-                                blurRadius: 10,
-                                offset: Offset(0, 2),
+                                color: (isDark
+                                        ? AppDarkColors.lightShadow
+                                        : AppColors.lightShadow)
+                                    .withValues(alpha: isDark ? 0.70 : 0.90),
+                                offset: const Offset(-2, -2),
+                                blurRadius: 4,
+                              ),
+                              BoxShadow(
+                                color: (isDark
+                                        ? AppDarkColors.darkShadow
+                                        : AppColors.darkShadow)
+                                    .withValues(alpha: isDark ? 0.85 : 0.45),
+                                offset: const Offset(2, 2),
+                                blurRadius: 4,
                               ),
                             ],
                           ),
-                          child: const Row(
+                          child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(
+                              const Icon(
                                 Icons.play_arrow_rounded,
                                 size: 18,
-                                color: AppColors.textPrimary,
+                                color: AppColors.coral,
                               ),
-                              SizedBox(width: 5),
+                              const SizedBox(width: 5),
                               Text(
                                 'Play Now',
                                 style: TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w700,
-                                  color: AppColors.textPrimary,
+                                  color: isDark
+                                      ? AppDarkColors.textPrimary
+                                      : AppColors.textPrimary,
                                 ),
                               ),
                             ],
@@ -1276,8 +1330,10 @@ class _HomeScreenState extends State<HomeScreen> {
                             margin: const EdgeInsets.only(left: 4),
                             decoration: BoxDecoration(
                               color: active
-                                  ? AppColors.lightCyan
-                                  : Colors.white.withValues(alpha: 0.20),
+                                  ? AppColors.coral
+                                  : (isDark
+                                      ? Colors.white.withValues(alpha: 0.15)
+                                      : Colors.black.withValues(alpha: 0.15)),
                               borderRadius: BorderRadius.circular(3),
                             ),
                           );
@@ -1298,6 +1354,7 @@ class _HomeScreenState extends State<HomeScreen> {
     required String title,
     required VoidCallback onSeeAll,
   }) {
+    final isDark = ThemeController.instance.isDark;
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -1306,11 +1363,13 @@ class _HomeScreenState extends State<HomeScreen> {
             title,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 17,
               fontWeight: FontWeight.w700,
               letterSpacing: -0.3,
-              color: AppColors.textPrimary,
+              color: isDark
+                  ? AppDarkColors.textPrimary
+                  : AppColors.textPrimary,
             ),
           ),
         ),
@@ -1322,12 +1381,14 @@ class _HomeScreenState extends State<HomeScreen> {
             minimumSize: Size.zero,
             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
           ),
-          child: const Text(
+          child: Text(
             'See all',
             style: TextStyle(
               fontSize: 12.5,
               fontWeight: FontWeight.w600,
-              color: AppColors.textMuted,
+              color: isDark
+                  ? AppDarkColors.textSecondary
+                  : AppColors.textSecondary,
             ),
           ),
         ),
@@ -1364,10 +1425,15 @@ class _HomeScreenState extends State<HomeScreen> {
     List<Song> queue, {
     required bool showDivider,
   }) {
+    final isDark = ThemeController.instance.isDark;
     return Container(
       decoration: BoxDecoration(
         border: showDivider
-            ? Border(bottom: BorderSide(color: AppColors.divider))
+            ? Border(
+                bottom: BorderSide(
+                  color: isDark ? AppDarkColors.divider : AppColors.divider,
+                ),
+              )
             : null,
       ),
       padding: const EdgeInsets.symmetric(vertical: 7),
@@ -1403,7 +1469,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      color: AppColors.textPrimary,
+                      color: isDark
+                          ? AppDarkColors.textPrimary
+                          : AppColors.textPrimary,
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
                     ),
@@ -1414,7 +1482,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      color: AppColors.textSecondary,
+                      color: isDark
+                          ? AppDarkColors.textSecondary
+                          : AppColors.textSecondary,
                       fontSize: 12,
                     ),
                   ),
@@ -1432,25 +1502,45 @@ class _HomeScreenState extends State<HomeScreen> {
                   : Icons.favorite_border_rounded,
               color: song.isFavorite
                   ? AppColors.heartColor
-                  : AppColors.textMuted,
+                  : (isDark
+                      ? AppDarkColors.textSecondary
+                      : AppColors.textSecondary),
               size: 20,
             ),
             onPressed: () => widget.audioService.toggleFavorite(song),
           ),
 
-          // Circular play button (Screenshot 4)
+          // Circular play button
           GestureDetector(
             onTap: () => widget.onSongTap(song, queue),
             child: Container(
               width: 32,
               height: 32,
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.88),
+                color: isDark
+                    ? AppDarkColors.cardSurface
+                    : Colors.white.withValues(alpha: 0.95),
                 shape: BoxShape.circle,
+                border: Border.all(
+                  color: isDark
+                      ? AppDarkColors.cardBorder
+                      : const Color(0x15000000),
+                  width: 0.8,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: (isDark ? AppDarkColors.darkShadow : Colors.black)
+                        .withValues(alpha: isDark ? 0.6 : 0.08),
+                    offset: const Offset(1, 1),
+                    blurRadius: 3,
+                  ),
+                ],
               ),
               child: Icon(
                 Icons.play_arrow_rounded,
-                color: AppColors.playControlForeground,
+                color: isDark
+                    ? AppDarkColors.textPrimary
+                    : AppColors.textPrimary,
                 size: 20,
               ),
             ),
@@ -1461,12 +1551,31 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildContinueListeningCard(Song song, bool isPlaying) {
+    final isDark = ThemeController.instance.isDark;
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppColors.glassSecondary,
+        color: isDark
+            ? AppDarkColors.cardSurface
+            : AppColors.cardSurface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.borderStandard),
+        border: Border.all(
+          color: isDark ? AppDarkColors.cardBorder : AppColors.cardBorder,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: (isDark ? AppDarkColors.lightShadow : AppColors.lightShadow)
+                .withValues(alpha: isDark ? 0.70 : 0.85),
+            offset: const Offset(-2, -2),
+            blurRadius: 5,
+          ),
+          BoxShadow(
+            color: (isDark ? AppDarkColors.darkShadow : AppColors.darkShadow)
+                .withValues(alpha: isDark ? 0.85 : 0.45),
+            offset: const Offset(2, 2),
+            blurRadius: 5,
+          ),
+        ],
       ),
       child: Row(
         children: [
@@ -1489,7 +1598,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     fontSize: 9.5,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 0.8,
-                    color: AppColors.softCyan,
+                    color: AppColors.coral,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -1497,19 +1606,23 @@ class _HomeScreenState extends State<HomeScreen> {
                   song.title,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
+                    color: isDark
+                        ? AppDarkColors.textPrimary
+                        : AppColors.textPrimary,
                   ),
                 ),
                 Text(
                   song.artist,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12,
-                    color: AppColors.textSecondary,
+                    color: isDark
+                        ? AppDarkColors.textSecondary
+                        : AppColors.textSecondary,
                   ),
                 ),
               ],
@@ -1522,7 +1635,7 @@ class _HomeScreenState extends State<HomeScreen> {
               isPlaying
                   ? Icons.pause_circle_filled_rounded
                   : Icons.play_circle_filled_rounded,
-              color: AppColors.primaryCyan,
+              color: AppColors.coral,
               size: 38,
             ),
           ),
@@ -1545,14 +1658,28 @@ class _HomeScreenState extends State<HomeScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
           color: isDark
-              ? AppDarkColors.backgroundSecondary
-              : AppColors.glassSecondary,
+              ? AppDarkColors.cardSurface
+              : AppColors.cardSurface,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
             color: isDark
-                ? AppDarkColors.borderStandard
-                : AppColors.borderStandard,
+                ? AppDarkColors.cardBorder
+                : AppColors.cardBorder,
           ),
+          boxShadow: [
+            BoxShadow(
+              color: (isDark ? AppDarkColors.lightShadow : AppColors.lightShadow)
+                  .withValues(alpha: isDark ? 0.70 : 0.85),
+              offset: const Offset(-2, -2),
+              blurRadius: 4,
+            ),
+            BoxShadow(
+              color: (isDark ? AppDarkColors.darkShadow : AppColors.darkShadow)
+                  .withValues(alpha: isDark ? 0.85 : 0.45),
+              offset: const Offset(2, 2),
+              blurRadius: 4,
+            ),
+          ],
         ),
         child: Row(
           children: [
@@ -1584,7 +1711,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       fontSize: 10.5,
                       color: isDark
                           ? AppDarkColors.textSecondary
-                          : AppColors.textMuted,
+                          : AppColors.textSecondary,
                     ),
                   ),
                 ],

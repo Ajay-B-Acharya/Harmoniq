@@ -45,9 +45,9 @@ class AvatarHalo extends StatelessWidget {
         ],
       ),
       child: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: AppColors.backgroundSecondary,
+          color: AppColors.backgroundSecondaryOf(context),
         ),
         clipBehavior: Clip.antiAlias,
         alignment: Alignment.center,

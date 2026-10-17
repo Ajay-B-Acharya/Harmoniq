@@ -6,6 +6,7 @@ import '../models/song.dart';
 import '../services/audio_service.dart';
 import '../services/download_service.dart';
 import '../theme/app_colors.dart';
+import '../theme/theme_controller.dart';
 import '../widgets/album_art.dart';
 import '../widgets/download_quality_sheet.dart';
 import '../widgets/spatial_background.dart';
@@ -29,12 +30,18 @@ class NowPlayingScreen extends StatefulWidget {
 }
 
 class _NowPlayingScreenState extends State<NowPlayingScreen> {
-  static const _background = AppColors.background;
-  static const _surface = AppColors.sheetSurface;
-  static const _foreground = AppColors.textPrimary;
-  static const _muted = AppColors.textSecondary;
-  static const _primary = AppColors.primaryCyan;
-  static const _border = AppColors.glassBorder;
+  bool get _isDark => ThemeController.instance.isDark;
+  Color get _background =>
+      _isDark ? AppDarkColors.background : AppColors.background;
+  Color get _surface =>
+      _isDark ? AppDarkColors.cardSurface : AppColors.cardSurface;
+  Color get _foreground =>
+      _isDark ? AppDarkColors.textPrimary : AppColors.textPrimary;
+  Color get _muted =>
+      _isDark ? AppDarkColors.textSecondary : AppColors.textSecondary;
+  Color get _primary => AppColors.coral;
+  Color get _border =>
+      _isDark ? AppDarkColors.cardBorder : AppColors.glassBorder;
 
   AudioService get _svc => widget.audioService;
   late final DownloadService _downloadService;
@@ -270,7 +277,7 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   'NOW PLAYING',
                   style: TextStyle(
                     color: _muted,
@@ -284,7 +291,7 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
                   song.album,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(color: _foreground, fontSize: 13),
+                  style: TextStyle(color: _foreground, fontSize: 13),
                 ),
               ],
             ),
@@ -348,17 +355,24 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
                         boxShadow: isCurrent
                             ? [
                                 BoxShadow(
-                                  color: Colors.white.withValues(alpha: 0.95),
+                                  color: (_isDark
+                                          ? AppDarkColors.lightShadow
+                                          : Colors.white)
+                                      .withValues(alpha: _isDark ? 0.60 : 0.95),
                                   offset: const Offset(-6, -6),
                                   blurRadius: 16,
                                 ),
                                 BoxShadow(
-                                  color: AppColors.darkShadow.withValues(alpha: 0.7),
+                                  color: (_isDark
+                                          ? AppDarkColors.darkShadow
+                                          : AppColors.darkShadow)
+                                      .withValues(alpha: _isDark ? 0.85 : 0.7),
                                   offset: const Offset(6, 6),
                                   blurRadius: 16,
                                 ),
                                 BoxShadow(
-                                  color: AppColors.coral.withValues(alpha: 0.2),
+                                  color: AppColors.coral
+                                      .withValues(alpha: _isDark ? 0.25 : 0.2),
                                   blurRadius: 24,
                                   offset: const Offset(0, 4),
                                 ),
@@ -407,7 +421,7 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
                     song.title,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: _foreground,
                       fontSize: 28,
                       height: 1.15,
@@ -420,7 +434,7 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
                     song.artist,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(color: _muted, fontSize: 16),
+                    style: TextStyle(color: _muted, fontSize: 16),
                   ),
                 ],
               ),
@@ -441,7 +455,7 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
         const SizedBox(height: 12),
         Text(
           song.source == SongSource.youtube ? 'ONLINE STREAM' : 'LOCAL LIBRARY',
-          style: const TextStyle(
+          style: TextStyle(
             color: _muted,
             fontSize: 10,
             fontWeight: FontWeight.w500,
@@ -472,7 +486,7 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
           if (_isLoading)
             Row(
               children: [
-                const SizedBox.square(
+                SizedBox.square(
                   dimension: 16,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
@@ -483,7 +497,7 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
                 Expanded(
                   child: Text(
                     _wantsToPlay ? 'Loading audio…' : 'Loading audio… · Paused',
-                    style: const TextStyle(color: _muted, fontSize: 13),
+                    style: TextStyle(color: _muted, fontSize: 13),
                   ),
                 ),
               ],
@@ -491,7 +505,7 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
           if (error != null) ...[
             Text(
               error,
-              style: const TextStyle(color: _foreground, fontSize: 13),
+              style: TextStyle(color: _foreground, fontSize: 13),
             ),
             Wrap(
               spacing: 8,
@@ -583,11 +597,11 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
                     children: [
                       Text(
                         _fmt(Duration(milliseconds: currentMs.toInt())),
-                        style: const TextStyle(color: _muted, fontSize: 11),
+                        style: TextStyle(color: _muted, fontSize: 11),
                       ),
                       Text(
                         _fmt(duration),
-                        style: const TextStyle(color: _muted, fontSize: 11),
+                        style: TextStyle(color: _muted, fontSize: 11),
                       ),
                     ],
                   ),
@@ -630,12 +644,18 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.white.withValues(alpha: 0.95),
+                color: (_isDark
+                        ? AppDarkColors.lightShadow
+                        : Colors.white)
+                    .withValues(alpha: _isDark ? 0.60 : 0.95),
                 offset: const Offset(-3, -3),
                 blurRadius: 8,
               ),
               BoxShadow(
-                color: AppColors.darkShadow.withValues(alpha: 0.75),
+                color: (_isDark
+                        ? AppDarkColors.darkShadow
+                        : AppColors.darkShadow)
+                    .withValues(alpha: _isDark ? 0.85 : 0.75),
                 offset: const Offset(3, 4),
                 blurRadius: 8,
               ),
@@ -719,7 +739,7 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         'UP NEXT',
                         style: TextStyle(
                           color: _muted,
@@ -733,7 +753,7 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
                         _nextTitle(),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: _foreground,
                           fontSize: 13,
                         ),
@@ -742,7 +762,7 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
                   ),
                 ),
                 const SizedBox(width: 8),
-                const Icon(
+                Icon(
                   Icons.chevron_right_rounded,
                   color: _muted,
                   size: 20,
@@ -803,7 +823,7 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
                           ),
                         ),
                         const SizedBox(height: 20),
-                        const Text(
+                        Text(
                           'Your queue',
                           style: TextStyle(
                             color: _foreground,
@@ -814,7 +834,7 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
                         const SizedBox(height: 4),
                         Text(
                           '${_queue.length} tracks',
-                          style: const TextStyle(color: _muted, fontSize: 12),
+                          style: TextStyle(color: _muted, fontSize: 12),
                         ),
                       ],
                     ),
@@ -851,7 +871,7 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
                     song.artist,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(color: _muted, fontSize: 12),
+                    style: TextStyle(color: _muted, fontSize: 12),
                   ),
                   trailing: isCurrent
                       ? Icon(
@@ -912,7 +932,7 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
                           song.title,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
                             color: _foreground,
@@ -923,14 +943,14 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
                           song.artist,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontSize: 13, color: _muted),
+                          style: TextStyle(fontSize: 13, color: _muted),
                         ),
                       ],
                     ),
                   ),
                 ],
               ),
-              const Divider(color: _border, height: 32),
+              Divider(color: _border, height: 32),
               ListTile(
                 contentPadding: EdgeInsets.zero,
                 leading: Icon(
@@ -943,7 +963,7 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
                   song.isFavorite
                       ? 'Remove from favorites'
                       : 'Add to favorites',
-                  style: const TextStyle(color: _foreground, fontSize: 14),
+                  style: TextStyle(color: _foreground, fontSize: 14),
                 ),
                 onTap: () {
                   _svc.toggleFavorite(song);
@@ -952,8 +972,8 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
               ),
               ListTile(
                 contentPadding: EdgeInsets.zero,
-                leading: const Icon(Icons.playlist_add_rounded, color: _muted),
-                title: const Text(
+                leading: Icon(Icons.playlist_add_rounded, color: _muted),
+                title: Text(
                   'Add to playlist',
                   style: TextStyle(color: _foreground, fontSize: 14),
                 ),
@@ -966,7 +986,7 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
               ListTile(
                 contentPadding: EdgeInsets.zero,
                 leading: _downloadService.isDownloading(song.identity)
-                    ? const SizedBox(
+                    ? SizedBox(
                         width: 24,
                         height: 24,
                         child: CircularProgressIndicator(
@@ -986,14 +1006,14 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
                       : _svc.isSongDownloaded(song)
                           ? 'Downloaded'
                           : 'Download',
-                  style: const TextStyle(color: _foreground, fontSize: 14),
+                  style: TextStyle(color: _foreground, fontSize: 14),
                 ),
                 subtitle: _svc.isSongDownloaded(song)
                     ? Text(
                         _svc.getDownloadedSong(song)?.downloadQuality != null
                             ? '${_svc.getDownloadedSong(song)!.downloadQuality} quality · Saved offline'
                             : 'Saved for offline listening',
-                        style: const TextStyle(color: _muted, fontSize: 11),
+                        style: TextStyle(color: _muted, fontSize: 11),
                       )
                     : null,
                 onTap: () {
@@ -1026,25 +1046,25 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
         builder: (dialogContext) => AlertDialog(
           backgroundColor: _surface,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: const Text(
+          title: Text(
             'Song Already Downloaded',
             style: TextStyle(color: _foreground, fontWeight: FontWeight.bold),
           ),
           content: Text(
             "'${song.title}' is already downloaded in ${downloadedSong?.downloadQuality ?? 'High'} quality for offline listening.",
-            style: const TextStyle(color: _muted, fontSize: 14),
+            style: TextStyle(color: _muted, fontSize: 14),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogContext),
-              child: const Text('Cancel', style: TextStyle(color: _muted)),
+              child: Text('Cancel', style: TextStyle(color: _muted)),
             ),
             TextButton(
               onPressed: () {
                 Navigator.pop(dialogContext);
                 _promptQualityAndDownload(context, song);
               },
-              child: const Text('Download Another Quality',
+              child: Text('Download Another Quality',
                   style: TextStyle(color: _primary)),
             ),
             FilledButton(
@@ -1174,7 +1194,7 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
           shrinkWrap: true,
           padding: const EdgeInsets.all(24),
           children: [
-            const Text(
+            Text(
               'Add to playlist',
               style: TextStyle(
                 color: _foreground,
@@ -1184,8 +1204,8 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
             ),
             const SizedBox(height: 16),
             if (_svc.playlists.isEmpty)
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 24),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 24),
                 child: Text(
                   'No playlists available',
                   style: TextStyle(color: _muted, fontSize: 14),
@@ -1205,7 +1225,7 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
                     playlist.name,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(color: _foreground, fontSize: 14),
+                    style: TextStyle(color: _foreground, fontSize: 14),
                   ),
                   onTap: () {
                     _svc.addSongToPlaylist(song, playlist);

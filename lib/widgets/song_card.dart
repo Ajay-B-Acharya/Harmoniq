@@ -37,6 +37,8 @@ class SongCard extends StatelessWidget {
                       final artSize = constraints.maxHeight.isFinite
                           ? constraints.maxHeight.clamp(0.0, width)
                           : width;
+                      final isDark =
+                          Theme.of(context).brightness == Brightness.dark;
                       return SizedBox(
                         width: artSize,
                         height: artSize,
@@ -56,16 +58,26 @@ class SongCard extends StatelessWidget {
                                 width: 34,
                                 height: 34,
                                 decoration: BoxDecoration(
-                                  color: AppColors.background,
+                                  color: isDark
+                                      ? AppDarkColors.cardSurface
+                                      : AppColors.background,
                                   shape: BoxShape.circle,
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.white.withValues(alpha: 0.95),
+                                      color: (isDark
+                                              ? AppDarkColors.lightShadow
+                                              : Colors.white)
+                                          .withValues(
+                                              alpha: isDark ? 0.70 : 0.95),
                                       offset: const Offset(-2, -2),
                                       blurRadius: 4,
                                     ),
                                     BoxShadow(
-                                      color: AppColors.darkShadow.withValues(alpha: 0.7),
+                                      color: (isDark
+                                              ? AppDarkColors.darkShadow
+                                              : AppColors.darkShadow)
+                                          .withValues(
+                                              alpha: isDark ? 0.85 : 0.70),
                                       offset: const Offset(2, 2),
                                       blurRadius: 4,
                                     ),
@@ -89,11 +101,13 @@ class SongCard extends StatelessWidget {
                   song.title,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 13.5,
                     fontWeight: FontWeight.w600,
                     letterSpacing: -0.2,
-                    color: AppColors.textPrimary,
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? AppDarkColors.textPrimary
+                        : AppColors.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 3),
@@ -101,9 +115,11 @@ class SongCard extends StatelessWidget {
                   song.artist,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12,
-                    color: AppColors.textSecondary,
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? AppDarkColors.textSecondary
+                        : AppColors.textSecondary,
                   ),
                 ),
               ],

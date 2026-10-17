@@ -145,6 +145,29 @@ class AppTheme {
           overlayShape: const RoundSliderOverlayShape(overlayRadius: 18),
         ),
         iconTheme: const IconThemeData(color: AppColors.textPrimary),
+        cardTheme: CardThemeData(
+          color: AppColors.cardSurface,
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: const BorderSide(color: AppColors.cardBorder, width: 1.0),
+          ),
+        ),
+        switchTheme: SwitchThemeData(
+          thumbColor: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.selected)) {
+              return Colors.white;
+            }
+            return const Color(0xFF7E8F9E);
+          }),
+          trackColor: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.selected)) {
+              return AppColors.coral;
+            }
+            return const Color(0xFFD4DCE8);
+          }),
+          trackOutlineColor: WidgetStateProperty.all(Colors.transparent),
+        ),
       );
 
   static ThemeData get darkTheme => ThemeData(
@@ -284,6 +307,29 @@ class AppTheme {
           overlayShape: const RoundSliderOverlayShape(overlayRadius: 18),
         ),
         iconTheme: const IconThemeData(color: AppDarkColors.textPrimary),
+        cardTheme: CardThemeData(
+          color: AppDarkColors.cardSurface,
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: const BorderSide(color: AppDarkColors.cardBorder, width: 1.0),
+          ),
+        ),
+        switchTheme: SwitchThemeData(
+          thumbColor: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.selected)) {
+              return Colors.white;
+            }
+            return const Color(0xFF94A3B8);
+          }),
+          trackColor: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.selected)) {
+              return AppColors.coral;
+            }
+            return AppDarkColors.insetTrack;
+          }),
+          trackOutlineColor: WidgetStateProperty.all(Colors.transparent),
+        ),
       );
 
   static ThemeData get theme =>

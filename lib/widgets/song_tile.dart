@@ -25,21 +25,32 @@ class SongTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return RepaintBoundary(
       child: Container(
         margin: const EdgeInsets.only(bottom: 6),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(14),
-          color: isActive ? AppColors.glassSelected : Colors.transparent,
+          color: isActive
+              ? (isDark
+                  ? AppDarkColors.dockActiveSurface
+                  : AppColors.glassSelected)
+              : Colors.transparent,
           boxShadow: isActive
               ? [
                   BoxShadow(
-                    color: AppColors.lightShadow.withValues(alpha: 0.8),
+                    color: (isDark
+                            ? AppDarkColors.lightShadow
+                            : AppColors.lightShadow)
+                        .withValues(alpha: isDark ? 0.7 : 0.8),
                     offset: const Offset(-1, -1),
                     blurRadius: 3,
                   ),
                   BoxShadow(
-                    color: AppColors.darkShadow.withValues(alpha: 0.5),
+                    color: (isDark
+                            ? AppDarkColors.darkShadow
+                            : AppColors.darkShadow)
+                        .withValues(alpha: isDark ? 0.85 : 0.5),
                     offset: const Offset(1, 1),
                     blurRadius: 3,
                   ),
@@ -81,7 +92,9 @@ class SongTile extends StatelessWidget {
                     style: TextStyle(
                       color: isActive
                           ? AppColors.coral
-                          : AppColors.textPrimary,
+                          : (isDark
+                              ? AppDarkColors.textPrimary
+                              : AppColors.textPrimary),
                       fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
                       fontSize: 14,
                     ),
@@ -105,8 +118,10 @@ class SongTile extends StatelessWidget {
               style: TextStyle(
                 fontSize: 12,
                 color: isActive
-                    ? AppColors.accentLight.withValues(alpha: 0.75)
-                    : AppColors.textSecondary,
+                    ? AppColors.coralLight
+                    : (isDark
+                        ? AppDarkColors.textSecondary
+                        : AppColors.textSecondary),
               ),
             ),
             trailing: Row(
@@ -120,7 +135,9 @@ class SongTile extends StatelessWidget {
                         : Icons.favorite_border_rounded,
                     color: song.isFavorite
                         ? AppColors.heartColor
-                        : AppColors.textMuted,
+                        : (isDark
+                            ? AppDarkColors.textSecondary
+                            : AppColors.textSecondary),
                     size: 20,
                   ),
                   onPressed: onFavoriteTap,
@@ -129,9 +146,11 @@ class SongTile extends StatelessWidget {
                 if (onMoreTap != null)
                   IconButton(
                     tooltip: 'Song options',
-                    icon: const Icon(
+                    icon: Icon(
                       Icons.more_vert_rounded,
-                      color: AppColors.textMuted,
+                      color: isDark
+                          ? AppDarkColors.textSecondary
+                          : AppColors.textSecondary,
                       size: 20,
                     ),
                     onPressed: onMoreTap,

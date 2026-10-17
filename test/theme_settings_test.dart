@@ -85,14 +85,14 @@ void main() {
 
     test('validates low contrast color tokens for dark and light modes', () {
       // Light Mode low contrast text and soft shadow checks
-      expect(AppColors.textPrimary, const Color(0xFF3B4858));
-      expect(AppColors.textSecondary, const Color(0xFF6B7C91));
+      expect(AppColors.textPrimary, const Color(0xFF222E3C));
+      expect(AppColors.textSecondary, const Color(0xFF4E5E72));
       expect(AppColors.lightShadow, const Color(0xFFF7F9FC));
       expect(AppColors.darkShadow, const Color(0xFFBAC7D5));
 
       // Dark Mode low contrast text and shadow checks
-      expect(AppDarkColors.textPrimary, const Color(0xFFCCD5E0));
-      expect(AppDarkColors.textSecondary, const Color(0xFF8C9BAE));
+      expect(AppDarkColors.textPrimary, const Color(0xFFE2E8F0));
+      expect(AppDarkColors.textSecondary, const Color(0xFF94A3B8));
       expect(AppDarkColors.darkShadow, const Color(0xFF12151B));
       expect(AppDarkColors.lightShadow, const Color(0xFF282F3C));
     });

@@ -22,27 +22,39 @@ class YoutubeCard extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) => RepaintBoundary(
-    child: Pressable(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(
-          color: AppColors.background,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.lightShadow.withValues(alpha: 0.95),
-              offset: const Offset(-3, -3),
-              blurRadius: 7,
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return RepaintBoundary(
+      child: Pressable(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: isDark ? AppDarkColors.cardSurface : AppColors.background,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: isDark ? AppDarkColors.cardBorder : Colors.transparent,
+              width: 1.0,
             ),
-            BoxShadow(
-              color: AppColors.darkShadow.withValues(alpha: 0.65),
-              offset: const Offset(3, 3),
-              blurRadius: 7,
-            ),
-          ],
-        ),
+            boxShadow: [
+              BoxShadow(
+                color: (isDark
+                        ? AppDarkColors.lightShadow
+                        : AppColors.lightShadow)
+                    .withValues(alpha: isDark ? 0.70 : 0.95),
+                offset: const Offset(-3, -3),
+                blurRadius: 7,
+              ),
+              BoxShadow(
+                color: (isDark
+                        ? AppDarkColors.darkShadow
+                        : AppColors.darkShadow)
+                    .withValues(alpha: isDark ? 0.85 : 0.65),
+                offset: const Offset(3, 3),
+                blurRadius: 7,
+              ),
+            ],
+          ),
         child: Row(
           children: [
             ClipRRect(
@@ -83,11 +95,13 @@ class YoutubeCard extends StatelessWidget {
                     video.title,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 13.5,
                       fontWeight: FontWeight.w600,
                       height: 1.25,
-                      color: AppColors.textPrimary,
+                      color: isDark
+                          ? AppDarkColors.textPrimary
+                          : AppColors.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -98,9 +112,11 @@ class YoutubeCard extends StatelessWidget {
                           video.artist,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 12,
-                            color: AppColors.textSecondary,
+                            color: isDark
+                                ? AppDarkColors.textSecondary
+                                : AppColors.textSecondary,
                           ),
                         ),
                       ),
@@ -108,9 +124,11 @@ class YoutubeCard extends StatelessWidget {
                         const SizedBox(width: 6),
                         Text(
                           _formatDuration(video.duration),
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 11,
-                            color: AppColors.textMuted,
+                            color: isDark
+                                ? AppDarkColors.textSecondary
+                                : AppColors.textSecondary,
                           ),
                         ),
                       ],
@@ -124,16 +142,24 @@ class YoutubeCard extends StatelessWidget {
               width: 36,
               height: 36,
               decoration: BoxDecoration(
-                color: AppColors.background,
+                color: isDark
+                    ? AppDarkColors.cardSurface
+                    : AppColors.background,
                 borderRadius: BorderRadius.circular(10),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.white.withValues(alpha: 0.95),
+                    color: (isDark
+                            ? AppDarkColors.lightShadow
+                            : Colors.white)
+                        .withValues(alpha: isDark ? 0.70 : 0.95),
                     offset: const Offset(-1.5, -1.5),
                     blurRadius: 3,
                   ),
                   BoxShadow(
-                    color: AppColors.darkShadow.withValues(alpha: 0.65),
+                    color: (isDark
+                            ? AppDarkColors.darkShadow
+                            : AppColors.darkShadow)
+                        .withValues(alpha: isDark ? 0.85 : 0.65),
                     offset: const Offset(1.5, 1.5),
                     blurRadius: 3,
                   ),
@@ -150,4 +176,5 @@ class YoutubeCard extends StatelessWidget {
       ),
     ),
   );
+  }
 }

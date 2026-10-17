@@ -118,7 +118,7 @@ class MiniPlayer extends StatelessWidget {
                             style: Theme.of(context).textTheme.bodyMedium
                                 ?.copyWith(
                                   fontSize: 11.5,
-                                  color: AppColors.textSecondary,
+                                  color: AppColors.textSecondaryOf(context),
                                 ),
                           ),
                         ],
@@ -153,9 +153,9 @@ class MiniPlayer extends StatelessWidget {
                     // Skip Next Action
                     IconButton(
                       tooltip: 'Next track',
-                      icon: const Icon(
+                      icon: Icon(
                         Icons.skip_next_rounded,
-                        color: AppColors.textPrimary,
+                        color: AppColors.textPrimaryOf(context),
                         size: 26,
                       ),
                       onPressed: onNextTap,
@@ -164,9 +164,9 @@ class MiniPlayer extends StatelessWidget {
                     // Close / stop current song
                     if (onCloseTap != null)
                       IconButton(
-                        icon: const Icon(
+                        icon: Icon(
                           Icons.close_rounded,
-                          color: AppColors.textMuted,
+                          color: AppColors.textSecondaryOf(context),
                           size: 20,
                         ),
                         onPressed: onCloseTap,

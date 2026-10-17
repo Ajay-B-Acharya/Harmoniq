@@ -17,17 +17,20 @@ class AppDarkColors {
   static const Color insetTrack = Color(0xFF171A21);
   static const Color insetHighlight = Color(0xFF262C38);
   static const Color insetShadow = Color(0xFF0E1015);
-  static const Color textPrimary = Color(0xFFCCD5E0);
-  static const Color textSecondary = Color(0xFF8C9BAE);
-  static const Color textTertiary = Color(0xFF627184);
+  static const Color textPrimary = Color(0xFFE2E8F0);
+  static const Color textSecondary = Color(0xFF94A3B8);
+  static const Color textTertiary = Color(0xFF6E8096);
   static const Color textMuted = textTertiary;
   static const Color silver = Color(0xFF282F3B);
-  static const Color borderStandard = Color(0x14FFFFFF);
-  static const Color borderElevated = Color(0x20FFFFFF);
+  static const Color borderStandard = Color(0x18FFFFFF);
+  static const Color borderElevated = Color(0x28FFFFFF);
   static const Color divider = Color(0x18FFFFFF);
   static const Color dockSurface = Color(0xFF1E222B);
+  static const Color dockBorder = Color(0x20FFFFFF);
   static const Color dockActiveSurface = Color(0xFF262C38);
-  static const Color dockInactive = Color(0xFF708094);
+  static const Color dockInactive = Color(0xFF7E8F9E);
+  static const Color cardSurface = Color(0xFF242A35);
+  static const Color cardBorder = Color(0x18FFFFFF);
   static const Color playControlSurface = background;
   static const Color playControlForeground = textPrimary;
 }
@@ -131,23 +134,27 @@ class AppColors {
   static const Color shadowActiveCyan = Color(0x30FF6444);
   static const Color shadowCyanAccent = Color(0x25FF6444);
 
-  // High-legibility, low-contrast typography (soft slate instead of harsh ink black)
-  static const Color textPrimary = Color(0xFF3B4858);
-  static const Color textSecondary = Color(0xFF6B7C91);
-  static const Color textTertiary = Color(0xFF90A0B4);
+  // Card & Panel surfaces
+  static const Color cardSurface = Color(0xFFEFF3F8);
+  static const Color cardBorder = Color(0x15000000);
+
+  // High-legibility, low-contrast typography (crisp slate for strong contrast)
+  static const Color textPrimary = Color(0xFF222E3C);
+  static const Color textSecondary = Color(0xFF4E5E72);
+  static const Color textTertiary = Color(0xFF6E8096);
   static const Color textMuted = textTertiary;
 
   // Floating dock & bottom navigation
   static const Color dockSurface = Color(0xFFE8ECF2);
-  static const Color dockBorder = Color(0x25FFFFFF);
+  static const Color dockBorder = Color(0x18000000);
   static const Color dockActiveSurface = Color(0xFFDFE5EB);
   static const Color dockActiveBorder = Color(0x35FFFFFF);
   static const Color dockActiveGlow = Color(0x20F06A4F);
-  static const Color dockInactive = Color(0xFF7A8D9F);
+  static const Color dockInactive = Color(0xFF5E7186);
 
   // Playback control surfaces
   static const Color playControlSurface = Color(0xFFE8ECF2);
-  static const Color playControlForeground = Color(0xFF3B4858);
+  static const Color playControlForeground = Color(0xFF222E3C);
   static const Color metallicAccent = Color(0xFFBAC7D5);
 
   // Atmosphere gradients
@@ -208,28 +215,60 @@ class AppColors {
       allGradients[id % allGradients.length];
 
   // Context-aware theme color helpers
+  static bool isDark(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark;
+
   static Color backgroundOf(BuildContext context) =>
-      Theme.of(context).brightness == Brightness.dark
-          ? AppDarkColors.background
-          : background;
+      isDark(context) ? AppDarkColors.background : background;
+
+  static Color backgroundSecondaryOf(BuildContext context) =>
+      isDark(context) ? AppDarkColors.backgroundSecondary : backgroundSecondary;
+
+  static Color backgroundSurfaceOf(BuildContext context) =>
+      isDark(context) ? AppDarkColors.backgroundSurface : cardSurface;
+
+  static Color surfaceOf(BuildContext context) =>
+      isDark(context) ? AppDarkColors.surface : surface;
+
+  static Color cardSurfaceOf(BuildContext context) =>
+      isDark(context) ? AppDarkColors.cardSurface : cardSurface;
+
+  static Color cardBorderOf(BuildContext context) =>
+      isDark(context) ? AppDarkColors.cardBorder : cardBorder;
 
   static Color lightShadowOf(BuildContext context) =>
-      Theme.of(context).brightness == Brightness.dark
-          ? AppDarkColors.lightShadow
-          : lightShadow;
+      isDark(context) ? AppDarkColors.lightShadow : lightShadow;
 
   static Color darkShadowOf(BuildContext context) =>
-      Theme.of(context).brightness == Brightness.dark
-          ? AppDarkColors.darkShadow
-          : darkShadow;
+      isDark(context) ? AppDarkColors.darkShadow : darkShadow;
 
   static Color textPrimaryOf(BuildContext context) =>
-      Theme.of(context).brightness == Brightness.dark
-          ? AppDarkColors.textPrimary
-          : textPrimary;
+      isDark(context) ? AppDarkColors.textPrimary : textPrimary;
 
   static Color textSecondaryOf(BuildContext context) =>
-      Theme.of(context).brightness == Brightness.dark
-          ? AppDarkColors.textSecondary
-          : textSecondary;
+      isDark(context) ? AppDarkColors.textSecondary : textSecondary;
+
+  static Color textTertiaryOf(BuildContext context) =>
+      isDark(context) ? AppDarkColors.textTertiary : textTertiary;
+
+  static Color textMutedOf(BuildContext context) =>
+      isDark(context) ? AppDarkColors.textMuted : textMuted;
+
+  static Color borderStandardOf(BuildContext context) =>
+      isDark(context) ? AppDarkColors.borderStandard : borderStandard;
+
+  static Color dividerOf(BuildContext context) =>
+      isDark(context) ? AppDarkColors.divider : divider;
+
+  static Color insetTrackOf(BuildContext context) =>
+      isDark(context) ? AppDarkColors.insetTrack : insetTrack;
+
+  static Color dockSurfaceOf(BuildContext context) =>
+      isDark(context) ? AppDarkColors.dockSurface : dockSurface;
+
+  static Color dockBorderOf(BuildContext context) =>
+      isDark(context) ? AppDarkColors.dockBorder : dockBorder;
+
+  static Color dockInactiveOf(BuildContext context) =>
+      isDark(context) ? AppDarkColors.dockInactive : dockInactive;
 }

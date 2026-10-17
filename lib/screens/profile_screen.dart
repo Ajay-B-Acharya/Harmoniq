@@ -249,22 +249,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   void _showPrivacyDialog() {
+    final isDark = ThemeController.instance.isDark;
     showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: AppColors.backgroundSecondary,
+        backgroundColor: isDark
+            ? AppDarkColors.cardSurface
+            : AppColors.cardSurface,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
-          side: BorderSide(color: AppColors.glassBorder),
+          side: BorderSide(
+            color: isDark
+                ? AppDarkColors.cardBorder
+                : AppColors.cardBorder,
+          ),
         ),
         title: Text(
           'Privacy & Security',
-          style: TextStyle(color: AppColors.textPrimary, fontSize: 18),
+          style: TextStyle(
+            color: isDark ? AppDarkColors.textPrimary : AppColors.textPrimary,
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+          ),
         ),
         content: Text(
           'Your listening history and playlists are stored locally and synced only with your authenticated Supabase account. No third-party tracking is enabled.',
           style: TextStyle(
-            color: AppColors.textSecondary,
+            color: isDark ? AppDarkColors.textSecondary : AppColors.textSecondary,
             fontSize: 13.5,
             height: 1.4,
           ),
@@ -274,7 +285,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             onPressed: () => Navigator.pop(ctx),
             child: const Text(
               'OK',
-              style: TextStyle(color: AppColors.primaryCyan),
+              style: TextStyle(color: AppColors.coral, fontWeight: FontWeight.w600),
             ),
           ),
         ],
@@ -283,6 +294,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _handleLogout() async {
+    final isDark = ThemeController.instance.isDark;
     if (!widget.authService.isAuthenticated) {
       AccountDialog.show(
         context,
@@ -295,25 +307,40 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: AppColors.backgroundSecondary,
+        backgroundColor: isDark
+            ? AppDarkColors.cardSurface
+            : AppColors.cardSurface,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
-          side: BorderSide(color: AppColors.glassBorder),
+          side: BorderSide(
+            color: isDark
+                ? AppDarkColors.cardBorder
+                : AppColors.cardBorder,
+          ),
         ),
         title: Text(
           'Log Out',
-          style: TextStyle(color: AppColors.textPrimary, fontSize: 18),
+          style: TextStyle(
+            color: isDark ? AppDarkColors.textPrimary : AppColors.textPrimary,
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+          ),
         ),
-        content: const Text(
+        content: Text(
           'Are you sure you want to log out of Harmoniq?',
-          style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
+          style: TextStyle(
+            color: isDark ? AppDarkColors.textSecondary : AppColors.textSecondary,
+            fontSize: 14,
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text(
+            child: Text(
               'Cancel',
-              style: TextStyle(color: AppColors.textMuted),
+              style: TextStyle(
+                color: isDark ? AppDarkColors.textSecondary : AppColors.textSecondary,
+              ),
             ),
           ),
           FilledButton(
@@ -411,6 +438,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             child: SafeArea(
               bottom: false,
               child: CustomScrollView(
+                clipBehavior: Clip.none,
                 physics: const AlwaysScrollableScrollPhysics(
                   parent: BouncingScrollPhysics(),
                 ),
@@ -426,13 +454,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             height: 36,
                             decoration: BoxDecoration(
                               color: isDark
-                                  ? AppDarkColors.backgroundSurface
-                                  : AppColors.backgroundSurface,
+                                  ? AppDarkColors.cardSurface
+                                  : AppColors.cardSurface,
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
                                 color: isDark
-                                    ? AppDarkColors.borderStandard
-                                    : AppColors.surfaceBorder,
+                                    ? AppDarkColors.cardBorder
+                                    : AppColors.cardBorder,
                               ),
                             ),
                             child: Icon(
@@ -519,8 +547,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     : Icons.person_outline_rounded,
                                 size: 48,
                                 color: isAuthenticated
-                                    ? AppColors.textPrimary
-                                    : AppColors.textMuted,
+                                    ? (isDark
+                                        ? AppDarkColors.textPrimary
+                                        : AppColors.textPrimary)
+                                    : (isDark
+                                        ? AppDarkColors.textSecondary
+                                        : AppColors.textSecondary),
                               ),
                             ),
                           ),
@@ -541,7 +573,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                           const SizedBox(height: 6),
 
-                          // Membership status pill (amber status indicator)
+                          // Membership status pill (warm amber indicator for legibility)
                           Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 14,
@@ -549,25 +581,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             ),
                             decoration: BoxDecoration(
                               color: isDark
-                                  ? AppDarkColors.backgroundSecondary
-                                  : AppColors.glassSecondary,
+                                  ? AppDarkColors.cardSurface
+                                  : AppColors.cardSurface,
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
                                 color: isAuthenticated
-                                    ? AppColors.silver.withValues(alpha: 0.5)
+                                    ? (isDark
+                                        ? const Color(0xFFF59E0B).withValues(alpha: 0.5)
+                                        : const Color(0xFFD97706).withValues(alpha: 0.4))
                                     : (isDark
-                                        ? AppDarkColors.borderStandard
-                                        : AppColors.borderStandard),
+                                        ? AppDarkColors.cardBorder
+                                        : AppColors.cardBorder),
                               ),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 if (isAuthenticated) ...[
-                                  const Icon(
+                                  Icon(
                                     Icons.star_rounded,
-                                    size: 14,
-                                    color: AppColors.silver,
+                                    size: 15,
+                                    color: isDark
+                                        ? const Color(0xFFFFB020)
+                                        : const Color(0xFFD97706),
                                   ),
                                   const SizedBox(width: 5),
                                 ],
@@ -577,11 +613,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       : 'Guest Mode',
                                   style: TextStyle(
                                     color: isAuthenticated
-                                        ? AppColors.silver
+                                        ? (isDark
+                                            ? const Color(0xFFFFC040)
+                                            : const Color(0xFFB45309))
                                         : (isDark
                                             ? AppDarkColors.textSecondary
                                             : AppColors.textSecondary),
-                                    fontSize: 11.5,
+                                    fontSize: 12,
                                     fontWeight: FontWeight.w600,
                                     letterSpacing: 0.2,
                                   ),
@@ -596,18 +634,36 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             width: double.infinity,
                             padding: const EdgeInsets.symmetric(
                               horizontal: 10,
-                              vertical: 10,
+                              vertical: 12,
                             ),
                             decoration: BoxDecoration(
                               color: isDark
-                                  ? AppDarkColors.backgroundSecondary
-                                  : AppColors.glassSecondary,
+                                  ? AppDarkColors.cardSurface
+                                  : AppColors.cardSurface,
                               borderRadius: BorderRadius.circular(16),
                               border: Border.all(
                                 color: isDark
-                                    ? AppDarkColors.borderStandard
-                                    : AppColors.borderStandard,
+                                    ? AppDarkColors.cardBorder
+                                    : AppColors.cardBorder,
                               ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: (isDark
+                                          ? AppDarkColors.lightShadow
+                                          : AppColors.lightShadow)
+                                      .withValues(alpha: isDark ? 0.70 : 0.90),
+                                  offset: const Offset(-2, -2),
+                                  blurRadius: 6,
+                                ),
+                                BoxShadow(
+                                  color: (isDark
+                                          ? AppDarkColors.darkShadow
+                                          : AppColors.darkShadow)
+                                      .withValues(alpha: isDark ? 0.85 : 0.50),
+                                  offset: const Offset(2, 2),
+                                  blurRadius: 6,
+                                ),
+                              ],
                             ),
                             child: Row(
                               children: [
@@ -695,7 +751,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     maxLines: 2,
                                     overflow: TextOverflow.ellipsis,
                                     style: TextStyle(
-                                      color: AppColors.textMuted,
+                                      color: isDark
+                                          ? AppDarkColors.textSecondary
+                                          : AppColors.textSecondary,
                                       fontSize: 11,
                                       fontWeight: FontWeight.w500,
                                     ),
@@ -715,8 +773,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 topGenre,
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  color: AppColors.textPrimary,
+                                style: TextStyle(
+                                  color: isDark
+                                      ? AppDarkColors.textPrimary
+                                      : AppColors.textPrimary,
                                   fontSize: 14.5,
                                   fontWeight: FontWeight.w700,
                                 ),
@@ -750,8 +810,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                               i,
                                             )[0],
                                             border: Border.all(
-                                              color:
-                                                  AppColors.backgroundSecondary,
+                                              color: isDark
+                                                  ? AppDarkColors.cardBorder
+                                                  : AppColors.cardBorder,
                                               width: 1.5,
                                             ),
                                           ),
@@ -769,10 +830,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     ),
                                   )
                                 else
-                                  const Text(
+                                  Text(
                                     'Listen to discover',
                                     style: TextStyle(
-                                      color: AppColors.textMuted,
+                                      color: isDark
+                                          ? AppDarkColors.textSecondary
+                                          : AppColors.textSecondary,
                                       fontSize: 12,
                                     ),
                                   ),
@@ -783,9 +846,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       : 'No artists yet',
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
-                                    color: AppColors.textMuted,
+                                  style: TextStyle(
+                                    color: isDark
+                                        ? AppDarkColors.textPrimary
+                                        : AppColors.textPrimary,
                                     fontSize: 11,
+                                    fontWeight: FontWeight.w600,
                                   ),
                                 ),
                               ],
@@ -800,10 +866,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   SliverPadding(
                     padding: const EdgeInsets.fromLTRB(20, 26, 20, 12),
                     sliver: SliverToBoxAdapter(
-                      child: const Text(
+                      child: Text(
                         'Settings & Preferences',
                         style: TextStyle(
-                          color: AppColors.textPrimary,
+                          color: isDark
+                              ? AppDarkColors.textPrimary
+                              : AppColors.textPrimary,
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
                           letterSpacing: -0.2,
@@ -817,9 +885,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     sliver: SliverToBoxAdapter(
                       child: Container(
                         decoration: BoxDecoration(
-                          color: AppColors.backgroundSurface,
+                          color: isDark
+                              ? AppDarkColors.cardSurface
+                              : AppColors.cardSurface,
                           borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: AppColors.surfaceBorder),
+                          border: Border.all(
+                            color: isDark
+                                ? AppDarkColors.cardBorder
+                                : AppColors.cardBorder,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: (isDark
+                                      ? AppDarkColors.lightShadow
+                                      : AppColors.lightShadow)
+                                  .withValues(alpha: isDark ? 0.70 : 0.90),
+                              offset: const Offset(-2, -2),
+                              blurRadius: 6,
+                            ),
+                            BoxShadow(
+                              color: (isDark
+                                      ? AppDarkColors.darkShadow
+                                      : AppColors.darkShadow)
+                                  .withValues(alpha: isDark ? 0.85 : 0.50),
+                              offset: const Offset(2, 2),
+                              blurRadius: 6,
+                            ),
+                          ],
                         ),
                         child: Column(
                           children: [
@@ -843,7 +935,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               trailing: Text(
                                 '${ThemeController.instance.themeModeName} >',
                                 style: const TextStyle(
-                                  color: AppColors.accentLight,
+                                  color: AppColors.coral,
                                   fontSize: 13,
                                   fontWeight: FontWeight.w600,
                                 ),
@@ -856,13 +948,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               title: 'Low Contrast Mode',
                               trailing: Switch(
                                 value: ThemeController.instance.isLowContrast,
-                                activeThumbColor: AppColors.accentLight,
-                                activeTrackColor: AppColors.accent.withValues(
-                                  alpha: 0.35,
-                                ),
-                                inactiveTrackColor: Colors.white.withValues(
-                                  alpha: 0.08,
-                                ),
+                                activeThumbColor: Colors.white,
+                                activeTrackColor: AppColors.coral,
+                                inactiveThumbColor: isDark
+                                    ? const Color(0xFF94A3B8)
+                                    : const Color(0xFF7E8F9E),
+                                inactiveTrackColor: isDark
+                                    ? AppDarkColors.insetTrack
+                                    : const Color(0xFFD4DCE8),
                                 onChanged: (val) {
                                   ThemeController.instance.setLowContrast(val);
                                 },
@@ -880,7 +973,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               trailing: Text(
                                 '$_audioQuality >',
                                 style: const TextStyle(
-                                  color: AppColors.accentLight,
+                                  color: AppColors.coral,
                                   fontSize: 13,
                                   fontWeight: FontWeight.w600,
                                 ),
@@ -893,13 +986,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               title: 'Offline Mode',
                               trailing: Switch(
                                 value: _offlineMode,
-                                activeThumbColor: AppColors.accentLight,
-                                activeTrackColor: AppColors.accent.withValues(
-                                  alpha: 0.35,
-                                ),
-                                inactiveTrackColor: Colors.white.withValues(
-                                  alpha: 0.08,
-                                ),
+                                activeThumbColor: Colors.white,
+                                activeTrackColor: AppColors.coral,
+                                inactiveThumbColor: isDark
+                                    ? const Color(0xFF94A3B8)
+                                    : const Color(0xFF7E8F9E),
+                                inactiveTrackColor: isDark
+                                    ? AppDarkColors.insetTrack
+                                    : const Color(0xFFD4DCE8),
                                 onChanged: _toggleOfflineMode,
                               ),
                               onTap: () => _toggleOfflineMode(!_offlineMode),
@@ -910,9 +1004,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               title: 'Local Device Storage',
                               trailing: Text(
                                 '${widget.audioService.localSongs.length} tracks >',
-                                style: const TextStyle(
-                                  color: AppColors.textMuted,
+                                style: TextStyle(
+                                  color: isDark
+                                      ? AppDarkColors.textSecondary
+                                      : AppColors.textSecondary,
                                   fontSize: 12,
+                                  fontWeight: FontWeight.w500,
                                 ),
                               ),
                               onTap: widget.onLocalTap,
@@ -931,7 +1028,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                   // Log Out Button (Screenshot 1: red-tinted glass panel)
                   SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(20, 22, 20, 112),
+                    padding: const EdgeInsets.fromLTRB(20, 22, 20, 120),
                     sliver: SliverToBoxAdapter(
                       child: Pressable(
                         onTap: _handleLogout,
@@ -955,7 +1052,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     : Icons.login_rounded,
                                 color: isAuthenticated
                                     ? AppColors.error
-                                    : AppColors.accentLight,
+                                    : AppColors.coral,
                                 size: 20,
                               ),
                               const SizedBox(width: 8),
@@ -966,7 +1063,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 style: TextStyle(
                                   color: isAuthenticated
                                       ? AppColors.error
-                                      : AppColors.accentLight,
+                                      : AppColors.coral,
                                   fontSize: 15,
                                   fontWeight: FontWeight.w600,
                                 ),
@@ -994,7 +1091,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           count,
           style: TextStyle(
             color: isDark ? AppDarkColors.textPrimary : AppColors.textPrimary,
-            fontSize: 14,
+            fontSize: 16,
             fontWeight: FontWeight.w700,
           ),
         ),
@@ -1002,8 +1099,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
         Text(
           label,
           style: TextStyle(
-            color: isDark ? AppDarkColors.textSecondary : AppColors.textMuted,
-            fontSize: 11,
+            color: isDark ? AppDarkColors.textSecondary : AppColors.textSecondary,
+            fontSize: 11.5,
+            fontWeight: FontWeight.w500,
           ),
         ),
       ],
@@ -1014,27 +1112,43 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final isDark = ThemeController.instance.isDark;
     return Container(
       width: 1,
-      height: 20,
+      height: 24,
       margin: const EdgeInsets.symmetric(horizontal: 6),
-      color: isDark ? AppDarkColors.borderStandard : AppColors.glassBorder,
+      color: isDark ? AppDarkColors.divider : AppColors.cardBorder,
     );
   }
 
   Widget _activityCard({required String title, required Widget content}) {
     final isDark = ThemeController.instance.isDark;
+    final shadowLight =
+        isDark ? AppDarkColors.lightShadow : AppColors.lightShadow;
+    final shadowDark =
+        isDark ? AppDarkColors.darkShadow : AppColors.darkShadow;
     return Container(
-      width: 148,
-      padding: const EdgeInsets.all(10),
+      width: 152,
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: isDark
-            ? AppDarkColors.backgroundSecondary
-            : AppColors.backgroundSurface,
+            ? AppDarkColors.cardSurface
+            : AppColors.cardSurface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: isDark
-              ? AppDarkColors.borderStandard
-              : AppColors.surfaceBorder,
+              ? AppDarkColors.cardBorder
+              : AppColors.cardBorder,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: shadowLight.withValues(alpha: isDark ? 0.70 : 0.85),
+            offset: const Offset(-2, -2),
+            blurRadius: 5,
+          ),
+          BoxShadow(
+            color: shadowDark.withValues(alpha: isDark ? 0.85 : 0.45),
+            offset: const Offset(2, 2),
+            blurRadius: 5,
+          ),
+        ],
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -1045,12 +1159,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
-              color: isDark ? AppDarkColors.textSecondary : AppColors.textMuted,
-              fontSize: 11,
-              fontWeight: FontWeight.w500,
+              color: isDark ? AppDarkColors.textSecondary : AppColors.textSecondary,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 10),
           content,
         ],
       ),
@@ -1098,7 +1212,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         trailing: trailing ??
             Icon(
               Icons.chevron_right_rounded,
-              color: dark ? AppDarkColors.textSecondary : AppColors.textMuted,
+              color: dark ? AppDarkColors.textSecondary : AppColors.textSecondary,
               size: 20,
             ),
       ),
@@ -1108,7 +1222,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _settingsDivider() {
     final isDark = ThemeController.instance.isDark;
     return Divider(
-      color: isDark ? AppDarkColors.borderStandard : AppColors.glassBorder,
+      color: isDark ? AppDarkColors.cardBorder : AppColors.cardBorder,
       height: 1,
       indent: 16,
       endIndent: 16,
