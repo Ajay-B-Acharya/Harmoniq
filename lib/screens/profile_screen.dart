@@ -155,7 +155,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
               subtitle: Text(
-                'Soft Neumorphic light canvas',
+                'Low-contrast soft light canvas',
                 style: TextStyle(
                   color: isDark
                       ? AppDarkColors.textSecondary
@@ -190,7 +190,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
               subtitle: Text(
-                'Deep Neumorphic dark canvas',
+                'Low-contrast soothing dark canvas',
                 style: TextStyle(
                   color: isDark
                       ? AppDarkColors.textSecondary
@@ -849,6 +849,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 ),
                               ),
                               onTap: _showThemeDialog,
+                            ),
+                            _settingsDivider(),
+                            _settingsTile(
+                              icon: Icons.contrast_rounded,
+                              title: 'Low Contrast Mode',
+                              trailing: Switch(
+                                value: ThemeController.instance.isLowContrast,
+                                activeThumbColor: AppColors.accentLight,
+                                activeTrackColor: AppColors.accent.withValues(
+                                  alpha: 0.35,
+                                ),
+                                inactiveTrackColor: Colors.white.withValues(
+                                  alpha: 0.08,
+                                ),
+                                onChanged: (val) {
+                                  ThemeController.instance.setLowContrast(val);
+                                },
+                              ),
+                              onTap: () {
+                                ThemeController.instance.setLowContrast(
+                                  !ThemeController.instance.isLowContrast,
+                                );
+                              },
                             ),
                             _settingsDivider(),
                             _settingsTile(

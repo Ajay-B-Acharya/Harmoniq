@@ -327,6 +327,54 @@ void main() {
       downloadService.dispose();
       audioService.dispose();
     });
+
+    test('successfully downloads and bundles sample/simulated song offline', () async {
+      final audioService = AudioService(
+        resolveYoutubeStream: (id) async =>
+            YoutubeAudioStream(Uri.parse('https://example.com/stream.m4a')),
+      );
+
+      final downloadService = DownloadService(
+        audioService: audioService,
+      );
+
+      const sampleSong = Song(
+        id: 0,
+        title: 'Midnight Drive',
+        artist: 'Rayan',
+        album: 'Retro Dreams',
+        duration: Duration(minutes: 3, seconds: 42),
+        audioPath: 'simulated_midnight_drive.mp3',
+        gradientId: 0,
+        source: SongSource.local,
+      );
+
+      expect(audioService.isSongDownloaded(sampleSong), isFalse);
+
+      final downloadedSong = await downloadService.downloadSong(
+        sampleSong,
+        DownloadQuality.normal,
+      );
+
+      expect(downloadedSong.title, 'Midnight Drive');
+      expect(downloadedSong.artist, 'Rayan');
+      expect(downloadedSong.source, SongSource.local);
+      expect(downloadedSong.audioPath.isNotEmpty, isTrue);
+      expect(File(downloadedSong.audioPath).existsSync(), isTrue);
+      expect(downloadedSong.downloadQuality, 'Normal');
+
+      // Verify audioService identifies it as downloaded
+      expect(audioService.isSongDownloaded(sampleSong), isTrue);
+      expect(audioService.getDownloadedSong(sampleSong), isNotNull);
+      expect(audioService.downloadedSongs.length, 1);
+
+      // Clean up downloaded file
+      await audioService.removeDownloadedSong(downloadedSong);
+      expect(audioService.isSongDownloaded(sampleSong), isFalse);
+
+      downloadService.dispose();
+      audioService.dispose();
+    });
   });
 
   group('Download Quality Sheet Widget', () {

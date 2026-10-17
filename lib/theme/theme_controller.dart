@@ -16,6 +16,9 @@ class ThemeController extends ChangeNotifier {
         Brightness.dark;
   }
 
+  bool _lowContrast = true;
+  bool get isLowContrast => _lowContrast;
+
   String get themeModeName {
     switch (_themeMode) {
       case ThemeMode.light:
@@ -37,7 +40,18 @@ class ThemeController extends ChangeNotifier {
     } else {
       _themeMode = ThemeMode.light;
     }
+    final lowContrastPref = prefs.getBool('pref_low_contrast');
+    if (lowContrastPref != null) {
+      _lowContrast = lowContrastPref;
+    }
     notifyListeners();
+  }
+
+  Future<void> setLowContrast(bool value) async {
+    _lowContrast = value;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('pref_low_contrast', value);
   }
 
   Future<void> toggleTheme() async {

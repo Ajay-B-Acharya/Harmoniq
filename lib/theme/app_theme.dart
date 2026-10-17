@@ -11,53 +11,53 @@ class AppTheme {
   static ThemeData get lightTheme => ThemeData(
         useMaterial3: true,
         brightness: Brightness.light,
-        scaffoldBackgroundColor: const Color(0xFFE8ECF2),
+        scaffoldBackgroundColor: AppColors.background,
         colorScheme: const ColorScheme.light(
-          surface: Color(0xFFE8ECF2),
+          surface: AppColors.background,
           primary: AppColors.coral,
           onPrimary: Colors.white,
           secondary: AppColors.coralLight,
           onSecondary: Colors.white,
-          onSurface: Color(0xFF202A36),
-          outline: Color(0xFFB8C5D6),
+          onSurface: AppColors.textPrimary,
+          outline: AppColors.darkShadow,
         ),
         splashFactory: InkSparkle.splashFactory,
         textTheme: const TextTheme(
           headlineLarge: TextStyle(
-            color: Color(0xFF202A36),
+            color: AppColors.textPrimary,
             fontSize: 32,
             fontWeight: FontWeight.w800,
             letterSpacing: -1.0,
           ),
           headlineMedium: TextStyle(
-            color: Color(0xFF202A36),
+            color: AppColors.textPrimary,
             fontSize: 26,
             fontWeight: FontWeight.w700,
             letterSpacing: -0.6,
           ),
           titleLarge: TextStyle(
-            color: Color(0xFF202A36),
+            color: AppColors.textPrimary,
             fontSize: 20,
             fontWeight: FontWeight.w700,
             letterSpacing: -0.3,
           ),
           titleMedium: TextStyle(
-            color: Color(0xFF202A36),
+            color: AppColors.textPrimary,
             fontSize: 16,
             fontWeight: FontWeight.w600,
           ),
           bodyLarge: TextStyle(
-            color: Color(0xFF202A36),
+            color: AppColors.textPrimary,
             fontSize: 14.5,
             fontWeight: FontWeight.w500,
           ),
           bodyMedium: TextStyle(
-            color: Color(0xFF7A8B9E),
+            color: AppColors.textSecondary,
             fontSize: 13,
             height: 1.45,
           ),
           bodySmall: TextStyle(
-            color: Color(0xFFA0AEC0),
+            color: AppColors.textTertiary,
             fontSize: 12,
             height: 1.4,
           ),
@@ -76,8 +76,8 @@ class AppTheme {
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFFE8ECF2),
-            foregroundColor: const Color(0xFF202A36),
+            backgroundColor: AppColors.background,
+            foregroundColor: AppColors.textPrimary,
             elevation: 0,
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             shape:
@@ -86,27 +86,27 @@ class AppTheme {
         ),
         outlinedButtonTheme: OutlinedButtonThemeData(
           style: OutlinedButton.styleFrom(
-            foregroundColor: const Color(0xFF202A36),
-            side: const BorderSide(color: Color(0xFFB8C5D6), width: 1.2),
+            foregroundColor: AppColors.textPrimary,
+            side: const BorderSide(color: AppColors.darkShadow, width: 1.2),
             shape:
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           ),
         ),
         chipTheme: ChipThemeData(
-          backgroundColor: const Color(0xFFE8ECF2),
-          selectedColor: const Color(0xFFDFE5ED),
+          backgroundColor: AppColors.background,
+          selectedColor: AppColors.insetTrack,
           side: BorderSide.none,
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
           labelStyle: const TextStyle(
-            color: Color(0xFF202A36),
+            color: AppColors.textPrimary,
             fontWeight: FontWeight.w600,
             fontSize: 13,
           ),
         ),
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
-          fillColor: const Color(0xFFE2E7ED),
+          fillColor: AppColors.backgroundSecondary,
           contentPadding:
               const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           border: OutlineInputBorder(
@@ -122,14 +122,14 @@ class AppTheme {
             borderSide: const BorderSide(color: AppColors.coral, width: 1.5),
           ),
           hintStyle: const TextStyle(
-            color: Color(0xFFA0AEC0),
+            color: AppColors.textTertiary,
             fontSize: 13.5,
           ),
         ),
         bottomSheetTheme: const BottomSheetThemeData(
-          backgroundColor: Color(0xFFE8ECF2),
+          backgroundColor: AppColors.background,
           showDragHandle: true,
-          dragHandleColor: Color(0xFFB8C5D6),
+          dragHandleColor: AppColors.darkShadow,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
           ),
@@ -137,66 +137,66 @@ class AppTheme {
         sliderTheme: SliderThemeData(
           activeTrackColor: AppColors.coral,
           inactiveTrackColor:
-              const Color(0xFFB8C5D6).withValues(alpha: 0.35),
+              AppColors.darkShadow.withValues(alpha: 0.35),
           thumbColor: Colors.white,
           overlayColor: AppColors.coral.withValues(alpha: 0.16),
           trackHeight: 6,
           thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 9),
           overlayShape: const RoundSliderOverlayShape(overlayRadius: 18),
         ),
-        iconTheme: const IconThemeData(color: Color(0xFF202A36)),
+        iconTheme: const IconThemeData(color: AppColors.textPrimary),
       );
 
   static ThemeData get darkTheme => ThemeData(
         useMaterial3: true,
         brightness: Brightness.dark,
-        scaffoldBackgroundColor: const Color(0xFF1E222B),
+        scaffoldBackgroundColor: AppDarkColors.background,
         colorScheme: const ColorScheme.dark(
-          surface: Color(0xFF1E222B),
+          surface: AppDarkColors.background,
           primary: AppColors.coral,
           onPrimary: Colors.white,
           secondary: AppColors.coralLight,
           onSecondary: Colors.white,
-          onSurface: Color(0xFFF1F5F9),
-          outline: Color(0xFF0F1217),
+          onSurface: AppDarkColors.textPrimary,
+          outline: AppDarkColors.darkShadow,
         ),
         splashFactory: InkSparkle.splashFactory,
         textTheme: const TextTheme(
           headlineLarge: TextStyle(
-            color: Color(0xFFF1F5F9),
+            color: AppDarkColors.textPrimary,
             fontSize: 32,
             fontWeight: FontWeight.w800,
             letterSpacing: -1.0,
           ),
           headlineMedium: TextStyle(
-            color: Color(0xFFF1F5F9),
+            color: AppDarkColors.textPrimary,
             fontSize: 26,
             fontWeight: FontWeight.w700,
             letterSpacing: -0.6,
           ),
           titleLarge: TextStyle(
-            color: Color(0xFFF1F5F9),
+            color: AppDarkColors.textPrimary,
             fontSize: 20,
             fontWeight: FontWeight.w700,
             letterSpacing: -0.3,
           ),
           titleMedium: TextStyle(
-            color: Color(0xFFF1F5F9),
+            color: AppDarkColors.textPrimary,
             fontSize: 16,
             fontWeight: FontWeight.w600,
           ),
           bodyLarge: TextStyle(
-            color: Color(0xFFF1F5F9),
+            color: AppDarkColors.textPrimary,
             fontSize: 14.5,
             fontWeight: FontWeight.w500,
           ),
           bodyMedium: TextStyle(
-            color: Color(0xFF94A3B8),
+            color: AppDarkColors.textSecondary,
             fontSize: 13,
             height: 1.45,
           ),
           bodySmall: TextStyle(
-            color: Color(0xFF64748B),
+            color: AppDarkColors.textTertiary,
             fontSize: 12,
             height: 1.4,
           ),
@@ -215,8 +215,8 @@ class AppTheme {
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF1E222B),
-            foregroundColor: const Color(0xFFF1F5F9),
+            backgroundColor: AppDarkColors.background,
+            foregroundColor: AppDarkColors.textPrimary,
             elevation: 0,
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             shape:
@@ -225,27 +225,27 @@ class AppTheme {
         ),
         outlinedButtonTheme: OutlinedButtonThemeData(
           style: OutlinedButton.styleFrom(
-            foregroundColor: const Color(0xFFF1F5F9),
-            side: const BorderSide(color: Color(0xFF282F3C), width: 1.2),
+            foregroundColor: AppDarkColors.textPrimary,
+            side: const BorderSide(color: AppDarkColors.lightShadow, width: 1.2),
             shape:
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           ),
         ),
         chipTheme: ChipThemeData(
-          backgroundColor: const Color(0xFF1E222B),
-          selectedColor: const Color(0xFF282F3C),
+          backgroundColor: AppDarkColors.background,
+          selectedColor: AppDarkColors.lightShadow,
           side: BorderSide.none,
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
           labelStyle: const TextStyle(
-            color: Color(0xFFF1F5F9),
+            color: AppDarkColors.textPrimary,
             fontWeight: FontWeight.w600,
             fontSize: 13,
           ),
         ),
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
-          fillColor: const Color(0xFF181B22),
+          fillColor: AppDarkColors.backgroundSecondary,
           contentPadding:
               const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           border: OutlineInputBorder(
@@ -261,14 +261,14 @@ class AppTheme {
             borderSide: const BorderSide(color: AppColors.coral, width: 1.5),
           ),
           hintStyle: const TextStyle(
-            color: Color(0xFF64748B),
+            color: AppDarkColors.textTertiary,
             fontSize: 13.5,
           ),
         ),
         bottomSheetTheme: const BottomSheetThemeData(
-          backgroundColor: Color(0xFF1E222B),
+          backgroundColor: AppDarkColors.background,
           showDragHandle: true,
-          dragHandleColor: Color(0xFF282F3C),
+          dragHandleColor: AppDarkColors.lightShadow,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
           ),
@@ -276,14 +276,14 @@ class AppTheme {
         sliderTheme: SliderThemeData(
           activeTrackColor: AppColors.coral,
           inactiveTrackColor:
-              const Color(0xFF282F3C).withValues(alpha: 0.35),
+              AppDarkColors.lightShadow.withValues(alpha: 0.35),
           thumbColor: Colors.white,
           overlayColor: AppColors.coral.withValues(alpha: 0.16),
           trackHeight: 6,
           thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 9),
           overlayShape: const RoundSliderOverlayShape(overlayRadius: 18),
         ),
-        iconTheme: const IconThemeData(color: Color(0xFFF1F5F9)),
+        iconTheme: const IconThemeData(color: AppDarkColors.textPrimary),
       );
 
   static ThemeData get theme =>

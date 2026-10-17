@@ -284,8 +284,8 @@ class MainActivity : AudioServiceActivity() {
         val resolver = applicationContext.contentResolver
         scanExecutor.execute {
             var insertedUri: android.net.Uri? = null
+            val tempFile = File(tempFilePath)
             try {
-                val tempFile = File(tempFilePath)
                 if (!tempFile.exists()) {
                     mainHandler.post {
                         result.error("FILE_NOT_FOUND", "Temporary download file does not exist", null)
@@ -308,33 +308,49 @@ class MainActivity : AudioServiceActivity() {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                         put(MediaStore.Audio.Media.RELATIVE_PATH, "Music/Harmoniq")
                         put(MediaStore.Audio.Media.IS_PENDING, 1)
+                    } else {
+                        val musicDir = android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_MUSIC)
+                        val harmoniqDir = File(musicDir, "Harmoniq").apply { if (!exists()) mkdirs() }
+                        val destFile = File(harmoniqDir, sanitizedDisplayName)
+                        put(MediaStore.Audio.Media.DATA, destFile.absolutePath)
                     }
                 }
 
                 val collection = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
                 insertedUri = resolver.insert(collection, contentValues)
-                    ?: throw IOException("Failed to create MediaStore entry")
 
-                resolver.openOutputStream(insertedUri)?.use { output ->
-                    tempFile.inputStream().use { input ->
-                        input.copyTo(output)
-                    }
-                    output.flush()
-                } ?: throw IOException("Unable to open output stream for MediaStore URI")
+                if (insertedUri != null) {
+                    resolver.openOutputStream(insertedUri)?.use { output ->
+                        tempFile.inputStream().use { input ->
+                            input.copyTo(output)
+                        }
+                        output.flush()
+                    } ?: throw IOException("Unable to open output stream for MediaStore URI")
 
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                    val completedValues = ContentValues().apply {
-                        put(MediaStore.Audio.Media.IS_PENDING, 0)
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                        val completedValues = ContentValues().apply {
+                            put(MediaStore.Audio.Media.IS_PENDING, 0)
+                        }
+                        resolver.update(insertedUri, completedValues, null, null)
                     }
-                    resolver.update(insertedUri, completedValues, null, null)
+
+                    tempFile.delete()
+                    val uriString = insertedUri.toString()
+                    mainHandler.post {
+                        result.success(uriString)
+                    }
+                    return@execute
                 }
 
-                // Delete scratch temp file after writing to MediaStore
+                // If MediaStore returned null, fallback directly to app-specific external files
+                val fallbackDir = applicationContext.getExternalFilesDir(android.os.Environment.DIRECTORY_MUSIC)
+                    ?: applicationContext.filesDir
+                val harmoniqDir = File(fallbackDir, "Harmoniq").apply { if (!exists()) mkdirs() }
+                val destFile = File(harmoniqDir, sanitizedDisplayName)
+                tempFile.copyTo(destFile, overwrite = true)
                 tempFile.delete()
-
-                val uriString = insertedUri.toString()
                 mainHandler.post {
-                    result.success(uriString)
+                    result.success(destFile.absolutePath)
                 }
             } catch (e: Exception) {
                 // If anything failed, clean up the pending entry if created
@@ -343,6 +359,22 @@ class MainActivity : AudioServiceActivity() {
                         resolver.delete(uri, null, null)
                     } catch (_: Exception) {}
                 }
+                // Try fallback to app storage before returning error
+                try {
+                    if (tempFile.exists()) {
+                        val fallbackDir = applicationContext.getExternalFilesDir(android.os.Environment.DIRECTORY_MUSIC)
+                            ?: applicationContext.filesDir
+                        val harmoniqDir = File(fallbackDir, "Harmoniq").apply { if (!exists()) mkdirs() }
+                        val destFile = File(harmoniqDir, sanitizeFileName(displayName))
+                        tempFile.copyTo(destFile, overwrite = true)
+                        tempFile.delete()
+                        mainHandler.post {
+                            result.success(destFile.absolutePath)
+                        }
+                        return@execute
+                    }
+                } catch (_: Exception) {}
+
                 mainHandler.post {
                     result.error("SAVE_FAILED", e.message ?: "Failed to save audio file", null)
                 }

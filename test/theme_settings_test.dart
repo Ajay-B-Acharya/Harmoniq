@@ -67,6 +67,35 @@ void main() {
       expect(controller.themeMode, ThemeMode.dark);
       expect(controller.isDark, isTrue);
     });
+
+    test('defaults to low contrast mode and persists changes', () async {
+      final controller = ThemeController.instance;
+      expect(controller.isLowContrast, isTrue);
+
+      await controller.setLowContrast(false);
+      expect(controller.isLowContrast, isFalse);
+
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getBool('pref_low_contrast'), isFalse);
+
+      await controller.setLowContrast(true);
+      expect(controller.isLowContrast, isTrue);
+      expect(prefs.getBool('pref_low_contrast'), isTrue);
+    });
+
+    test('validates low contrast color tokens for dark and light modes', () {
+      // Light Mode low contrast text and soft shadow checks
+      expect(AppColors.textPrimary, const Color(0xFF3B4858));
+      expect(AppColors.textSecondary, const Color(0xFF6B7C91));
+      expect(AppColors.lightShadow, const Color(0xFFF7F9FC));
+      expect(AppColors.darkShadow, const Color(0xFFBAC7D5));
+
+      // Dark Mode low contrast text and shadow checks
+      expect(AppDarkColors.textPrimary, const Color(0xFFCCD5E0));
+      expect(AppDarkColors.textSecondary, const Color(0xFF8C9BAE));
+      expect(AppDarkColors.darkShadow, const Color(0xFF12151B));
+      expect(AppDarkColors.lightShadow, const Color(0xFF282F3C));
+    });
   });
 
   group('Settings Theme Selection Flow', () {
@@ -117,6 +146,41 @@ void main() {
 
       final prefs = await SharedPreferences.getInstance();
       expect(prefs.getString('pref_theme_mode'), 'dark');
+    });
+
+    testWidgets('ProfileScreen displays Low Contrast Mode tile and toggles it',
+        (tester) async {
+      await ThemeController.instance.setLowContrast(true);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: AppTheme.lightTheme,
+          darkTheme: AppTheme.darkTheme,
+          themeMode: ThemeController.instance.themeMode,
+          home: ProfileScreen(
+            audioService: _FakeAudioService(),
+            authService: _FakeAuthService(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.scrollUntilVisible(
+        find.text('Low Contrast Mode'),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Low Contrast Mode'), findsOneWidget);
+
+      await tester.tap(find.text('Low Contrast Mode'));
+      await tester.pumpAndSettle();
+
+      expect(ThemeController.instance.isLowContrast, isFalse);
+
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getBool('pref_low_contrast'), isFalse);
     });
   });
 

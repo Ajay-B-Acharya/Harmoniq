@@ -955,11 +955,11 @@ class _HomeScreenState extends State<HomeScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Expanded(
+                  Expanded(
                     child: Row(
                       children: [
-                        Icon(Icons.tune_rounded, size: 18, color: AppColors.coral),
-                        SizedBox(width: 8),
+                        const Icon(Icons.tune_rounded, size: 18, color: AppColors.coral),
+                        const SizedBox(width: 8),
                         Expanded(
                           child: Text(
                             'Soft 3D Controls',
@@ -968,7 +968,9 @@ class _HomeScreenState extends State<HomeScreen> {
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w700,
-                              color: AppColors.textPrimary,
+                              color: isDark
+                                  ? AppDarkColors.textPrimary
+                                  : AppColors.textPrimary,
                             ),
                           ),
                         ),
@@ -979,16 +981,24 @@ class _HomeScreenState extends State<HomeScreen> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                     decoration: BoxDecoration(
-                      color: AppColors.background,
+                      color: isDark
+                          ? AppDarkColors.backgroundSecondary
+                          : AppColors.background,
                       borderRadius: BorderRadius.circular(10),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.white.withValues(alpha: 0.9),
+                          color: (isDark
+                                  ? AppDarkColors.lightShadow
+                                  : AppColors.lightShadow)
+                              .withValues(alpha: 0.8),
                           offset: const Offset(-1, -1),
                           blurRadius: 2,
                         ),
                         BoxShadow(
-                          color: AppColors.darkShadow.withValues(alpha: 0.6),
+                          color: (isDark
+                                  ? AppDarkColors.darkShadow
+                                  : AppColors.darkShadow)
+                              .withValues(alpha: 0.5),
                           offset: const Offset(1, 1),
                           blurRadius: 2,
                         ),
@@ -1056,10 +1066,16 @@ class _HomeScreenState extends State<HomeScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Expanded(
+                  Expanded(
                     child: Row(
                       children: [
-                        Icon(Icons.graphic_eq_rounded, size: 18, color: AppColors.textPrimary),
+                        Icon(
+                          Icons.graphic_eq_rounded,
+                          size: 18,
+                          color: isDark
+                              ? AppDarkColors.textPrimary
+                              : AppColors.textPrimary,
+                        ),
                         SizedBox(width: 8),
                         Expanded(
                           child: Text(
@@ -1069,7 +1085,9 @@ class _HomeScreenState extends State<HomeScreen> {
                             style: TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
-                              color: AppColors.textPrimary,
+                              color: isDark
+                                  ? AppDarkColors.textPrimary
+                                  : AppColors.textPrimary,
                             ),
                           ),
                         ),

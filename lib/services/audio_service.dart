@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:collection';
 import 'dart:convert';
+import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter/foundation.dart';
@@ -347,8 +348,21 @@ class AudioService extends ChangeNotifier {
       (s) =>
           s.identity == song.identity ||
           (song.videoId != null && s.videoId == song.videoId) ||
-          (song.audioPath.isNotEmpty && s.audioPath == song.audioPath),
+          (song.audioPath.isNotEmpty && s.audioPath == song.audioPath) ||
+          (s.title.trim().toLowerCase() == song.title.trim().toLowerCase() &&
+              s.artist.trim().toLowerCase() == song.artist.trim().toLowerCase()),
     );
+    if (song.audioPath.isNotEmpty &&
+        !song.audioPath.startsWith('content://') &&
+        !song.audioPath.startsWith('simulated_') &&
+        !song.audioPath.startsWith('asset://')) {
+      try {
+        final file = File(song.audioPath);
+        if (file.existsSync()) {
+          file.deleteSync();
+        }
+      } catch (_) {}
+    }
     _downloadsRevision++;
     _catalogRevision++;
     notifyListeners();
@@ -363,7 +377,9 @@ class AudioService extends ChangeNotifier {
     return _downloadedSongs.any(
       (s) =>
           s.identity == song.identity ||
-          (song.videoId != null && s.videoId == song.videoId),
+          (song.videoId != null && s.videoId == song.videoId) ||
+          (s.title.trim().toLowerCase() == song.title.trim().toLowerCase() &&
+              s.artist.trim().toLowerCase() == song.artist.trim().toLowerCase()),
     );
   }
 
@@ -371,7 +387,9 @@ class AudioService extends ChangeNotifier {
     for (final s in _downloadedSongs) {
       if (s.identity == song.identity ||
           (song.videoId != null && s.videoId == song.videoId) ||
-          (song.audioPath.isNotEmpty && s.audioPath == song.audioPath)) {
+          (song.audioPath.isNotEmpty && s.audioPath == song.audioPath) ||
+          (s.title.trim().toLowerCase() == song.title.trim().toLowerCase() &&
+              s.artist.trim().toLowerCase() == song.artist.trim().toLowerCase())) {
         return s;
       }
     }

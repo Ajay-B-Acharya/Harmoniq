@@ -116,22 +116,21 @@ internal class YtDlpAdapter(private val context: Context) {
         require(videoIdPattern.matches(videoId)) { "Invalid YouTube video ID" }
         val info = extract("https://www.youtube.com/watch?v=$videoId", flat = false)
         require(info.optString("id") == videoId) { "Unexpected video identity" }
-        val format = info
-        check(format.optString("vcodec") == "none" &&
-            format.optString("acodec").let { it.isNotBlank() && it != "none" } &&
-            format.optString("ext") in safeAudioExtensions &&
-            safeHttps(format.optString("url")) != null &&
-            !format.optBoolean("has_drm") &&
-            format.optString("protocol") == "https") {
-            "No directly playable audio-only stream"
-        }
-        val headers = format.optJSONObject("http_headers")
+        val format = findAudioFormat(info)
+            ?: throw IllegalStateException("No directly playable audio-only stream")
+
+        val formatHeaders = format.optJSONObject("http_headers")
+        val infoHeaders = info.optJSONObject("http_headers")
         val playbackHeaders = mutableMapOf<String, String>()
-        if (headers != null) {
-            for (name in safeHeaders) {
-                val value = headers.optString(name)
-                if (value.isNotBlank() && !value.contains('\n') && !value.contains('\r')) playbackHeaders[name] = value
+        for (name in safeHeaders) {
+            val value = formatHeaders?.optString(name)?.takeIf { it.isNotBlank() }
+                ?: infoHeaders?.optString(name)?.takeIf { it.isNotBlank() }
+            if (value != null && !value.contains('\n') && !value.contains('\r')) {
+                playbackHeaders[name] = value
             }
+        }
+        if (!playbackHeaders.containsKey("User-Agent")) {
+            playbackHeaders["User-Agent"] = "Mozilla/5.0 (Linux; Android 13; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Mobile Safari/537.36"
         }
         if (context.applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE != 0) {
             android.util.Log.i("YtDlpAdapter", "Resolved $videoId, audio format ${format.optString("format_id")}")
@@ -145,6 +144,53 @@ internal class YtDlpAdapter(private val context: Context) {
             "sourceUrl" to "https://www.youtube.com/watch?v=$videoId",
             "source" to "youtube"
         )
+    }
+
+    private fun findAudioFormat(info: JSONObject): JSONObject? {
+        if (isPlayableAudioFormat(info)) return info
+
+        val requested = info.optJSONArray("requested_formats")
+        if (requested != null) {
+            for (i in 0 until requested.length()) {
+                val fmt = requested.optJSONObject(i) ?: continue
+                if (isPlayableAudioFormat(fmt)) return fmt
+            }
+        }
+
+        val formats = info.optJSONArray("formats")
+        if (formats != null) {
+            var bestFormat: JSONObject? = null
+            var bestTbr = -1.0
+            for (i in 0 until formats.length()) {
+                val fmt = formats.optJSONObject(i) ?: continue
+                if (isPlayableAudioFormat(fmt)) {
+                    val tbr = fmt.optDouble("tbr", fmt.optDouble("abr", 0.0))
+                    if (bestFormat == null || tbr > bestTbr) {
+                        bestFormat = fmt
+                        bestTbr = tbr
+                    }
+                }
+            }
+            if (bestFormat != null) return bestFormat
+        }
+
+        return null
+    }
+
+    private fun isPlayableAudioFormat(format: JSONObject): Boolean {
+        val vcodec = format.optString("vcodec")
+        val acodec = format.optString("acodec")
+        val ext = format.optString("ext")
+        val url = format.optString("url")
+        val hasDrm = format.optBoolean("has_drm", false)
+        val protocol = format.optString("protocol")
+
+        return (vcodec == "none" || vcodec.isEmpty()) &&
+                acodec.isNotBlank() && acodec != "none" &&
+                (ext in safeAudioExtensions) &&
+                safeHttps(url) != null &&
+                !hasDrm &&
+                (protocol == "https" || protocol == "http" || protocol.isEmpty())
     }
 
     private fun extract(url: String, flat: Boolean): JSONObject {

@@ -1009,16 +1009,6 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
   }
 
   void _handleDownloadAction(BuildContext context, Song song) {
-    if (song.source == SongSource.local && !_svc.isSongDownloaded(song)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('This song is already stored locally on your device.'),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-      return;
-    }
-
     if (_downloadService.isDownloading(song.identity)) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -1072,17 +1062,6 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
               ),
             ),
           ],
-        ),
-      );
-      return;
-    }
-
-    if (song.source != SongSource.youtube || song.videoId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-              'This sample track does not have an online stream available for download.'),
-          behavior: SnackBarBehavior.floating,
         ),
       );
       return;
