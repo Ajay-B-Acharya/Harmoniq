@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../models/song.dart';
 import '../models/youtube_video.dart';
 import '../services/audio_service.dart';
+import '../services/search_suggestion_service.dart';
 import '../services/youtube_catalog.dart';
 import '../services/youtube_links.dart';
 import '../theme/app_colors.dart';
@@ -24,6 +27,7 @@ class SearchScreen extends StatefulWidget {
   final ValueChanged<YoutubeVideo>? onVideoTap;
   final void Function(YoutubeVideo, List<YoutubeVideo>)? onVideoQueueTap;
   final VoidCallback? onProfileTap;
+  final SearchSuggestionService? suggestionService;
 
   const SearchScreen({
     super.key,
@@ -35,6 +39,7 @@ class SearchScreen extends StatefulWidget {
     this.onVideoTap,
     this.onVideoQueueTap,
     this.onProfileTap,
+    this.suggestionService,
   });
 
   @override
@@ -45,6 +50,11 @@ class SearchScreenState extends State<SearchScreen> {
   final _controller = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final FocusNode _focusNode = FocusNode();
+  late final SearchSuggestionService _suggestionService;
+  Timer? _debounceTimer;
+  List<SearchSuggestion> _suggestions = [];
+  bool _loadingSuggestions = false;
+
   SearchFilter _filter = SearchFilter.all;
   List<Song> _local = [];
   List<YoutubeVideo> _videos = [];
@@ -69,12 +79,15 @@ class SearchScreenState extends State<SearchScreen> {
   @override
   void initState() {
     super.initState();
+    _suggestionService =
+        widget.suggestionService ?? SearchSuggestionService.instance;
     _controller.addListener(_changed);
     _scrollController.addListener(_onScroll);
   }
 
   @override
   void dispose() {
+    _debounceTimer?.cancel();
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
     _controller.dispose();
@@ -112,6 +125,54 @@ class SearchScreenState extends State<SearchScreen> {
       _submitted = null;
       _refreshLocal();
     });
+    _fetchSuggestions(query);
+  }
+
+  void _fetchSuggestions(String query) {
+    _debounceTimer?.cancel();
+    if (query.isEmpty) {
+      if (mounted) {
+        setState(() {
+          _suggestions = [];
+          _loadingSuggestions = false;
+        });
+      }
+      return;
+    }
+
+    if (mounted) {
+      setState(() => _loadingSuggestions = true);
+    }
+    final currentGen = _generation;
+
+    _debounceTimer = Timer(const Duration(milliseconds: 200), () async {
+      try {
+        final suggestions = await _suggestionService.getCombinedSuggestions(
+          query,
+          librarySongs: widget.audioService.allAvailableSongs,
+          recentSearches: _recent,
+        );
+
+        if (!mounted || currentGen != _generation) return;
+        setState(() {
+          _suggestions = suggestions;
+          _loadingSuggestions = false;
+        });
+      } catch (_) {
+        if (!mounted || currentGen != _generation) return;
+        setState(() => _loadingSuggestions = false);
+      }
+    });
+  }
+
+  void _selectSuggestion(String text) {
+    setQuery(text);
+    _submit();
+  }
+
+  void _insertSuggestion(String text) {
+    setQuery(text);
+    _fetchSuggestions(text);
   }
 
   void _refreshLocal() {
@@ -190,9 +251,11 @@ class SearchScreenState extends State<SearchScreen> {
     if (!_configured) return;
     final query = _query;
     final generation = ++_generation;
+    _debounceTimer?.cancel();
     setState(() {
       _loading = true;
       _loadingMore = false;
+      _loadingSuggestions = false;
       _hasMore = true;
       _currentPage = 1;
       _error = null;
@@ -400,8 +463,11 @@ class SearchScreenState extends State<SearchScreen> {
                           ),
                           onPressed: () {
                             _controller.clear();
+                            _debounceTimer?.cancel();
                             setState(() {
                               _query = '';
+                              _suggestions = [];
+                              _loadingSuggestions = false;
                               _generation++;
                               _loading = false;
                               _loadingMore = false;
@@ -411,6 +477,7 @@ class SearchScreenState extends State<SearchScreen> {
                               _videoIds.clear();
                               _error = null;
                               _loadMoreError = null;
+                              _submitted = null;
                             });
                           },
                         )
@@ -449,9 +516,13 @@ class SearchScreenState extends State<SearchScreen> {
                   listenable: widget.audioService,
                   builder: (context, _) {
                     _refreshLocal();
-                    return _query.isEmpty
-                        ? _buildDiscoveryLanding()
-                        : _buildSearchResults();
+                    if (_query.isEmpty) {
+                      return _buildDiscoveryLanding();
+                    }
+                    if (_filter == SearchFilter.local || _submitted == _query) {
+                      return _buildSearchResults();
+                    }
+                    return _buildSuggestionsView();
                   },
                 ),
               ),
@@ -490,6 +561,218 @@ class SearchScreenState extends State<SearchScreen> {
       }
     }),
   );
+
+  // ── Live Search Suggestions View ───────────────────────────────────────────
+  Widget _buildSuggestionsView() {
+    final showLocal = _filter != SearchFilter.online;
+
+    return ListView(
+      physics: const BouncingScrollPhysics(),
+      padding: const EdgeInsets.fromLTRB(20, 6, 20, 96),
+      children: [
+        // "Search online for ..." primary action tile
+        Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          decoration: BoxDecoration(
+            color: AppColors.glassSecondary,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppColors.borderActiveCyan, width: 1),
+            boxShadow: const [
+              BoxShadow(
+                color: AppColors.shadowStandard,
+                blurRadius: 10,
+                offset: Offset(0, 3),
+              ),
+            ],
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: ListTile(
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+              leading: Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: AppColors.glassSelected,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(
+                  Icons.search_rounded,
+                  color: AppColors.primaryCyan,
+                  size: 20,
+                ),
+              ),
+              title: RichText(
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                text: TextSpan(
+                  style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 14.5,
+                  ),
+                  children: [
+                    const TextSpan(text: 'Search online for "'),
+                    TextSpan(
+                      text: _query,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.primaryCyan,
+                      ),
+                    ),
+                    const TextSpan(text: '"'),
+                  ],
+                ),
+              ),
+              trailing: _loadingSuggestions
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: AppColors.primaryCyan,
+                      ),
+                    )
+                  : const Icon(
+                      Icons.arrow_forward_ios_rounded,
+                      size: 14,
+                      color: AppColors.textMuted,
+                    ),
+              onTap: _submit,
+            ),
+          ),
+        ),
+
+        // Live Suggestions List
+        if (_suggestions.isNotEmpty) ...[
+          const Padding(
+            padding: EdgeInsets.only(left: 4, bottom: 8, top: 4),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.auto_awesome_rounded,
+                  size: 14,
+                  color: AppColors.softCyan,
+                ),
+                SizedBox(width: 6),
+                Text(
+                  'SONG & SEARCH SUGGESTIONS',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 1.1,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          ..._suggestions.map((suggestion) {
+            final icon = switch (suggestion.type) {
+              SuggestionType.library => Icons.music_note_rounded,
+              SuggestionType.recent => Icons.history_rounded,
+              SuggestionType.online => Icons.search_rounded,
+            };
+            final iconColor = switch (suggestion.type) {
+              SuggestionType.library => AppColors.coral,
+              SuggestionType.recent => AppColors.textMuted,
+              SuggestionType.online => AppColors.softCyan,
+            };
+
+            return Container(
+              margin: const EdgeInsets.only(bottom: 6),
+              decoration: BoxDecoration(
+                color: AppColors.glassBackground,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: AppColors.glassBorder),
+              ),
+              child: Material(
+                color: Colors.transparent,
+                child: ListTile(
+                  dense: true,
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
+                  leading: Icon(icon, color: iconColor, size: 20),
+                  title: Text(
+                    suggestion.text,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: AppColors.textPrimary,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  subtitle: suggestion.type == SuggestionType.library &&
+                          suggestion.song != null
+                      ? Text(
+                          '${suggestion.song!.artist} · In Library',
+                          style: const TextStyle(
+                            color: AppColors.textMuted,
+                            fontSize: 11,
+                          ),
+                        )
+                      : null,
+                  trailing: IconButton(
+                    icon: const Icon(
+                      Icons.north_west_rounded,
+                      size: 16,
+                      color: AppColors.textMuted,
+                    ),
+                    tooltip: 'Insert into search bar',
+                    onPressed: () => _insertSuggestion(suggestion.text),
+                  ),
+                  onTap: () {
+                    if (suggestion.type == SuggestionType.library &&
+                        suggestion.song != null) {
+                      widget.onSongTap(suggestion.song!);
+                    } else {
+                      _selectSuggestion(suggestion.text);
+                    }
+                  },
+                ),
+              ),
+            );
+          }),
+        ],
+
+        // Matching local device tracks if any
+        if (showLocal && _local.isNotEmpty) ...[
+          const SizedBox(height: 12),
+          Padding(
+            padding: const EdgeInsets.only(left: 4, bottom: 8),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.folder_open_rounded,
+                  size: 14,
+                  color: AppColors.accentLight,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  'MATCHES ON YOUR DEVICE · ${_local.length}',
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 1.1,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          ..._local.map((song) => Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: SongTile(
+                  song: song,
+                  onTap: () => widget.onSongTap(song),
+                  onFavoriteTap: () => widget.onFavoriteTap(song),
+                ),
+              )),
+        ],
+      ],
+    );
+  }
 
   // ── Discovery Landing View (Screenshot 2: Recent, Categories, Trending) ───
   Widget _buildDiscoveryLanding() {
