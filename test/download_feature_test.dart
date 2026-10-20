@@ -57,7 +57,7 @@ void main() {
 
       for (final q in DownloadQuality.values) {
         expect(q.label.isNotEmpty, isTrue);
-        expect(q.format, contains('AAC'));
+        expect(q.format, contains('MP3'));
         expect(q.description.isNotEmpty, isTrue);
         expect(q.notes.isNotEmpty, isTrue);
       }
@@ -627,3 +627,4 @@ void main() {
     });
   });
 }
+

@@ -14,30 +14,30 @@ enum DownloadQuality {
   low(
     label: 'Low',
     approxBitrateKbps: 96,
-    format: 'AAC / M4A',
-    description: 'Data saver (~96 kbps)',
+    format: 'MP3',
+    description: 'Data saver (~96 kbps MP3)',
     notes: 'Optimized for mobile data savings',
   ),
   normal(
     label: 'Normal',
     approxBitrateKbps: 128,
-    format: 'AAC / M4A',
-    description: 'Standard (~128 kbps)',
+    format: 'MP3',
+    description: 'Standard (~128 kbps MP3)',
     notes: 'Balanced quality and file size',
   ),
   high(
     label: 'High',
     approxBitrateKbps: 192,
-    format: 'AAC / M4A',
-    description: 'High quality (~192 kbps)',
-    notes: 'Source stream quality (Recommended)',
+    format: 'MP3',
+    description: 'High quality (~192 kbps MP3)',
+    notes: 'High fidelity audio (Recommended)',
   ),
   veryHigh(
     label: 'Very High',
     approxBitrateKbps: 320,
-    format: 'AAC / M4A',
-    description: 'Maximum fidelity (~320 kbps target)',
-    notes: 'Captured at highest source bitrate (160–256 kbps)',
+    format: 'MP3',
+    description: 'Maximum fidelity (~320 kbps MP3)',
+    notes: 'Studio-grade 320 kbps MP3 encoding',
   );
 
   final String label;
@@ -427,13 +427,14 @@ class DownloadService extends ChangeNotifier {
         throw StateError('Downloaded audio resource was empty.');
       }
 
-      // 5. Commit to MediaStore / storage
-      final isMp3 = !isYouTube;
+      // 5. Commit to MediaStore / storage as MP3
+      const isMp3 = true;
       final savedAudioPath = await _saveAudioToStorage(
         song: song,
         quality: quality,
         tempFile: tempFile,
         isMp3: isMp3,
+        bitrateKbps: quality.approxBitrateKbps,
       );
 
       // 6. Create offline local Song model
@@ -550,7 +551,8 @@ class DownloadService extends ChangeNotifier {
     required Song song,
     required DownloadQuality quality,
     required File tempFile,
-    bool isMp3 = false,
+    bool isMp3 = true,
+    int? bitrateKbps,
   }) async {
     final ext = isMp3 ? 'mp3' : 'm4a';
     final mime = isMp3 ? 'audio/mpeg' : 'audio/mp4';
@@ -572,6 +574,7 @@ class DownloadService extends ChangeNotifier {
             'mimeType': mime,
             'displayName': '$fileName.$ext',
             'tempFilePath': tempFile.path,
+            'bitrateKbps': bitrateKbps ?? quality.approxBitrateKbps,
           },
         );
         if (resultUri != null && resultUri.isNotEmpty) {

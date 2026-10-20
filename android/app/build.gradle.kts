@@ -53,8 +53,10 @@ kotlin {
 
 dependencies {
     implementation("dev.ffmpegkit-maintained:yt-dlp-android:2.0.2")
+    implementation("dev.ffmpegkit-maintained:ffmpeg-kit-audio:8.1.7")
 }
 
 flutter {
     source = "../.."
 }
+

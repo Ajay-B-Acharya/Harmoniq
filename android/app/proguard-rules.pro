@@ -26,3 +26,7 @@
 -keepclasseswithmembernames class * {
     native <methods>;
 }
+
+# FFmpegKit
+-keep class com.arthenica.ffmpegkit.** { *; }
+-dontwarn com.arthenica.ffmpegkit.**

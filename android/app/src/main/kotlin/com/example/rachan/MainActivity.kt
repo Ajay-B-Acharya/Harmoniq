@@ -13,6 +13,8 @@ import android.provider.MediaStore
 import androidx.annotation.NonNull
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import com.arthenica.ffmpegkit.FFmpegKit
+import com.arthenica.ffmpegkit.ReturnCode
 import com.ryanheise.audioservice.AudioServiceActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
@@ -66,14 +68,15 @@ class MainActivity : AudioServiceActivity() {
                     val artist = call.argument<String>("artist") ?: "Unknown Artist"
                     val album = call.argument<String>("album") ?: "Harmoniq"
                     val durationMs = (call.argument<Number>("durationMs"))?.toLong() ?: 0L
-                    val mimeType = call.argument<String>("mimeType") ?: "audio/mp4"
-                    val displayName = call.argument<String>("displayName") ?: "$title.m4a"
+                    val mimeType = call.argument<String>("mimeType") ?: "audio/mpeg"
+                    val displayName = call.argument<String>("displayName") ?: "$title.mp3"
                     val tempFilePath = call.argument<String>("tempFilePath")
+                    val bitrateKbps = (call.argument<Number>("bitrateKbps"))?.toInt() ?: 192
                     if (tempFilePath == null) {
                         result.error("INVALID_ARGS", "tempFilePath is required", null)
                     } else {
                         saveDownloadedAudioAsync(
-                            title, artist, album, durationMs, mimeType, displayName, tempFilePath, result
+                            title, artist, album, durationMs, mimeType, displayName, tempFilePath, bitrateKbps, result
                         )
                     }
                 }
@@ -282,27 +285,61 @@ class MainActivity : AudioServiceActivity() {
         mimeType: String,
         displayName: String,
         tempFilePath: String,
+        bitrateKbps: Int = 192,
         result: MethodChannel.Result
     ) {
         val resolver = applicationContext.contentResolver
         scanExecutor.execute {
             var insertedUri: android.net.Uri? = null
-            val tempFile = File(tempFilePath)
+            val originalTempFile = File(tempFilePath)
+            var fileToSave = originalTempFile
+            var convertedMp3File: File? = null
+            val sanitizedDisplayName = sanitizeFileName(displayName)
+            var effectiveMimeType = mimeType
+            var effectiveDisplayName = sanitizedDisplayName
+
             try {
-                if (!tempFile.exists()) {
+                if (!originalTempFile.exists()) {
                     mainHandler.post {
                         result.error("FILE_NOT_FOUND", "Temporary download file does not exist", null)
                     }
                     return@execute
                 }
 
-                val sanitizedDisplayName = sanitizeFileName(displayName)
+                val isMp3Target = mimeType == "audio/mpeg" || sanitizedDisplayName.endsWith(".mp3", ignoreCase = true)
+
+                if (isMp3Target) {
+                    val baseName = if (sanitizedDisplayName.endsWith(".mp3", ignoreCase = true)) {
+                        sanitizedDisplayName.substringBeforeLast(".mp3")
+                    } else {
+                        sanitizedDisplayName.substringBeforeLast(".")
+                    }
+                    effectiveDisplayName = "$baseName.mp3"
+                    effectiveMimeType = "audio/mpeg"
+
+                    val safeBitrate = bitrateKbps.coerceIn(64, 320)
+                    val mp3Out = File(originalTempFile.parentFile, "harmoniq_conv_${System.currentTimeMillis()}.mp3")
+
+                    try {
+                        val cmd = "-y -i \"" + originalTempFile.absolutePath + "\" -vn -c:a libmp3lame -b:a " + safeBitrate + "k \"" + mp3Out.absolutePath + "\""
+                        val session = FFmpegKit.execute(cmd)
+                        if (ReturnCode.isSuccess(session.returnCode) && mp3Out.exists() && mp3Out.length() > 0) {
+                            convertedMp3File = mp3Out
+                            fileToSave = mp3Out
+                        } else {
+                            android.util.Log.w("MainActivity", "FFmpeg MP3 conversion returned code: " + session.returnCode + ", logs: " + session.allLogsAsString)
+                        }
+                    } catch (e: Exception) {
+                        android.util.Log.w("MainActivity", "FFmpeg conversion execution notice: " + e.message)
+                    }
+                }
+
                 val contentValues = ContentValues().apply {
                     put(MediaStore.Audio.Media.TITLE, title)
                     put(MediaStore.Audio.Media.ARTIST, artist)
                     put(MediaStore.Audio.Media.ALBUM, album)
-                    put(MediaStore.Audio.Media.DISPLAY_NAME, sanitizedDisplayName)
-                    put(MediaStore.Audio.Media.MIME_TYPE, mimeType)
+                    put(MediaStore.Audio.Media.DISPLAY_NAME, effectiveDisplayName)
+                    put(MediaStore.Audio.Media.MIME_TYPE, effectiveMimeType)
                     if (durationMs > 0) {
                         put(MediaStore.Audio.Media.DURATION, durationMs)
                     }
@@ -314,7 +351,7 @@ class MainActivity : AudioServiceActivity() {
                     } else {
                         val musicDir = android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_MUSIC)
                         val harmoniqDir = File(musicDir, "Harmoniq").apply { if (!exists()) mkdirs() }
-                        val destFile = File(harmoniqDir, sanitizedDisplayName)
+                        val destFile = File(harmoniqDir, effectiveDisplayName)
                         put(MediaStore.Audio.Media.DATA, destFile.absolutePath)
                     }
                 }
@@ -324,7 +361,7 @@ class MainActivity : AudioServiceActivity() {
 
                 if (insertedUri != null) {
                     resolver.openOutputStream(insertedUri)?.use { output ->
-                        tempFile.inputStream().use { input ->
+                        fileToSave.inputStream().use { input ->
                             input.copyTo(output)
                         }
                         output.flush()
@@ -337,7 +374,8 @@ class MainActivity : AudioServiceActivity() {
                         resolver.update(insertedUri, completedValues, null, null)
                     }
 
-                    tempFile.delete()
+                    originalTempFile.delete()
+                    convertedMp3File?.delete()
                     val uriString = insertedUri.toString()
                     mainHandler.post {
                         result.success(uriString)
@@ -349,14 +387,14 @@ class MainActivity : AudioServiceActivity() {
                 val fallbackDir = applicationContext.getExternalFilesDir(android.os.Environment.DIRECTORY_MUSIC)
                     ?: applicationContext.filesDir
                 val harmoniqDir = File(fallbackDir, "Harmoniq").apply { if (!exists()) mkdirs() }
-                val destFile = File(harmoniqDir, sanitizedDisplayName)
-                tempFile.copyTo(destFile, overwrite = true)
-                tempFile.delete()
+                val destFile = File(harmoniqDir, effectiveDisplayName)
+                fileToSave.copyTo(destFile, overwrite = true)
+                originalTempFile.delete()
+                convertedMp3File?.delete()
                 mainHandler.post {
                     result.success(destFile.absolutePath)
                 }
             } catch (e: Exception) {
-                // If anything failed, clean up the pending entry if created
                 insertedUri?.let { uri ->
                     try {
                         resolver.delete(uri, null, null)
@@ -364,13 +402,14 @@ class MainActivity : AudioServiceActivity() {
                 }
                 // Try fallback to app storage before returning error
                 try {
-                    if (tempFile.exists()) {
+                    if (fileToSave.exists()) {
                         val fallbackDir = applicationContext.getExternalFilesDir(android.os.Environment.DIRECTORY_MUSIC)
                             ?: applicationContext.filesDir
                         val harmoniqDir = File(fallbackDir, "Harmoniq").apply { if (!exists()) mkdirs() }
-                        val destFile = File(harmoniqDir, sanitizeFileName(displayName))
-                        tempFile.copyTo(destFile, overwrite = true)
-                        tempFile.delete()
+                        val destFile = File(harmoniqDir, effectiveDisplayName)
+                        fileToSave.copyTo(destFile, overwrite = true)
+                        originalTempFile.delete()
+                        convertedMp3File?.delete()
                         mainHandler.post {
                             result.success(destFile.absolutePath)
                         }
@@ -378,6 +417,8 @@ class MainActivity : AudioServiceActivity() {
                     }
                 } catch (_: Exception) {}
 
+                originalTempFile.delete()
+                convertedMp3File?.delete()
                 mainHandler.post {
                     result.error("SAVE_FAILED", e.message ?: "Failed to save audio file", null)
                 }
@@ -387,6 +428,6 @@ class MainActivity : AudioServiceActivity() {
 
     private fun sanitizeFileName(name: String): String {
         val clean = name.replace(Regex("[\\\\/:*?\"<>|]"), "_").trim()
-        return if (clean.isEmpty()) "download.m4a" else clean
+        return if (clean.isEmpty()) "download.mp3" else clean
     }
 }
