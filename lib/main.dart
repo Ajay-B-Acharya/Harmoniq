@@ -300,17 +300,25 @@ class _MainContainerState extends State<MainContainer> {
           onClose: () => Navigator.pop(context),
           onNavigateToDownloads: _openDownloads,
         ),
-        transitionsBuilder: (ctx, animation, a2, child) {
-          final tween = Tween(
-            begin: const Offset(0.0, 1.0),
-            end: Offset.zero,
-          ).chain(CurveTween(curve: Curves.easeInOutCubic));
-          return SlideTransition(
-            position: animation.drive(tween),
-            child: child,
+        transitionsBuilder: (ctx, animation, secondaryAnimation, child) {
+          final curved = CurvedAnimation(
+            parent: animation,
+            curve: Curves.easeOutCubic,
+            reverseCurve: Curves.easeInCubic,
+          );
+          return FadeTransition(
+            opacity: Tween<double>(begin: 0.0, end: 1.0).animate(curved),
+            child: SlideTransition(
+              position: Tween<Offset>(
+                begin: const Offset(0.0, 0.08),
+                end: Offset.zero,
+              ).animate(curved),
+              child: child,
+            ),
           );
         },
-        transitionDuration: motionDuration(context, 340),
+        transitionDuration: motionDuration(context, 320),
+        reverseTransitionDuration: motionDuration(context, 260),
       ),
     );
   }

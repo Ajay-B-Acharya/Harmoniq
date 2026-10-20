@@ -15,6 +15,7 @@ import '../widgets/motion.dart';
 import '../widgets/song_tile.dart';
 import '../widgets/spatial_background.dart';
 import '../widgets/youtube_card.dart';
+import '../widgets/shimmer_skeleton.dart';
 
 enum SearchFilter { all, local, online }
 
@@ -1056,14 +1057,9 @@ class SearchScreenState extends State<SearchScreen> {
           ],
           if (_loading)
             const SliverToBoxAdapter(
-              child: Center(
-                child: Padding(
-                  padding: EdgeInsets.all(24),
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2.5,
-                    color: AppColors.primaryCyan,
-                  ),
-                ),
+              child: Padding(
+                padding: EdgeInsets.only(top: 8),
+                child: ShimmerSongList(count: 6),
               ),
             ),
           if (_error != null)
@@ -1110,17 +1106,8 @@ class SearchScreenState extends State<SearchScreen> {
             if (_loadingMore)
               const SliverToBoxAdapter(
                 child: Padding(
-                  padding: EdgeInsets.symmetric(vertical: 20),
-                  child: Center(
-                    child: SizedBox(
-                      width: 24,
-                      height: 24,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2.5,
-                        color: AppColors.primaryCyan,
-                      ),
-                    ),
-                  ),
+                  padding: EdgeInsets.symmetric(vertical: 12),
+                  child: ShimmerSongList(count: 2),
                 ),
               )
             else if (_hasMore)

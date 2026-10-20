@@ -12,6 +12,7 @@ import '../widgets/harmoniq_emblem.dart';
 import '../widgets/motion.dart';
 import '../widgets/song_tile.dart';
 import '../widgets/spatial_background.dart';
+import '../widgets/shimmer_skeleton.dart';
 
 /// Dedicated Spatial UI Explore / Discovery screen inspired by Screenshot 3.
 /// Features "Discover New Vibes" hero banner, "Popular Genres",
@@ -425,6 +426,13 @@ class _ExploreScreenState extends State<ExploreScreen> {
                           onFavoriteTap: () => widget.onFavoriteTap(song),
                         );
                       },
+                    ),
+                  )
+                else if (_isLoading)
+                  const SliverToBoxAdapter(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                      child: ShimmerSongList(count: 6),
                     ),
                   )
                 else

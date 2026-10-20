@@ -10,6 +10,8 @@ import '../theme/theme_controller.dart';
 import '../widgets/album_art.dart';
 import '../widgets/download_quality_sheet.dart';
 import '../widgets/spatial_background.dart';
+import '../widgets/audio_waveform_visualizer.dart';
+import '../widgets/lyrics_sheet.dart';
 
 class NowPlayingScreen extends StatefulWidget {
   final AudioService audioService;
@@ -297,6 +299,16 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
             ),
           ),
           IconButton(
+            tooltip: 'View lyrics',
+            onPressed: () => LyricsSheet.show(
+              context,
+              song: song,
+              audioService: _svc,
+            ),
+            icon: const Icon(Icons.lyrics_rounded, size: 21),
+            color: AppColors.accent,
+          ),
+          IconButton(
             tooltip: 'Stop and close',
             onPressed: _stopAndClose,
             icon: const Icon(Icons.close_rounded, size: 21),
@@ -545,6 +557,23 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
                     .clamp(0.0, maxMs);
             return Column(
               children: [
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 10, left: 2, right: 2),
+                  child: AudioWaveformVisualizer(
+                    isPlaying: _isPlaying && !_isLoading,
+                    progress: maxMs > 0 ? (currentMs / maxMs).clamp(0.0, 1.0) : 0.0,
+                    onSeek: !_canSeek
+                        ? null
+                        : (ratio) {
+                            final seekMs = ratio * maxMs;
+                            _dragPositionNotifier.value = _DragState(
+                              isDragging: false,
+                              positionMs: seekMs,
+                            );
+                            _svc.seek(Duration(milliseconds: seekMs.round()));
+                          },
+                  ),
+                ),
                 SliderTheme(
                   data: SliderTheme.of(context).copyWith(
                     trackHeight: 3.5,

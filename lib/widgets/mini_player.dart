@@ -46,6 +46,12 @@ class MiniPlayer extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16),
         child: GestureDetector(
           onTap: onTap,
+          onVerticalDragEnd: (details) {
+            final velocity = details.primaryVelocity ?? 0;
+            if (velocity < -150) {
+              onTap();
+            }
+          },
           onHorizontalDragEnd: (details) {
             final velocity = details.primaryVelocity ?? 0;
             if (velocity < -250) {
@@ -55,15 +61,15 @@ class MiniPlayer extends StatelessWidget {
             }
           },
           child: GlassCard(
-            borderRadius: 20,
-            blurSigma: 8,
+            borderRadius: 22,
+            blurSigma: 16,
             level: GlassLevel.floating,
             specularHighlight: true,
             padding: const EdgeInsets.fromLTRB(10, 8, 10, 6),
             borderColor: isPlaying
                 ? AppColors.borderActiveCyan
                 : AppColors.dockBorder,
-            glowColor: isPlaying ? AppColors.primaryCyan : null,
+            glowColor: isPlaying ? AppColors.primaryCyan.withValues(alpha: 0.35) : null,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -211,7 +217,7 @@ class MiniPlayer extends StatelessWidget {
                     ),
                   ),
                 const SizedBox(height: 7),
-                // Isolated Progress Bar - listens only to positionNotifier (zero rebuilds for the parent)
+                // Isolated Glowing Progress Bar - listens only to positionNotifier (zero rebuilds for the parent)
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 2),
                   child: ClipRRect(
@@ -223,18 +229,33 @@ class MiniPlayer extends StatelessWidget {
                         final double progress = totalMs > 0
                             ? (pos.inMilliseconds / totalMs).clamp(0.0, 1.0)
                             : 0.0;
-                        return LinearProgressIndicator(
-                          value: isLoading
-                              ? null
-                              : (progress.isNaN ? 0.0 : progress),
-                          semanticsLabel: isLoading
-                              ? 'Loading audio'
-                              : 'Playback progress',
-                          backgroundColor: AppColors.darkShadow.withValues(alpha: 0.3),
-                          valueColor: const AlwaysStoppedAnimation<Color>(
-                            AppColors.coral,
+                        if (isLoading) {
+                          return const LinearProgressIndicator(
+                            value: null,
+                            semanticsLabel: 'Loading audio',
+                            backgroundColor: Colors.transparent,
+                            valueColor: AlwaysStoppedAnimation<Color>(AppColors.accent),
+                            minHeight: 2.5,
+                          );
+                        }
+                        return Container(
+                          height: 2.5,
+                          color: AppColors.darkShadow.withValues(alpha: 0.25),
+                          child: FractionallySizedBox(
+                            alignment: Alignment.centerLeft,
+                            widthFactor: progress.isNaN ? 0.0 : progress,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(2),
+                                gradient: const LinearGradient(
+                                  colors: [
+                                    AppColors.accent,
+                                    AppColors.coral,
+                                  ],
+                                ),
+                              ),
+                            ),
                           ),
-                          minHeight: 2.5,
                         );
                       },
                     ),

@@ -109,20 +109,51 @@ class SongTile extends StatelessWidget {
                 ],
               ],
             ),
-            subtitle: Text(
-              song.album.isNotEmpty && song.album != 'YouTube'
-                  ? "${song.artist} · ${song.album}"
-                  : song.artist,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 12,
-                color: isActive
-                    ? AppColors.coralLight
-                    : (isDark
-                        ? AppDarkColors.textSecondary
-                        : AppColors.textSecondary),
-              ),
+            subtitle: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    song.album.isNotEmpty && song.album != 'YouTube'
+                        ? "${song.artist} · ${song.album}"
+                        : song.artist,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: isActive
+                          ? AppColors.coralLight
+                          : (isDark
+                              ? AppDarkColors.textSecondary
+                              : AppColors.textSecondary),
+                    ),
+                  ),
+                ),
+                if (song.downloadQuality != null || song.source == SongSource.local) ...[
+                  const SizedBox(width: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                    decoration: BoxDecoration(
+                      color: AppColors.primaryCyan.withValues(alpha: 0.16),
+                      borderRadius: BorderRadius.circular(4),
+                      border: Border.all(
+                        color: AppColors.primaryCyan.withValues(alpha: 0.35),
+                        width: 0.8,
+                      ),
+                    ),
+                    child: Text(
+                      song.downloadQuality != null
+                          ? '${song.downloadQuality!.toUpperCase()} MP3'
+                          : 'OFFLINE',
+                      style: const TextStyle(
+                        color: AppColors.primaryCyan,
+                        fontSize: 8.5,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.4,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
             ),
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
