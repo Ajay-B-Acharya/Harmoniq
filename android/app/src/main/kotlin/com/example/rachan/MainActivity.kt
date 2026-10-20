@@ -6,6 +6,11 @@ import android.content.ContentUris
 import android.content.ContentValues
 import android.content.pm.PackageManager
 import android.database.Cursor
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.content.Context
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
@@ -27,6 +32,7 @@ import java.util.concurrent.Executors
 // the background audio service correctly.
 class MainActivity : AudioServiceActivity() {
     private val CHANNEL = "com.example.harmoniq/local_music"
+    private val NOTIFICATION_CHANNEL_ID = "harmoniq_downloads"
     private val PERMISSION_REQUEST_CODE = 1001
     private val pendingPermissionResults = mutableListOf<MethodChannel.Result>()
     private val pendingScanResults = mutableSetOf<MethodChannel.Result>()
@@ -43,6 +49,7 @@ class MainActivity : AudioServiceActivity() {
 
     override fun configureFlutterEngine(@NonNull flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        createNotificationChannel()
         musicChannel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL)
         musicChannel?.setMethodCallHandler { call, result ->
             when (call.method) {
@@ -79,6 +86,22 @@ class MainActivity : AudioServiceActivity() {
                             title, artist, album, durationMs, mimeType, displayName, tempFilePath, bitrateKbps, result
                         )
                     }
+                }
+                "showDownloadNotification" -> {
+                    val id = call.argument<Number>("id")?.toInt() ?: 101
+                    val title = call.argument<String>("title") ?: "Music"
+                    val artist = call.argument<String>("artist") ?: ""
+                    val progress = call.argument<Number>("progress")?.toInt() ?: -1
+                    val isCompleted = call.argument<Boolean>("isCompleted") ?: false
+                    val isFailed = call.argument<Boolean>("isFailed") ?: false
+                    val isCancelled = call.argument<Boolean>("isCancelled") ?: false
+                    showDownloadNotification(id, title, artist, progress, isCompleted, isFailed, isCancelled)
+                    result.success(true)
+                }
+                "cancelDownloadNotification" -> {
+                    val id = call.argument<Number>("id")?.toInt() ?: 101
+                    cancelDownloadNotification(id)
+                    result.success(true)
                 }
                 else -> {
                     result.notImplemented()
@@ -314,18 +337,20 @@ class MainActivity : AudioServiceActivity() {
                     } else {
                         sanitizedDisplayName.substringBeforeLast(".")
                     }
-                    effectiveDisplayName = "$baseName.mp3"
-                    effectiveMimeType = "audio/mpeg"
+                    val candidateDisplayName = "$baseName.mp3"
+                    val candidateMimeType = "audio/mpeg"
 
                     val safeBitrate = bitrateKbps.coerceIn(64, 320)
                     val mp3Out = File(originalTempFile.parentFile, "harmoniq_conv_${System.currentTimeMillis()}.mp3")
 
                     try {
-                        val cmd = "-y -i \"" + originalTempFile.absolutePath + "\" -vn -c:a libmp3lame -b:a " + safeBitrate + "k \"" + mp3Out.absolutePath + "\""
+                        val cmd = "-y -i \"" + originalTempFile.absolutePath + "\" -vn -c:a libmp3lame -b:a " + safeBitrate + "k -ac 2 -ar 44100 -f mp3 \"" + mp3Out.absolutePath + "\""
                         val session = FFmpegKit.execute(cmd)
                         if (ReturnCode.isSuccess(session.returnCode) && mp3Out.exists() && mp3Out.length() > 0) {
                             convertedMp3File = mp3Out
                             fileToSave = mp3Out
+                            effectiveDisplayName = candidateDisplayName
+                            effectiveMimeType = candidateMimeType
                         } else {
                             android.util.Log.w("MainActivity", "FFmpeg MP3 conversion returned code: " + session.returnCode + ", logs: " + session.allLogsAsString)
                         }
@@ -429,5 +454,87 @@ class MainActivity : AudioServiceActivity() {
     private fun sanitizeFileName(name: String): String {
         val clean = name.replace(Regex("[\\\\/:*?\"<>|]"), "_").trim()
         return if (clean.isEmpty()) "download.mp3" else clean
+    }
+
+    private fun createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val name = "Downloads"
+            val descriptionText = "Music download progress notifications"
+            val importance = NotificationManager.IMPORTANCE_LOW
+            val channel = NotificationChannel(NOTIFICATION_CHANNEL_ID, name, importance).apply {
+                description = descriptionText
+                setShowBadge(false)
+            }
+            val notificationManager: NotificationManager =
+                getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.createNotificationChannel(channel)
+        }
+    }
+
+    private fun showDownloadNotification(
+        id: Int,
+        title: String,
+        artist: String,
+        progress: Int,
+        isCompleted: Boolean,
+        isFailed: Boolean,
+        isCancelled: Boolean
+    ) {
+        if (!checkNotificationPermission()) return
+        val notificationManager = NotificationManagerCompat.from(this)
+        if (isCancelled) {
+            notificationManager.cancel(id)
+            return
+        }
+
+        val appIcon = applicationInfo.icon.takeIf { it != 0 } ?: android.R.drawable.stat_sys_download
+
+        val builder = NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
+            .setSmallIcon(appIcon)
+            .setContentTitle(title)
+            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setCategory(NotificationCompat.CATEGORY_PROGRESS)
+            .setOnlyAlertOnce(true)
+
+        when {
+            isCompleted -> {
+                builder.setContentText(if (artist.isNotEmpty()) "Downloaded • $artist" else "Download complete")
+                    .setProgress(0, 0, false)
+                    .setOngoing(false)
+                    .setAutoCancel(true)
+            }
+            isFailed -> {
+                builder.setContentText("Download failed")
+                    .setProgress(0, 0, false)
+                    .setOngoing(false)
+                    .setAutoCancel(true)
+            }
+            else -> {
+                val subText = if (progress in 0..100) "$progress%" else "Downloading..."
+                val content = if (artist.isNotEmpty()) "$artist • $subText" else subText
+                builder.setContentText(content)
+                    .setOngoing(true)
+                    .setAutoCancel(false)
+                if (progress in 0..100) {
+                    builder.setProgress(100, progress, false)
+                } else {
+                    builder.setProgress(0, 0, true)
+                }
+            }
+        }
+
+        try {
+            notificationManager.notify(id, builder.build())
+        } catch (e: SecurityException) {
+            android.util.Log.w("MainActivity", "Notification permission not granted: ${e.message}")
+        } catch (e: Exception) {
+            android.util.Log.w("MainActivity", "Error showing download notification: ${e.message}")
+        }
+    }
+
+    private fun cancelDownloadNotification(id: Int) {
+        try {
+            NotificationManagerCompat.from(this).cancel(id)
+        } catch (_: Exception) {}
     }
 }

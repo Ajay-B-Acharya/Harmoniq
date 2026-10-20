@@ -147,6 +147,16 @@ internal class YtDlpAdapter(private val context: Context) {
     }
 
     private fun findAudioFormat(info: JSONObject, quality: String? = null): JSONObject? {
+        val requested = info.optJSONArray("requested_formats")
+        if (requested != null) {
+            for (i in 0 until requested.length()) {
+                val fmt = requested.optJSONObject(i) ?: continue
+                if (isPlayableAudioFormat(fmt)) return fmt
+            }
+        }
+
+        if (isPlayableAudioFormat(info)) return info
+
         val formats = info.optJSONArray("formats")
         if (formats != null) {
             val playable = ArrayList<JSONObject>()
@@ -175,15 +185,6 @@ internal class YtDlpAdapter(private val context: Context) {
             }
         }
 
-        val requested = info.optJSONArray("requested_formats")
-        if (requested != null) {
-            for (i in 0 until requested.length()) {
-                val fmt = requested.optJSONObject(i) ?: continue
-                if (isPlayableAudioFormat(fmt)) return fmt
-            }
-        }
-
-        if (isPlayableAudioFormat(info)) return info
         return null
     }
 

@@ -140,7 +140,12 @@ class DownloadService extends ChangeNotifier {
   static DownloadService? _instance;
   static DownloadService get instance => _instance ??= DownloadService();
 
-  final AudioService? audioService;
+  AudioService? _audioService;
+  AudioService? get audioService => _audioService;
+  void setAudioService(AudioService service) {
+    _audioService = service;
+  }
+
   final http.Client _httpClient;
   final MethodChannel _platformChannel;
 
@@ -148,15 +153,18 @@ class DownloadService extends ChangeNotifier {
   final Set<String> _cancellations = {};
   final Map<String, StreamSubscription<List<int>>> _activeSubscriptions = {};
   final Map<String, Completer<void>> _activeCompleters = {};
+  final Map<String, DateTime> _lastNotificationTimes = {};
   final StreamController<DownloadProgress> _progressController =
       StreamController<DownloadProgress>.broadcast();
 
   DownloadService({
-    this.audioService,
+    AudioService? audioService,
     http.Client? httpClient,
     MethodChannel? platformChannel,
   })  : _httpClient = httpClient ?? http.Client(),
-        _platformChannel = platformChannel ?? _defaultPlatformChannel;
+        _platformChannel = platformChannel ?? _defaultPlatformChannel {
+    _audioService = audioService;
+  }
 
   Stream<DownloadProgress> get progressStream => _progressController.stream;
 
@@ -201,6 +209,44 @@ class DownloadService extends ChangeNotifier {
       _progressController.add(progress);
     }
     notifyListeners();
+    _updateSystemNotification(progress);
+  }
+
+  Future<void> _updateSystemNotification(DownloadProgress progress) async {
+    if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) return;
+    final now = DateTime.now();
+    final lastTime = _lastNotificationTimes[progress.songIdentity] ??
+        DateTime.fromMillisecondsSinceEpoch(0);
+    final isTerminal = progress.status == DownloadStatus.completed ||
+        progress.status == DownloadStatus.failed ||
+        progress.status == DownloadStatus.cancelled;
+
+    if (!isTerminal && now.difference(lastTime).inMilliseconds < 350) {
+      return;
+    }
+    _lastNotificationTimes[progress.songIdentity] = now;
+    if (isTerminal) {
+      _lastNotificationTimes.remove(progress.songIdentity);
+    }
+
+    final id = progress.songIdentity.hashCode & 0x7FFFFFFF;
+    final pct = progress.progress != null
+        ? (progress.progress! * 100).round().clamp(0, 100)
+        : -1;
+
+    try {
+      await _platformChannel.invokeMethod('showDownloadNotification', {
+        'id': id,
+        'title': progress.song.title,
+        'artist': progress.song.artist,
+        'progress': pct,
+        'isCompleted': progress.status == DownloadStatus.completed,
+        'isFailed': progress.status == DownloadStatus.failed,
+        'isCancelled': progress.status == DownloadStatus.cancelled,
+      });
+    } catch (e) {
+      debugPrint('[DOWNLOAD_SERVICE] Notification update error: $e');
+    }
   }
 
   /// Cancels an in-flight download if one exists.
@@ -256,7 +302,7 @@ class DownloadService extends ChangeNotifier {
           ? song.videoId
           : '${song.id}_${DateTime.now().millisecondsSinceEpoch}';
       final tempFileName =
-          'harmoniq_dl_${tempTag}_${DateTime.now().millisecondsSinceEpoch}.part';
+          'harmoniq_dl_${tempTag}_${DateTime.now().millisecondsSinceEpoch}.tmp';
       tempFile = File('${tempDir.path}/$tempFileName');
 
       if (isYouTube) {

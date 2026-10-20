@@ -9,6 +9,7 @@ import 'package:harmoniq/screens/now_playing_screen.dart';
 import 'package:harmoniq/services/audio_service.dart';
 import 'package:harmoniq/services/download_service.dart';
 import 'package:harmoniq/services/yt_dlp_channel.dart';
+import 'package:harmoniq/widgets/download_progress_bar.dart';
 import 'package:harmoniq/widgets/download_quality_sheet.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -624,6 +625,63 @@ void main() {
       );
 
       audioService.dispose();
+    });
+  });
+
+  group('DownloadProgressBar Widget', () {
+    testWidgets('renders download progress, bytes, and cancel button',
+        (tester) async {
+      const song = Song(
+        id: 1,
+        title: 'Cyberpunk Odyssey',
+        artist: 'Neon Wave',
+        album: 'Harmoniq',
+        duration: Duration(minutes: 3),
+        audioPath: '',
+        gradientId: 1,
+        source: SongSource.youtube,
+        videoId: 'cyber123',
+      );
+
+      final audioService = AudioService(
+        resolveYoutubeStream: (id) async {
+          await Future<void>.delayed(const Duration(milliseconds: 200));
+          return YoutubeAudioStream(Uri.parse('https://example.com/audio.m4a'));
+        },
+      );
+
+      final downloadService = DownloadService(audioService: audioService);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Center(
+              child: DownloadProgressBar(downloadService: downloadService),
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      // Initially empty
+      expect(find.text('Cyberpunk Odyssey'), findsNothing);
+
+      // Trigger download
+      unawaited(downloadService.downloadSong(song, DownloadQuality.high));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 50));
+
+      // Bar is visible with song title and cancel icon
+      expect(find.text('Cyberpunk Odyssey'), findsOneWidget);
+      expect(find.byIcon(Icons.close_rounded), findsOneWidget);
+
+      // Tap cancel
+      await tester.tap(find.byIcon(Icons.close_rounded));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 200));
+
+      audioService.dispose();
+      downloadService.dispose();
     });
   });
 }

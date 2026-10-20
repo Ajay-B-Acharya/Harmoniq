@@ -69,9 +69,9 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
   void initState() {
     super.initState();
     _syncFromService();
-    _ownsDownloadService = widget.downloadService == null;
-    _downloadService = widget.downloadService ??
-        DownloadService(audioService: widget.audioService);
+    _ownsDownloadService = false;
+    _downloadService = widget.downloadService ?? DownloadService.instance;
+    _downloadService.setAudioService(widget.audioService);
     _downloadService.addListener(_onDownloadChanged);
     _carouselController = PageController(
       initialPage: _queueIndex >= 0 ? _queueIndex : 0,

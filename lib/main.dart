@@ -22,6 +22,8 @@ import 'widgets/mini_player.dart';
 import 'widgets/motion.dart';
 import 'models/song.dart';
 import 'models/youtube_video.dart';
+import 'services/download_service.dart';
+import 'widgets/download_progress_bar.dart';
 import 'widgets/opening_animation.dart';
 
 Future<void> main() async {
@@ -167,6 +169,7 @@ class _MainContainerState extends State<MainContainer> {
     super.initState();
     _audioService = widget.audioService ?? AudioService();
     _authService = widget.authService ?? AuthService();
+    DownloadService.instance.setAudioService(_audioService);
     _pageController = PageController();
 
     _pages = [
@@ -352,6 +355,7 @@ class _MainContainerState extends State<MainContainer> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              const DownloadProgressBar(),
               ListenableBuilder(
                 listenable: _audioService,
                 builder: (context, child) {
