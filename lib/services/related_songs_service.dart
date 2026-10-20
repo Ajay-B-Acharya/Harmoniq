@@ -58,6 +58,33 @@ class RelatedSongsService {
     return title.replaceAll(RegExp(r'\s+'), ' ');
   }
 
+  /// Identifies generic record label and corporate channel names on YouTube.
+  static bool isRecordLabel(String raw) {
+    final lower = raw.toLowerCase();
+    const labels = [
+      't-series',
+      'tseries',
+      'sony music',
+      'zee music',
+      'yrf',
+      'saregama',
+      'tips official',
+      'tips music',
+      'speed records',
+      'aditya music',
+      'lahari music',
+      'eros now',
+      'think music',
+      'geetha arts',
+      'svf',
+      'soundtrack',
+      'vevo',
+      'records',
+      'music channel',
+    ];
+    return labels.any((l) => lower.contains(l));
+  }
+
   /// Cleans artist/channel names (strips "- Topic", "VEVO", "Official", etc.)
   static String cleanArtist(String raw) {
     var artist = raw.trim();
@@ -161,19 +188,22 @@ class RelatedSongsService {
       searchQueries.add('$movieOrAlbum songs');
     }
 
+    final isLabel = isRecordLabel(cleanedArtist);
+
     // 2. Song & Artist related songs query
     if (cleanedTitle.isNotEmpty &&
+        !isLabel &&
         cleanedArtist.isNotEmpty &&
         cleanedArtist.toLowerCase() != 'unknown channel') {
-      searchQueries.add('$cleanedTitle $cleanedArtist songs');
+      searchQueries.add('$cleanedTitle $cleanedArtist');
+      searchQueries.add('$cleanedArtist songs');
     } else if (cleanedTitle.isNotEmpty) {
-      searchQueries.add('$cleanedTitle related songs');
+      searchQueries.add('$cleanedTitle songs');
     }
 
-    // 3. Artist popular songs query (for variety & language consistency)
-    if (cleanedArtist.isNotEmpty &&
-        cleanedArtist.toLowerCase() != 'unknown channel') {
-      searchQueries.add('$cleanedArtist songs');
+    // 3. If movieOrAlbum was not found, try searching the song title with 'songs'
+    if (movieOrAlbum == null && cleanedTitle.isNotEmpty && !searchQueries.contains('$cleanedTitle songs')) {
+      searchQueries.add('$cleanedTitle songs');
     }
 
     // Fallback query if title was too short or empty
@@ -196,6 +226,9 @@ class RelatedSongsService {
             if (candidateVideos.length >= limit) break;
           }
         }
+        // If we found at least 5 strong related candidates from the primary query,
+        // stop here to keep autoplay discovery instant without blocking on further queries.
+        if (candidateVideos.length >= 6) break;
       } catch (_) {
         // If one query fails, continue to the next
       }
@@ -217,6 +250,13 @@ class RelatedSongsService {
   /// Filters out non-music videos (e.g. trailers, interviews, podcasts, clips)
   bool _isValidRelatedVideo(YoutubeVideo video, Song currentSong) {
     if (video.id == currentSong.videoId) return false;
+
+    // Filter out re-uploads/duplicate versions of the exact same song
+    final currentClean = cleanTitle(currentSong.title).toLowerCase();
+    final vidClean = cleanTitle(video.title).toLowerCase();
+    if (currentClean.isNotEmpty && currentClean == vidClean) {
+      return false;
+    }
 
     final lowerTitle = video.title.toLowerCase();
     const blacklist = [

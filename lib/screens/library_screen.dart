@@ -12,7 +12,7 @@ import '../utils/local_song_sort.dart';
 
 class LibraryScreen extends StatefulWidget {
   final AudioService audioService;
-  final Function(Song) onSongTap;
+  final Function onSongTap;
   final Function(Song) onFavoriteTap;
   final Function(String) onCreatePlaylist;
   final int initialCategoryIndex;
@@ -173,8 +173,11 @@ class LibraryScreenState extends State<LibraryScreen> {
                                 ],
                               ),
                             ),
-                            onSelected: (sort) =>
-                                setState(() => _localSongSort = sort),
+                            onSelected: (sort) {
+                              setState(() => _localSongSort = sort);
+                              final sorted = sortLocalSongs(widget.audioService.localSongs, sort);
+                              widget.audioService.reorderQueue(sorted);
+                            },
                             itemBuilder: (context) => LocalSongSort.values
                                 .map(
                                   (sort) => CheckedPopupMenuItem(
@@ -311,9 +314,13 @@ class LibraryScreenState extends State<LibraryScreen> {
     }
   }
 
-  void _onSongTap(Song song) {
+  void _onSongTap(Song song, [List<Song>? queue]) {
     if (song.source != SongSource.legacy) {
-      widget.onSongTap(song);
+      try {
+        (widget.onSongTap as dynamic)(song, queue);
+      } catch (_) {
+        (widget.onSongTap as dynamic)(song);
+      }
       return;
     }
     ScaffoldMessenger.of(context).showSnackBar(
@@ -382,7 +389,7 @@ class LibraryScreenState extends State<LibraryScreen> {
         return GestureDetector(
           onTap: () {
             if (playlist.songs.isNotEmpty) {
-              _onSongTap(playlist.songs[0]);
+              _onSongTap(playlist.songs[0], playlist.songs);
             } else {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
@@ -457,7 +464,7 @@ class LibraryScreenState extends State<LibraryScreen> {
         final albumName = albumKeys[index];
         final albumSongs = albums[albumName]!;
         return GestureDetector(
-          onTap: () => _onSongTap(albumSongs[0]),
+          onTap: () => _onSongTap(albumSongs[0], albumSongs),
           child: GlassCard(
             padding: const EdgeInsets.all(12),
             borderRadius: 16,
@@ -596,7 +603,7 @@ class LibraryScreenState extends State<LibraryScreen> {
                       song: song,
                       isActive: isActive,
                       isPlaying: isActive && isPlaying,
-                      onTap: () => _onSongTap(song),
+                      onTap: () => _onSongTap(song, filtered),
                       onFavoriteTap: () => widget.onFavoriteTap(song),
                     );
                   },
@@ -659,7 +666,7 @@ class LibraryScreenState extends State<LibraryScreen> {
           song: song,
           isActive: isActive,
           isPlaying: isActive && isPlaying,
-          onTap: () => _onSongTap(song),
+          onTap: () => _onSongTap(song, recentlyPlayed),
           onFavoriteTap: () => widget.onFavoriteTap(song),
         );
       },
@@ -719,7 +726,7 @@ class LibraryScreenState extends State<LibraryScreen> {
           song: song,
           isActive: isActive,
           isPlaying: isActive && isPlaying,
-          onTap: () => _onSongTap(song),
+          onTap: () => _onSongTap(song, localSongs),
           onFavoriteTap: () => widget.onFavoriteTap(song),
         );
       },
@@ -883,7 +890,7 @@ class LibraryScreenState extends State<LibraryScreen> {
                 song: song,
                 isActive: isActive,
                 isPlaying: isActive && isPlaying,
-                onTap: () => _onSongTap(song),
+                onTap: () => _onSongTap(song, downloadedSongs),
                 onFavoriteTap: () => widget.onFavoriteTap(song),
                 onMoreTap: () => _showDownloadOptions(context, song),
               );
@@ -957,7 +964,7 @@ class LibraryScreenState extends State<LibraryScreen> {
                     style: TextStyle(color: AppColors.textPrimaryOf(context))),
                 onTap: () {
                   Navigator.pop(sheetCtx);
-                  _onSongTap(song);
+                  _onSongTap(song, widget.audioService.downloadedSongs);
                 },
               ),
               ListTile(

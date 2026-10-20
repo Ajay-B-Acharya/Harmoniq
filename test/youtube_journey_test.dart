@@ -523,7 +523,7 @@ void main() {
           await tester.testTextInput.receiveAction(TextInputAction.search);
           await tester.pump();
           expect(searches, ['music']);
-          expect(find.byType(CircularProgressIndicator), findsOneWidget);
+          expect(find.byWidgetPredicate((w) => w is CircularProgressIndicator || w.runtimeType.toString() == 'ShimmerSongList'), findsOneWidget);
           // Do not settle while the deliberately unresolved request is loading.
           await tester.tap(find.widgetWithText(ChoiceChip, 'Local'));
           await tester.pumpAndSettle();

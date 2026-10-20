@@ -587,7 +587,9 @@ class AudioService extends ChangeNotifier {
     bool autoQueueRelated = false,
   }) async {
     if (_disposed || !_canPlay(song)) return;
-    _autoQueueRelated = autoQueueRelated;
+    _autoQueueRelated = autoQueueRelated ||
+        song.source == SongSource.youtube ||
+        (contextQueue == null || contextQueue.length <= 1);
     _registerSongs([song]);
     if (contextQueue != null) {
       _queue = contextQueue.where(_canPlay).toList();
@@ -601,6 +603,26 @@ class AudioService extends ChangeNotifier {
 
     if (_autoQueueRelated) {
       unawaited(_fetchAndAppendRelatedSongs(song));
+    }
+  }
+
+  /// Reorders the active playback queue to match the new sort order [newOrder],
+  /// while keeping the currently playing track active at its new position.
+  void reorderQueue(List<Song> newOrder) {
+    if (_disposed || _queue.isEmpty) return;
+    final current = _currentSong;
+    if (current == null) {
+      _queue = newOrder.where(_canPlay).toList();
+      notifyListeners();
+      return;
+    }
+
+    final newIndex = newOrder.indexWhere((s) => s.identity == current.identity);
+    if (newIndex != -1) {
+      _queue = newOrder.where(_canPlay).toList();
+      _currentQueueIndex = newIndex;
+      notifyListeners();
+      _preloadNextTrack();
     }
   }
 
@@ -918,7 +940,9 @@ class AudioService extends ChangeNotifier {
     }
 
     // Proactively fetch more related songs if we are at the end of the queue and auto-queue is enabled
-    if (_autoQueueRelated && !_shuffleEnabled && _currentQueueIndex + 1 >= _queue.length) {
+    if ((_autoQueueRelated || _currentSong?.source == SongSource.youtube) &&
+        !_shuffleEnabled &&
+        _currentQueueIndex + 1 >= _queue.length) {
       if (_currentSong != null) {
         await _fetchAndAppendRelatedSongs(_currentSong!);
       }
@@ -964,7 +988,9 @@ class AudioService extends ChangeNotifier {
     final nextIndex = _shuffleEnabled ? -1 : (_currentQueueIndex + 1);
 
     if (nextIndex < 0 || nextIndex >= _queue.length) {
-      if (_autoQueueRelated && _currentSong != null && !_fetchingRelatedSongs) {
+      if ((_autoQueueRelated || _currentSong?.source == SongSource.youtube) &&
+          _currentSong != null &&
+          !_fetchingRelatedSongs) {
         unawaited(_fetchAndAppendRelatedSongs(_currentSong!));
       }
       return;

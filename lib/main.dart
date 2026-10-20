@@ -200,7 +200,8 @@ class _MainContainerState extends State<MainContainer> {
       LibraryScreen(
         key: _libraryKey,
         audioService: _audioService,
-        onSongTap: (song) => _playSong(song, contextQueue: _audioService.songs),
+        onSongTap: (song, [queue]) =>
+            _playSong(song, contextQueue: queue ?? _audioService.songs),
         onFavoriteTap: _audioService.toggleFavorite,
         onCreatePlaylist: _audioService.createPlaylist,
       ),
@@ -210,7 +211,7 @@ class _MainContainerState extends State<MainContainer> {
         onVideoQueueTap: _playYoutubeQueue,
         onProfileTap: () => _onTabTap(4),
         audioService: _audioService,
-        onSongTap: (song) => _playSong(song, contextQueue: _audioService.songs),
+        onSongTap: (song, [queue]) => _playSong(song, contextQueue: queue),
         onFavoriteTap: _audioService.toggleFavorite,
       ),
       ProfileScreen(
@@ -258,7 +259,11 @@ class _MainContainerState extends State<MainContainer> {
     }
   }
 
-  Future<void> _playSong(Song song, {List<Song>? contextQueue}) async {
+  Future<void> _playSong(
+    Song song, {
+    List<Song>? contextQueue,
+    bool autoQueueRelated = false,
+  }) async {
     if (song.source == SongSource.legacy) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -271,7 +276,11 @@ class _MainContainerState extends State<MainContainer> {
       );
       return;
     }
-    await _audioService.playSong(song, contextQueue: contextQueue);
+    await _audioService.playSong(
+      song,
+      contextQueue: contextQueue,
+      autoQueueRelated: autoQueueRelated,
+    );
   }
 
   void _openSearch(String query) {

@@ -10,7 +10,7 @@ import '../utils/local_song_sort.dart';
 
 class LocalScreen extends StatefulWidget {
   final AudioService audioService;
-  final Function(Song) onSongTap;
+  final Function onSongTap;
   final Function(Song) onFavoriteTap;
   final Future<void> Function() onScanTap;
 
@@ -63,6 +63,14 @@ class _LocalScreenState extends State<LocalScreen> {
       }
     } catch (e) {
       debugPrint('[LOCAL_SCREEN] Auto-scan check failed: $e');
+    }
+  }
+
+  void _onSongTap(Song song, [List<Song>? queue]) {
+    try {
+      (widget.onSongTap as dynamic)(song, queue);
+    } catch (_) {
+      (widget.onSongTap as dynamic)(song);
     }
   }
 
@@ -147,8 +155,11 @@ class _LocalScreenState extends State<LocalScreen> {
                                         ],
                                       ),
                                     ),
-                                    onSelected: (sort) =>
-                                        setState(() => _sort = sort),
+                                     onSelected: (sort) {
+                                       setState(() => _sort = sort);
+                                       final sorted = sortLocalSongs(widget.audioService.localSongs, sort);
+                                       widget.audioService.reorderQueue(sorted);
+                                     },
                                     itemBuilder: (context) => LocalSongSort
                                         .values
                                         .map(
@@ -305,7 +316,7 @@ class _LocalScreenState extends State<LocalScreen> {
           song: song,
           isActive: isActive,
           isPlaying: isActive && isPlaying,
-          onTap: () => widget.onSongTap(song),
+          onTap: () => _onSongTap(song, localSongs),
           onFavoriteTap: () => widget.onFavoriteTap(song),
         );
       },

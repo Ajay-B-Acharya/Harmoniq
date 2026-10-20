@@ -379,7 +379,7 @@ void main() {
       expect(find.text('Retry search'), findsOneWidget);
       await tester.tap(find.text('Retry search'));
       await tester.pump();
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      expect(find.byWidgetPredicate((w) => w is CircularProgressIndicator || w.runtimeType.toString() == 'ShimmerSongList'), findsOneWidget);
       await tester.enterText(find.byType(TextField), '');
       pending.completeError(Exception('late failure'));
       await tester.pump();

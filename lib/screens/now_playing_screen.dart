@@ -170,15 +170,16 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
     return '$minutes:$seconds';
   }
 
-  String _nextTitle() {
-    if (_queue.isEmpty || _queueIndex < 0) return 'No upcoming tracks';
-    if (_shuffle) return 'Shuffle is on';
+  Song? get _nextSong {
+    if (_queue.isEmpty || _queueIndex < 0) return null;
+    if (_shuffle) return null;
     final next = _queueIndex + 1;
-    if (next >= _queue.length) {
-      return _repeat ? _queue.first.title : 'End of queue';
-    }
-    return _queue[next].title;
+    if (next < _queue.length) return _queue[next];
+    if (_repeat && _queue.isNotEmpty) return _queue.first;
+    return null;
   }
+
+
 
   Future<void> _stopAndClose() async {
     await _svc.stopAndClear();
@@ -716,16 +717,19 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
   }
 
   Widget _buildQueuePreview() {
+    final nextSong = _nextSong;
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.glassBackground,
+        color: _surface,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.glassBorder, width: 1),
-        boxShadow: const [
+        border: Border.all(color: _border, width: 1.2),
+        boxShadow: [
           BoxShadow(
-            color: AppColors.shadowStandard,
+            color: _isDark
+                ? Colors.black.withValues(alpha: 0.35)
+                : AppColors.shadowStandard,
             blurRadius: 14,
-            offset: Offset(0, 4),
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -736,19 +740,23 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
           onTap: () => _showQueueBottomSheet(context),
           borderRadius: BorderRadius.circular(20),
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             child: Row(
               children: [
                 Container(
-                  width: 42,
-                  height: 42,
+                  width: 44,
+                  height: 44,
                   decoration: BoxDecoration(
-                    color: AppColors.primaryCyan.withValues(alpha: 0.16),
+                    color: _primary.withValues(alpha: 0.16),
                     borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: _primary.withValues(alpha: 0.28),
+                      width: 1,
+                    ),
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.queue_music_rounded,
-                    color: AppColors.primaryCyan,
+                    color: _primary,
                     size: 22,
                   ),
                 ),
@@ -760,22 +768,38 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
                       Text(
                         'UP NEXT',
                         style: TextStyle(
-                          color: _muted,
-                          fontSize: 10,
-                          fontWeight: FontWeight.w600,
+                          color: _primary,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
                           letterSpacing: 1.4,
                         ),
                       ),
-                      const SizedBox(height: 5),
+                      const SizedBox(height: 4),
                       Text(
-                        _nextTitle(),
+                        nextSong != null
+                            ? nextSong.title
+                            : (_shuffle ? 'Shuffle mode is active' : (_svc.isLoading ? 'Loading upcoming track...' : 'No upcoming tracks')),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           color: _foreground,
-                          fontSize: 13,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
                         ),
                       ),
+                      if (nextSong != null && nextSong.artist.isNotEmpty) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          nextSong.artist,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: _muted,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -783,7 +807,7 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
                 Icon(
                   Icons.chevron_right_rounded,
                   color: _muted,
-                  size: 20,
+                  size: 22,
                 ),
               ],
             ),
