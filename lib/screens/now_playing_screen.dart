@@ -11,7 +11,6 @@ import '../widgets/album_art.dart';
 import '../widgets/download_quality_sheet.dart';
 import '../widgets/spatial_background.dart';
 import '../widgets/audio_waveform_visualizer.dart';
-import '../widgets/lyrics_sheet.dart';
 
 class NowPlayingScreen extends StatefulWidget {
   final AudioService audioService;
@@ -297,16 +296,6 @@ class _NowPlayingScreenState extends State<NowPlayingScreen> {
                 ),
               ],
             ),
-          ),
-          IconButton(
-            tooltip: 'View lyrics',
-            onPressed: () => LyricsSheet.show(
-              context,
-              song: song,
-              audioService: _svc,
-            ),
-            icon: const Icon(Icons.lyrics_rounded, size: 21),
-            color: AppColors.accent,
           ),
           IconButton(
             tooltip: 'Stop and close',

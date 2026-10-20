@@ -147,16 +147,7 @@ internal class YtDlpAdapter(private val context: Context) {
     }
 
     private fun findAudioFormat(info: JSONObject, quality: String? = null): JSONObject? {
-        val requested = info.optJSONArray("requested_formats")
-        if (requested != null) {
-            for (i in 0 until requested.length()) {
-                val fmt = requested.optJSONObject(i) ?: continue
-                if (isPlayableAudioFormat(fmt)) return fmt
-            }
-        }
-
-        if (isPlayableAudioFormat(info)) return info
-
+        val q = quality?.lowercase()?.trim()
         val formats = info.optJSONArray("formats")
         if (formats != null) {
             val playable = ArrayList<JSONObject>()
@@ -168,22 +159,29 @@ internal class YtDlpAdapter(private val context: Context) {
             }
 
             if (playable.isNotEmpty()) {
-                // Sort by tbr ascending
                 playable.sortBy { it.optDouble("tbr", it.optDouble("abr", 0.0)) }
-                val q = quality?.lowercase()?.trim()
                 return when {
-                    q in setOf("low", "standard", "medium", "data saver") ->
-                        playable.first() // lowest bitrate playable audio (~50-96 kbps)
-                    q in setOf("high", "very high", "lossless", "maximum") ->
-                        playable.last() // highest bitrate source audio available (~160-256 kbps)
-                    q == "normal" || q == "balanced" ->
-                        // Standard / balanced: pick format closest to 128 kbps
+                    q in setOf("low", "data saver") ->
+                        playable.first()
+                    q in setOf("normal", "standard", "medium", "balanced") ->
                         playable.minByOrNull { Math.abs(it.optDouble("tbr", it.optDouble("abr", 128.0)) - 128.0) } ?: playable.last()
+                    q in setOf("high", "very high", "lossless", "maximum", "very") ->
+                        playable.last()
                     else ->
                         playable.last()
                 }
             }
         }
+
+        val requested = info.optJSONArray("requested_formats")
+        if (requested != null) {
+            for (i in 0 until requested.length()) {
+                val fmt = requested.optJSONObject(i) ?: continue
+                if (isPlayableAudioFormat(fmt)) return fmt
+            }
+        }
+
+        if (isPlayableAudioFormat(info)) return info
 
         return null
     }
@@ -231,11 +229,11 @@ internal class YtDlpAdapter(private val context: Context) {
 
     private fun baseOptions(flat: Boolean, quality: String? = null): JSONObject {
         val formatSelector = when (quality?.lowercase()?.trim()) {
-            "low", "standard", "medium", "data saver" ->
+            "low", "data saver" ->
                 "worstaudio[protocol=https]/worstaudio/bestaudio[protocol=https]/bestaudio"
-            "normal", "balanced" ->
-                "bestaudio[ext=m4a][protocol=https]/bestaudio[protocol=https]/bestaudio"
-            "high", "very high", "lossless", "maximum" ->
+            "normal", "standard", "medium", "balanced" ->
+                "bestaudio[ext=m4a][protocol=https]/bestaudio[abr<=160][protocol=https]/bestaudio[protocol=https]/bestaudio"
+            "high", "very high", "lossless", "maximum", "very" ->
                 "bestaudio[protocol=https]/bestaudio"
             else ->
                 "bestaudio[protocol=https]/bestaudio"

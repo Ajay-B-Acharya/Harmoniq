@@ -523,6 +523,37 @@ void main() {
 
       audioService.dispose();
     });
+
+    testWidgets('lyrics feature is completely removed from NowPlayingScreen', (tester) async {
+      const song = Song(
+        id: 0,
+        title: 'Current Hit',
+        artist: 'Top Artist',
+        album: 'Album',
+        duration: Duration(minutes: 3),
+        audioPath: '',
+        gradientId: 5,
+        source: SongSource.youtube,
+        videoId: 'currenthit1',
+      );
+
+      final audioService = _TestAudioService(testSong: song);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: NowPlayingScreen(
+            audioService: audioService,
+            onClose: () {},
+          ),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(find.byTooltip('View lyrics'), findsNothing);
+      expect(find.byIcon(Icons.lyrics_rounded), findsNothing);
+
+      audioService.dispose();
+    });
   });
 
   group('LibraryScreen Downloads Tab', () {

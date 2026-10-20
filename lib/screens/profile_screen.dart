@@ -86,7 +86,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: options.map((opt) {
-            final isSelected = _audioQuality.startsWith(opt.split(' ').first);
+            final targetQuality = opt.startsWith('Very High') ? 'Very High' : opt.split(' ').first;
+            final isSelected = _audioQuality.toLowerCase().startsWith(targetQuality.toLowerCase());
             return ListTile(
               title: Text(
                 opt,
@@ -104,7 +105,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     )
                   : null,
               onTap: () {
-                _setAudioQuality(opt.split(' ').first);
+                _setAudioQuality(targetQuality);
                 Navigator.pop(ctx);
               },
             );

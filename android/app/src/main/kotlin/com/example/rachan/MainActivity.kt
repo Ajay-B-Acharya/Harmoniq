@@ -354,8 +354,8 @@ class MainActivity : AudioServiceActivity() {
                         } else {
                             android.util.Log.w("MainActivity", "FFmpeg MP3 conversion returned code: " + session.returnCode + ", logs: " + session.allLogsAsString)
                         }
-                    } catch (e: Exception) {
-                        android.util.Log.w("MainActivity", "FFmpeg conversion execution notice: " + e.message)
+                    } catch (t: Throwable) {
+                        android.util.Log.w("MainActivity", "FFmpeg conversion execution notice: " + t.message)
                     }
                 }
 
@@ -419,7 +419,8 @@ class MainActivity : AudioServiceActivity() {
                 mainHandler.post {
                     result.success(destFile.absolutePath)
                 }
-            } catch (e: Exception) {
+            } catch (t: Throwable) {
+                val e = if (t is Exception) t else Exception(t.message, t)
                 insertedUri?.let { uri ->
                     try {
                         resolver.delete(uri, null, null)
