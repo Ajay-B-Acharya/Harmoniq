@@ -365,15 +365,15 @@ class SearchScreenState extends State<SearchScreen> {
                       width: 38,
                       height: 38,
                       decoration: BoxDecoration(
-                        color: AppColors.glassBackground,
+                        color: AppColors.glassBackgroundOf(context),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: AppColors.glassBorder),
+                        border: Border.all(color: AppColors.glassBorderOf(context)),
                       ),
                       alignment: Alignment.center,
                       child: const HarmoniqEmblem(size: 24),
                     ),
                     const SizedBox(width: 12),
-                    const Expanded(
+                    Expanded(
                       child: Text(
                         'Search',
                         maxLines: 1,
@@ -382,17 +382,17 @@ class SearchScreenState extends State<SearchScreen> {
                           fontSize: 20,
                           fontWeight: FontWeight.w700,
                           letterSpacing: -0.4,
-                          color: AppColors.textPrimary,
+                          color: AppColors.textPrimaryOf(context),
                         ),
                       ),
                     ),
                     AvatarHalo(
                       size: 38,
                       onTap: widget.onProfileTap,
-                      child: const Icon(
+                      child: Icon(
                         Icons.person_rounded,
                         size: 20,
-                        color: AppColors.textPrimary,
+                        color: AppColors.textPrimaryOf(context),
                       ),
                     ),
                   ],
@@ -405,28 +405,29 @@ class SearchScreenState extends State<SearchScreen> {
                 child: Container(
                   height: 52,
                   decoration: BoxDecoration(
-                    color: AppColors.glassSecondary,
+                    color: AppColors.cardSurfaceOf(context),
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
                       color: _focusNode.hasFocus
-                          ? AppColors.borderActiveCyan
-                          : AppColors.borderStandard,
+                          ? AppColors.coral
+                          : AppColors.cardBorderOf(context),
                       width: 1,
                     ),
-                    boxShadow: const [
+                    boxShadow: [
                       BoxShadow(
-                        color: AppColors.shadowStandard,
-                        blurRadius: 14,
-                        offset: Offset(0, 4),
+                        color: AppColors.darkShadowOf(context)
+                            .withValues(alpha: Theme.of(context).brightness == Brightness.dark ? 0.6 : 0.25),
+                        blurRadius: 10,
+                        offset: const Offset(0, 3),
                       ),
                     ],
                   ),
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Row(
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.search_rounded,
-                        color: AppColors.textSecondary,
+                        color: AppColors.textSecondaryOf(context),
                         size: 22,
                       ),
                       const SizedBox(width: 12),
@@ -434,16 +435,16 @@ class SearchScreenState extends State<SearchScreen> {
                         child: TextField(
                           controller: _controller,
                           focusNode: _focusNode,
-                          style: const TextStyle(
-                            color: AppColors.textPrimary,
+                          style: TextStyle(
+                            color: AppColors.textPrimaryOf(context),
                             fontSize: 14.5,
                           ),
                           textInputAction: TextInputAction.search,
                           onSubmitted: (_) => _submit(),
-                          decoration: const InputDecoration(
+                          decoration: InputDecoration(
                             hintText: 'Search artists, songs, playlists...',
                             hintStyle: TextStyle(
-                              color: AppColors.textMuted,
+                              color: AppColors.textMutedOf(context),
                               fontSize: 14,
                             ),
                             border: InputBorder.none,
@@ -457,9 +458,9 @@ class SearchScreenState extends State<SearchScreen> {
                       if (_query.isNotEmpty)
                         IconButton(
                           tooltip: 'Clear search',
-                          icon: const Icon(
+                          icon: Icon(
                             Icons.close_rounded,
-                            color: AppColors.textSecondary,
+                            color: AppColors.textSecondaryOf(context),
                             size: 18,
                           ),
                           onPressed: () {
@@ -485,7 +486,7 @@ class SearchScreenState extends State<SearchScreen> {
                       else
                         const Icon(
                           Icons.mic_none_rounded,
-                          color: AppColors.softCyan,
+                          color: AppColors.coral,
                           size: 20,
                         ),
                     ],
@@ -535,20 +536,20 @@ class SearchScreenState extends State<SearchScreen> {
     label: Text(text),
     selected: _filter == filter,
     showCheckmark: false,
-    selectedColor: AppColors.glassSelected,
-    backgroundColor: AppColors.glassSecondary,
+    selectedColor: AppColors.selectedSurfaceOf(context),
+    backgroundColor: AppColors.cardSurfaceOf(context),
     labelStyle: TextStyle(
       color: _filter == filter
-          ? AppColors.textPrimary
-          : AppColors.textSecondary,
+          ? AppColors.coral
+          : AppColors.textSecondaryOf(context),
       fontWeight: _filter == filter ? FontWeight.w700 : FontWeight.w500,
       fontSize: 12,
     ),
     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
     side: BorderSide(
       color: _filter == filter
-          ? AppColors.borderActiveCyan
-          : AppColors.borderStandard,
+          ? AppColors.coral
+          : AppColors.borderStandardOf(context),
       width: 1,
     ),
     onSelected: (_) => setState(() {
@@ -569,29 +570,29 @@ class SearchScreenState extends State<SearchScreen> {
 
     return ListView(
       physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(20, 6, 20, 96),
+      padding: EdgeInsets.fromLTRB(20, 6, 20, AppColors.bottomClearanceOf(context)),
       children: [
         Text(
           heading,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w700,
             letterSpacing: -0.3,
-            color: AppColors.textPrimary,
+            color: AppColors.textPrimaryOf(context),
           ),
         ),
         const SizedBox(height: 4),
         Text(
           subtext,
-          style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
+          style: TextStyle(fontSize: 13, color: AppColors.textSecondaryOf(context)),
         ),
         const SizedBox(height: 18),
         // Recent Searches
         if (_recent.isNotEmpty) ...[
-          const Text(
+          Text(
             'Recent searches',
             style: TextStyle(
-              color: AppColors.textPrimary,
+              color: AppColors.textPrimaryOf(context),
               fontSize: 16,
               fontWeight: FontWeight.w700,
               letterSpacing: -0.2,
@@ -600,9 +601,9 @@ class SearchScreenState extends State<SearchScreen> {
           const SizedBox(height: 10),
           Container(
             decoration: BoxDecoration(
-              color: AppColors.glassBackground,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: AppColors.glassBorder),
+              color: AppColors.cardSurfaceOf(context),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.cardBorderOf(context)),
             ),
             child: Column(
               children: List.generate(_recent.length, (index) {
@@ -619,16 +620,16 @@ class SearchScreenState extends State<SearchScreen> {
                         dense: true,
                         title: Text(
                           item,
-                          style: const TextStyle(
-                            color: AppColors.textPrimary,
+                          style: TextStyle(
+                            color: AppColors.textPrimaryOf(context),
                             fontSize: 14,
                           ),
                         ),
                         trailing: IconButton(
-                          icon: const Icon(
+                          icon: Icon(
                             Icons.close_rounded,
                             size: 16,
-                            color: AppColors.textMuted,
+                            color: AppColors.textMutedOf(context),
                           ),
                           onPressed: () {
                             setState(() => _recent.removeAt(index));
@@ -641,8 +642,8 @@ class SearchScreenState extends State<SearchScreen> {
                       ),
                     ),
                     if (index < _recent.length - 1)
-                      const Divider(
-                        color: AppColors.glassBorder,
+                      Divider(
+                        color: AppColors.dividerOf(context),
                         height: 1,
                         indent: 16,
                         endIndent: 16,
@@ -656,10 +657,10 @@ class SearchScreenState extends State<SearchScreen> {
         ],
 
         // Search by Category (Screenshot 2)
-        const Text(
+        Text(
           'Search by Category',
           style: TextStyle(
-            color: AppColors.textPrimary,
+            color: AppColors.textPrimaryOf(context),
             fontSize: 16,
             fontWeight: FontWeight.w700,
             letterSpacing: -0.2,
@@ -690,10 +691,10 @@ class SearchScreenState extends State<SearchScreen> {
         const SizedBox(height: 24),
 
         // Trending Search (Screenshot 2)
-        const Text(
+        Text(
           'Trending Search',
           style: TextStyle(
-            color: AppColors.textPrimary,
+            color: AppColors.textPrimaryOf(context),
             fontSize: 16,
             fontWeight: FontWeight.w700,
             letterSpacing: -0.2,
@@ -701,25 +702,24 @@ class SearchScreenState extends State<SearchScreen> {
         ),
         const SizedBox(height: 10),
         Container(
-          decoration: const BoxDecoration(
-            color: AppColors.backgroundSurface,
-            border: Border(
-              top: BorderSide(color: AppColors.surfaceBorder),
-              bottom: BorderSide(color: AppColors.surfaceBorder),
-            ),
+          decoration: BoxDecoration(
+            color: AppColors.cardSurfaceOf(context),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppColors.cardBorderOf(context)),
           ),
+          clipBehavior: Clip.antiAlias,
           child: Column(
             children: [
               _trendingSearchTile('#1 Sunset Drive', 'Arijit Singh'),
-              const Divider(
-                color: AppColors.glassBorder,
+              Divider(
+                color: AppColors.dividerOf(context),
                 height: 1,
                 indent: 16,
                 endIndent: 16,
               ),
               _trendingSearchTile('#2 Chill Beats', 'Lofi Sound'),
-              const Divider(
-                color: AppColors.glassBorder,
+              Divider(
+                color: AppColors.dividerOf(context),
                 height: 1,
                 indent: 16,
                 endIndent: 16,
@@ -740,6 +740,17 @@ class SearchScreenState extends State<SearchScreen> {
   }) {
     final width =
         (MediaQuery.sizeOf(context).width - 52).clamp(100.0, 360.0) / 2;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final darkGradient = switch (label) {
+      'Top Playlists' => AppColors.categoryOceanBlueDark,
+      'New Releases' => AppColors.categoryCyanDepthDark,
+      'Pop' => AppColors.categoryBlueAuraDark,
+      'Bollywood' => AppColors.categoryMidnightSteelDark,
+      'Hip-Hop' => AppColors.categoryElectricBlueDark,
+      'Podcasts' => AppColors.categoryBlueCosmicDark,
+      _ => [AppDarkColors.cardSurface, AppDarkColors.backgroundSurface],
+    };
+
     return Pressable(
       onTap: () {
         setQuery(label);
@@ -749,19 +760,23 @@ class SearchScreenState extends State<SearchScreen> {
         width: width,
         height: 76,
         decoration: BoxDecoration(
+          color: AppColors.cardSurfaceOf(context),
           gradient: LinearGradient(
-            colors: [
-              gradient.first.withValues(alpha: 0.58),
-              AppColors.backgroundSurface,
-            ],
+            colors: isDark
+                ? darkGradient
+                : [
+                    gradient.first.withValues(alpha: 0.45),
+                    AppColors.cardSurface,
+                  ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
             color: isHighlighted
-                ? AppColors.accent.withValues(alpha: 0.55)
-                : AppColors.surfaceBorder,
+                ? AppColors.coral
+                : AppColors.cardBorderOf(context),
+            width: isHighlighted ? 1.5 : 1.0,
           ),
         ),
         padding: const EdgeInsets.all(14),
@@ -771,8 +786,8 @@ class SearchScreenState extends State<SearchScreen> {
               alignment: Alignment.bottomLeft,
               child: Text(
                 label,
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: AppColors.textPrimaryOf(context),
                   fontSize: 14.5,
                   fontWeight: FontWeight.w700,
                 ),
@@ -785,12 +800,14 @@ class SearchScreenState extends State<SearchScreen> {
                   width: 26,
                   height: 26,
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.85),
+                    color: isDark
+                        ? AppDarkColors.backgroundSecondary
+                        : Colors.white.withValues(alpha: 0.9),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.play_arrow_rounded,
-                    color: AppColors.playControlForeground,
+                    color: AppColors.coral,
                     size: 18,
                   ),
                 ),
@@ -809,25 +826,25 @@ class SearchScreenState extends State<SearchScreen> {
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
         leading: const Icon(
           Icons.local_fire_department_rounded,
-          color: AppColors.primaryCyan,
+          color: AppColors.coral,
           size: 20,
         ),
         title: Text(
           title,
-          style: const TextStyle(
-            color: AppColors.textPrimary,
+          style: TextStyle(
+            color: AppColors.textPrimaryOf(context),
             fontSize: 14,
             fontWeight: FontWeight.w600,
           ),
         ),
         subtitle: Text(
           subtitle,
-          style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
+          style: TextStyle(color: AppColors.textMutedOf(context), fontSize: 12),
         ),
-        trailing: const Icon(
+        trailing: Icon(
           Icons.arrow_forward_ios_rounded,
           size: 13,
-          color: AppColors.textMuted,
+          color: AppColors.textMutedOf(context),
         ),
         onTap: () {
           setQuery(title.replaceFirst(RegExp(r'#\d+\s+'), ''));
@@ -991,9 +1008,9 @@ class SearchScreenState extends State<SearchScreen> {
                     return Container(
                       margin: const EdgeInsets.only(bottom: 6),
                       decoration: BoxDecoration(
-                        color: AppColors.glassBackground,
+                        color: AppColors.cardSurfaceOf(context),
                         borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: AppColors.glassBorder),
+                        border: Border.all(color: AppColors.cardBorderOf(context)),
                       ),
                       child: Material(
                         color: Colors.transparent,
@@ -1008,8 +1025,8 @@ class SearchScreenState extends State<SearchScreen> {
                             suggestion.text,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              color: AppColors.textPrimary,
+                            style: TextStyle(
+                              color: AppColors.textPrimaryOf(context),
                               fontSize: 14,
                               fontWeight: FontWeight.w500,
                             ),
@@ -1018,17 +1035,17 @@ class SearchScreenState extends State<SearchScreen> {
                                   suggestion.song != null
                               ? Text(
                                   '${suggestion.song!.artist} · In Library',
-                                  style: const TextStyle(
-                                    color: AppColors.textMuted,
+                                  style: TextStyle(
+                                    color: AppColors.textMutedOf(context),
                                     fontSize: 11,
                                   ),
                                 )
                               : null,
                           trailing: IconButton(
-                            icon: const Icon(
+                            icon: Icon(
                               Icons.north_west_rounded,
                               size: 16,
-                              color: AppColors.textMuted,
+                              color: AppColors.textMutedOf(context),
                             ),
                             tooltip: 'Insert into search bar',
                             onPressed: () => _insertSuggestion(suggestion.text),
@@ -1200,23 +1217,26 @@ class SearchScreenState extends State<SearchScreen> {
             sliver: SliverToBoxAdapter(
               child: Text(
                 'On your device · ${_local.length}',
-                style: const TextStyle(
+                style: TextStyle(
                   fontWeight: FontWeight.w600,
                   fontSize: 15,
-                  color: AppColors.textPrimary,
+                  color: AppColors.textPrimaryOf(context),
                 ),
               ),
             ),
           ),
           if (_local.isEmpty)
-            const SliverPadding(
-              padding: EdgeInsets.symmetric(horizontal: 20),
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
               sliver: SliverToBoxAdapter(
                 child: Padding(
-                  padding: EdgeInsets.only(bottom: 12),
+                  padding: const EdgeInsets.only(bottom: 12),
                   child: Text(
                     'No local results found',
-                    style: TextStyle(color: AppColors.textMuted, fontSize: 13),
+                    style: TextStyle(
+                      color: AppColors.textMutedOf(context),
+                      fontSize: 13,
+                    ),
                   ),
                 ),
               ),
@@ -1244,7 +1264,9 @@ class SearchScreenState extends State<SearchScreen> {
             ),
           ),
         ],
-        const SliverToBoxAdapter(child: SizedBox(height: 96)),
+        SliverToBoxAdapter(
+          child: SizedBox(height: AppColors.bottomClearanceOf(context)),
+        ),
       ],
     );
   }

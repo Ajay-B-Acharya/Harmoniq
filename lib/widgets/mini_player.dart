@@ -67,9 +67,9 @@ class MiniPlayer extends StatelessWidget {
             specularHighlight: true,
             padding: const EdgeInsets.fromLTRB(10, 8, 10, 6),
             borderColor: isPlaying
-                ? AppColors.borderActiveCyan
-                : AppColors.dockBorder,
-            glowColor: isPlaying ? AppColors.primaryCyan.withValues(alpha: 0.35) : null,
+                ? AppColors.coral.withValues(alpha: 0.45)
+                : AppColors.dockBorderOf(context),
+            glowColor: isPlaying ? AppColors.coral.withValues(alpha: 0.18) : null,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -194,8 +194,8 @@ class MiniPlayer extends StatelessWidget {
                                     : 'Loading audio… · Paused'),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              color: AppColors.textSecondary,
+                            style: TextStyle(
+                              color: AppColors.textSecondaryOf(context),
                               fontSize: 11.5,
                             ),
                           ),
@@ -238,24 +238,12 @@ class MiniPlayer extends StatelessWidget {
                             minHeight: 2.5,
                           );
                         }
-                        return Container(
-                          height: 2.5,
-                          color: AppColors.darkShadow.withValues(alpha: 0.25),
-                          child: FractionallySizedBox(
-                            alignment: Alignment.centerLeft,
-                            widthFactor: progress.isNaN ? 0.0 : progress,
-                            child: Container(
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(2),
-                                gradient: const LinearGradient(
-                                  colors: [
-                                    AppColors.accent,
-                                    AppColors.coral,
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
+                        return LinearProgressIndicator(
+                          value: progress.isNaN ? 0.0 : progress,
+                          semanticsLabel: 'Playback progress',
+                          backgroundColor: AppColors.darkShadowOf(context).withValues(alpha: 0.25),
+                          valueColor: const AlwaysStoppedAnimation<Color>(AppColors.coral),
+                          minHeight: 2.5,
                         );
                       },
                     ),

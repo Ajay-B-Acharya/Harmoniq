@@ -64,16 +64,14 @@ class BottomNav extends StatelessWidget {
               ),
               boxShadow: [
                 BoxShadow(
-                  color: shadowLight.withValues(alpha: isDark ? 0.90 : 0.95),
-                  offset: const Offset(-6, -6),
-                  blurRadius: 14,
-                  spreadRadius: 1,
+                  color: shadowLight.withValues(alpha: isDark ? 0.70 : 0.85),
+                  offset: const Offset(-4, -4),
+                  blurRadius: 10,
                 ),
                 BoxShadow(
-                  color: shadowDark.withValues(alpha: isDark ? 0.85 : 0.65),
-                  offset: const Offset(6, 6),
-                  blurRadius: 14,
-                  spreadRadius: 1,
+                  color: shadowDark.withValues(alpha: isDark ? 0.80 : 0.50),
+                  offset: const Offset(4, 4),
+                  blurRadius: 10,
                 ),
               ],
             ),
@@ -118,15 +116,15 @@ class BottomNav extends StatelessWidget {
                               ? [
                                   BoxShadow(
                                     color: shadowLight.withValues(
-                                        alpha: isDark ? 0.90 : 0.95),
+                                        alpha: isDark ? 0.70 : 0.85),
                                     offset: const Offset(-2, -2),
-                                    blurRadius: 5,
+                                    blurRadius: 4,
                                   ),
                                   BoxShadow(
                                     color: shadowDark.withValues(
-                                        alpha: isDark ? 0.85 : 0.60),
+                                        alpha: isDark ? 0.75 : 0.45),
                                     offset: const Offset(2, 2),
-                                    blurRadius: 5,
+                                    blurRadius: 4,
                                   ),
                                 ]
                               : null,

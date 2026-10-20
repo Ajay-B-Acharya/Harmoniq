@@ -22,7 +22,8 @@ class AlbumArt extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = AppColors.getGradientForId(gradientId);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colors = AppColors.getGradientForIdTheme(gradientId, isDark);
     final hasNetworkImage = imageUrl != null && imageUrl!.trim().isNotEmpty;
 
     return Container(

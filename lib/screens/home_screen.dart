@@ -509,19 +509,19 @@ class _HomeScreenState extends State<HomeScreen> {
                         sliver: SliverToBoxAdapter(
                           child: Container(
                             decoration: BoxDecoration(
-                              color: AppColors.glassBackground,
+                              color: AppColors.cardSurfaceOf(context),
                               borderRadius: BorderRadius.circular(20),
-                              border: Border.all(color: AppColors.glassBorder),
+                              border: Border.all(color: AppColors.cardBorderOf(context)),
                             ),
                             padding: const EdgeInsets.all(16),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text(
+                                Text(
                                   'YouTube · in-app',
                                   style: TextStyle(
                                     fontSize: 12,
-                                    color: AppColors.textMuted,
+                                    color: AppColors.textMutedOf(context),
                                     letterSpacing: 0.3,
                                   ),
                                 ),
@@ -556,9 +556,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                   ),
                                   label: const Text('Find a song'),
                                   style: OutlinedButton.styleFrom(
-                                    foregroundColor: AppColors.textPrimary,
-                                    side: const BorderSide(
-                                      color: AppColors.glassBorder,
+                                    foregroundColor: AppColors.textPrimaryOf(context),
+                                    side: BorderSide(
+                                      color: AppColors.cardBorderOf(context),
                                       width: 1,
                                     ),
                                     shape: RoundedRectangleBorder(
@@ -647,7 +647,11 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
 
-                    const SliverToBoxAdapter(child: SizedBox(height: 96)),
+                    SliverToBoxAdapter(
+                      child: SizedBox(
+                        height: AppColors.bottomClearanceOf(context),
+                      ),
+                    ),
                   ],
                 );
               },
@@ -1181,6 +1185,7 @@ class _HomeScreenState extends State<HomeScreen> {
       borderRadius: 24,
       blurSigma: 5,
       level: GlassLevel.floating,
+      color: isDark ? AppDarkColors.cardSurface : null,
       tint: GlassTint.cyan,
       borderColor: isDark ? AppDarkColors.cardBorder : AppColors.borderElevated,
       child: SizedBox(
@@ -1194,12 +1199,44 @@ class _HomeScreenState extends State<HomeScreen> {
                 right: -16,
                 bottom: 16,
                 child: Opacity(
-                  opacity: 0.92,
+                  opacity: 0.95,
                   child: AlbumArt(
                     gradientId: featuredSong.gradientId,
                     size: 158,
                     borderRadius: 22,
                     imageUrl: featuredSong.albumArtUrl,
+                  ),
+                ),
+              )
+            else
+              Positioned(
+                top: 16,
+                right: -16,
+                bottom: 16,
+                child: Opacity(
+                  opacity: 0.92,
+                  child: Container(
+                    width: 158,
+                    height: 158,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(22),
+                      gradient: LinearGradient(
+                        colors: isDark
+                            ? [const Color(0xFF2C3545), const Color(0xFF1E232F)]
+                            : [const Color(0xFFE2E8F0), const Color(0xFFCBD5E1)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      border: Border.all(
+                        color: isDark ? AppDarkColors.cardBorder : AppColors.cardBorder,
+                      ),
+                    ),
+                    alignment: Alignment.center,
+                    child: Icon(
+                      Icons.graphic_eq_rounded,
+                      size: 64,
+                      color: AppColors.coral.withValues(alpha: isDark ? 0.6 : 0.5),
+                    ),
                   ),
                 ),
               ),
@@ -1209,10 +1246,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   begin: Alignment.centerLeft,
                   end: Alignment.centerRight,
                   colors: [
-                    (isDark ? AppDarkColors.background : AppColors.background)
-                        .withValues(alpha: isDark ? 0.88 : 0.76),
-                    (isDark ? AppDarkColors.background : AppColors.background)
-                        .withValues(alpha: isDark ? 0.45 : 0.36),
+                    (isDark ? AppDarkColors.cardSurface : AppColors.background)
+                        .withValues(alpha: isDark ? 0.94 : 0.76),
+                    (isDark ? AppDarkColors.cardSurface : AppColors.background)
+                        .withValues(alpha: isDark ? 0.60 : 0.36),
                     Colors.transparent,
                   ],
                   stops: const [0, 0.58, 1],
@@ -1736,17 +1773,17 @@ class _HomeScreenState extends State<HomeScreen> {
       children: [
         Text(
           title,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w700,
             letterSpacing: -0.3,
-            color: AppColors.textPrimary,
+            color: AppColors.textPrimaryOf(context),
           ),
         ),
         const SizedBox(height: 2),
         Text(
           subtitle,
-          style: const TextStyle(fontSize: 12, color: AppColors.textMuted),
+          style: TextStyle(fontSize: 12, color: AppColors.textMutedOf(context)),
         ),
       ],
     );
@@ -1763,10 +1800,10 @@ class _MoodChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) => ActionChip(
     label: Text(label),
-    labelStyle: const TextStyle(fontSize: 12.5, color: AppColors.textSecondary),
+    labelStyle: TextStyle(fontSize: 12.5, color: AppColors.textSecondaryOf(context)),
     onPressed: () => onTap?.call(query),
-    side: const BorderSide(color: AppColors.glassBorder),
-    backgroundColor: AppColors.glassBackground,
+    side: BorderSide(color: AppColors.cardBorderOf(context)),
+    backgroundColor: AppColors.cardSurfaceOf(context),
     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
   );
 }

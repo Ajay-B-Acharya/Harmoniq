@@ -130,14 +130,14 @@ class _ExploreScreenState extends State<ExploreScreen> {
                           width: 38,
                           height: 38,
                           decoration: BoxDecoration(
-                            color: AppColors.glassBackground,
+                            color: AppColors.cardSurfaceOf(context),
                             borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: AppColors.glassBorder),
+                            border: Border.all(color: AppColors.cardBorderOf(context)),
                           ),
-                          child: const Icon(
+                          child: Icon(
                             Icons.grid_view_rounded,
                             size: 19,
-                            color: AppColors.textPrimary,
+                            color: AppColors.textPrimaryOf(context),
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -148,20 +148,20 @@ class _ExploreScreenState extends State<ExploreScreen> {
                               width: 26,
                               height: 26,
                               decoration: BoxDecoration(
-                                color: AppColors.backgroundSurface,
+                                color: AppColors.cardSurfaceOf(context),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               alignment: Alignment.center,
                               child: const HarmoniqEmblem(size: 20),
                             ),
                             const SizedBox(width: 8),
-                            const Text(
+                            Text(
                               'Harmoniq',
                               style: TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.w700,
                                 letterSpacing: -0.5,
-                                color: AppColors.textPrimary,
+                                color: AppColors.textPrimaryOf(context),
                               ),
                             ),
                           ],
@@ -170,19 +170,19 @@ class _ExploreScreenState extends State<ExploreScreen> {
                         IconButton(
                           tooltip: 'Notifications',
                           onPressed: () {},
-                          icon: const Icon(
+                          icon: Icon(
                             Icons.notifications_none_rounded,
                             size: 22,
-                            color: AppColors.textPrimary,
+                            color: AppColors.textPrimaryOf(context),
                           ),
                         ),
                         AvatarHalo(
                           size: 38,
                           onTap: widget.onProfileTap,
-                          child: const Icon(
+                          child: Icon(
                             Icons.person_rounded,
                             size: 20,
-                            color: AppColors.textPrimary,
+                            color: AppColors.textPrimaryOf(context),
                           ),
                         ),
                       ],
@@ -200,21 +200,21 @@ class _ExploreScreenState extends State<ExploreScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            const Text(
+                            Text(
                               'Discover New Vibes',
                               style: TextStyle(
                                 fontSize: 17,
                                 fontWeight: FontWeight.w700,
-                                color: AppColors.textPrimary,
+                                color: AppColors.textPrimaryOf(context),
                                 letterSpacing: -0.3,
                               ),
                             ),
                             IconButton(
                               tooltip: 'Search music',
                               onPressed: () => widget.onSearchTap?.call(''),
-                              icon: const Icon(
+                              icon: Icon(
                                 Icons.search_rounded,
-                                color: AppColors.textSecondary,
+                                color: AppColors.textSecondaryOf(context),
                                 size: 21,
                               ),
                             ),
@@ -231,12 +231,12 @@ class _ExploreScreenState extends State<ExploreScreen> {
                 SliverPadding(
                   padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
                   sliver: SliverToBoxAdapter(
-                    child: const Text(
+                    child: Text(
                       'Popular Genres',
                       style: TextStyle(
                         fontSize: 17,
                         fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary,
+                        color: AppColors.textPrimaryOf(context),
                         letterSpacing: -0.3,
                       ),
                     ),
@@ -268,12 +268,12 @@ class _ExploreScreenState extends State<ExploreScreen> {
                 SliverPadding(
                   padding: const EdgeInsets.fromLTRB(20, 26, 20, 12),
                   sliver: SliverToBoxAdapter(
-                    child: const Text(
+                    child: Text(
                       'Trending Playlists',
                       style: TextStyle(
                         fontSize: 17,
                         fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary,
+                        color: AppColors.textPrimaryOf(context),
                         letterSpacing: -0.3,
                       ),
                     ),
@@ -321,12 +321,12 @@ class _ExploreScreenState extends State<ExploreScreen> {
                 SliverPadding(
                   padding: const EdgeInsets.fromLTRB(20, 26, 20, 12),
                   sliver: SliverToBoxAdapter(
-                    child: const Text(
+                    child: Text(
                       'Moods & Activities',
                       style: TextStyle(
                         fontSize: 17,
                         fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary,
+                        color: AppColors.textPrimaryOf(context),
                         letterSpacing: -0.3,
                       ),
                     ),
@@ -343,7 +343,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                         _moodChip(
                           'Focus',
                           Icons.album_rounded,
-                          AppColors.accentLight,
+                          AppColors.coral,
                         ),
                         const SizedBox(width: 10),
                         _moodChip(
@@ -374,13 +374,13 @@ class _ExploreScreenState extends State<ExploreScreen> {
                   sliver: SliverToBoxAdapter(
                     child: Row(
                       children: [
-                        const Expanded(
+                        Expanded(
                           child: Text(
                             'Discovered Tracks',
                             style: TextStyle(
                               fontSize: 17,
                               fontWeight: FontWeight.w700,
-                              color: AppColors.textPrimary,
+                              color: AppColors.textPrimaryOf(context),
                               letterSpacing: -0.3,
                             ),
                           ),
@@ -391,7 +391,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                             height: 16,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              color: AppColors.primaryCyan,
+                              color: AppColors.coral,
                             ),
                           )
                         else
@@ -400,7 +400,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                             onPressed: () =>
                                 _loadDiscoveryTracks(refresh: true),
                             icon: const Icon(Icons.refresh_rounded, size: 20),
-                            color: AppColors.textMuted,
+                            color: AppColors.textMutedOf(context),
                           ),
                       ],
                     ),
@@ -436,14 +436,14 @@ class _ExploreScreenState extends State<ExploreScreen> {
                     ),
                   )
                 else
-                  const SliverToBoxAdapter(
+                  SliverToBoxAdapter(
                     child: Padding(
-                      padding: EdgeInsets.all(28),
+                      padding: const EdgeInsets.all(28),
                       child: Center(
                         child: Text(
                           'Pull down to refresh and discover new tracks',
                           style: TextStyle(
-                            color: AppColors.textMuted,
+                            color: AppColors.textMutedOf(context),
                             fontSize: 13,
                           ),
                         ),
@@ -451,7 +451,11 @@ class _ExploreScreenState extends State<ExploreScreen> {
                     ),
                   ),
 
-                const SliverToBoxAdapter(child: SizedBox(height: 96)),
+                SliverToBoxAdapter(
+                  child: SizedBox(
+                    height: AppColors.bottomClearanceOf(context),
+                  ),
+                ),
               ],
             ),
           ),
@@ -465,12 +469,12 @@ class _ExploreScreenState extends State<ExploreScreen> {
       height: 185,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(22),
-        gradient: const LinearGradient(
-          colors: AppColors.gradientHero,
+        gradient: LinearGradient(
+          colors: AppColors.heroGradientOf(context),
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        border: Border.all(color: AppColors.borderElevated),
+        border: Border.all(color: AppColors.cardBorderOf(context)),
         boxShadow: const [
           BoxShadow(
             color: AppColors.shadowFloating,
@@ -488,7 +492,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Column(
+                Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
@@ -496,16 +500,16 @@ class _ExploreScreenState extends State<ExploreScreen> {
                       style: TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.w800,
-                        color: AppColors.textPrimary,
+                        color: AppColors.textPrimaryOf(context),
                         letterSpacing: -0.6,
                       ),
                     ),
-                    SizedBox(height: 4),
+                    const SizedBox(height: 4),
                     Text(
                       'Live mixes, top releases & curated sounds',
                       style: TextStyle(
                         fontSize: 12,
-                        color: AppColors.textSecondary,
+                        color: AppColors.textSecondaryOf(context),
                       ),
                     ),
                   ],
@@ -518,17 +522,13 @@ class _ExploreScreenState extends State<ExploreScreen> {
                       vertical: 9,
                     ),
                     decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [AppColors.primaryCyan, AppColors.blue],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
+                      color: AppColors.coral,
                       borderRadius: BorderRadius.circular(14),
-                      boxShadow: const [
+                      boxShadow: [
                         BoxShadow(
-                          color: AppColors.shadowActiveCyan,
-                          blurRadius: 12,
-                          offset: Offset(0, 2),
+                          color: AppColors.coral.withValues(alpha: 0.3),
+                          blurRadius: 10,
+                          offset: const Offset(0, 2),
                         ),
                       ],
                     ),
@@ -569,14 +569,14 @@ class _ExploreScreenState extends State<ExploreScreen> {
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              gradient.first.withValues(alpha: 0.7),
-              AppColors.backgroundSurface,
+              gradient.first.withValues(alpha: 0.65),
+              AppColors.cardSurfaceOf(context),
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.surfaceBorder),
+          border: Border.all(color: AppColors.cardBorderOf(context)),
         ),
         padding: const EdgeInsets.all(12),
         alignment: Alignment.bottomLeft,
@@ -599,7 +599,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
     required VoidCallback onTap,
   }) {
     return Material(
-      color: AppColors.backgroundSurface,
+      color: AppColors.cardSurfaceOf(context),
       borderRadius: BorderRadius.circular(16),
       child: InkWell(
         onTap: onTap,
@@ -609,7 +609,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.surfaceBorder),
+            border: Border.all(color: AppColors.cardBorderOf(context)),
           ),
           child: Row(
             children: [
@@ -628,16 +628,16 @@ class _ExploreScreenState extends State<ExploreScreen> {
                   title,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 13.5,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
+                    color: AppColors.textPrimaryOf(context),
                   ),
                 ),
               ),
               const Icon(
                 Icons.play_arrow_rounded,
-                color: AppColors.accentLight,
+                color: AppColors.coral,
                 size: 22,
               ),
             ],
@@ -653,9 +653,9 @@ class _ExploreScreenState extends State<ExploreScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: AppColors.backgroundSurface,
+          color: AppColors.cardSurfaceOf(context),
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: AppColors.surfaceBorder),
+          border: Border.all(color: AppColors.cardBorderOf(context)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -664,10 +664,10 @@ class _ExploreScreenState extends State<ExploreScreen> {
             const SizedBox(width: 8),
             Text(
               label,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 12.5,
                 fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
+                color: AppColors.textPrimaryOf(context),
               ),
             ),
           ],

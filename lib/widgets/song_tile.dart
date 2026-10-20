@@ -92,9 +92,7 @@ class SongTile extends StatelessWidget {
                     style: TextStyle(
                       color: isActive
                           ? AppColors.coral
-                          : (isDark
-                              ? AppDarkColors.textPrimary
-                              : AppColors.textPrimary),
+                          : AppColors.textPrimaryOf(context),
                       fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
                       fontSize: 14,
                     ),
@@ -104,7 +102,7 @@ class SongTile extends StatelessWidget {
                   const SizedBox(width: 6),
                   const MiniEqualizerBars(
                     isPlaying: true,
-                    color: AppColors.accent,
+                    color: AppColors.coral,
                   ),
                 ],
               ],
@@ -122,9 +120,7 @@ class SongTile extends StatelessWidget {
                       fontSize: 12,
                       color: isActive
                           ? AppColors.coralLight
-                          : (isDark
-                              ? AppDarkColors.textSecondary
-                              : AppColors.textSecondary),
+                          : AppColors.textSecondaryOf(context),
                     ),
                   ),
                 ),
@@ -133,10 +129,14 @@ class SongTile extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
                     decoration: BoxDecoration(
-                      color: AppColors.primaryCyan.withValues(alpha: 0.16),
+                      color: isDark
+                          ? Colors.white.withValues(alpha: 0.08)
+                          : Colors.black.withValues(alpha: 0.05),
                       borderRadius: BorderRadius.circular(4),
                       border: Border.all(
-                        color: AppColors.primaryCyan.withValues(alpha: 0.35),
+                        color: isDark
+                            ? Colors.white.withValues(alpha: 0.14)
+                            : Colors.black.withValues(alpha: 0.10),
                         width: 0.8,
                       ),
                     ),
@@ -144,11 +144,11 @@ class SongTile extends StatelessWidget {
                       song.downloadQuality != null
                           ? '${song.downloadQuality!.toUpperCase()} MP3'
                           : 'OFFLINE',
-                      style: const TextStyle(
-                        color: AppColors.primaryCyan,
+                      style: TextStyle(
+                        color: AppColors.textSecondaryOf(context),
                         fontSize: 8.5,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 0.4,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.3,
                       ),
                     ),
                   ),
@@ -166,9 +166,7 @@ class SongTile extends StatelessWidget {
                         : Icons.favorite_border_rounded,
                     color: song.isFavorite
                         ? AppColors.heartColor
-                        : (isDark
-                            ? AppDarkColors.textSecondary
-                            : AppColors.textSecondary),
+                        : AppColors.textSecondaryOf(context),
                     size: 20,
                   ),
                   onPressed: onFavoriteTap,

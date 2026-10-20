@@ -118,7 +118,7 @@ class LibraryScreenState extends State<LibraryScreen> {
                             ?.copyWith(
                               fontWeight: FontWeight.w800,
                               letterSpacing: -0.6,
-                              color: AppColors.textPrimary,
+                              color: AppColors.textPrimaryOf(context),
                             ),
                       ),
                     ),
@@ -127,7 +127,7 @@ class LibraryScreenState extends State<LibraryScreen> {
                         tooltip: 'New playlist',
                         icon: const Icon(
                           Icons.add_rounded,
-                          color: AppColors.accentLight,
+                          color: AppColors.coral,
                           size: 26,
                         ),
                         onPressed: _showCreatePlaylistDialog,
@@ -139,7 +139,7 @@ class LibraryScreenState extends State<LibraryScreen> {
                         children: [
                           PopupMenuButton<LocalSongSort>(
                             tooltip: 'Sort local songs',
-                            color: AppColors.sheetSurface,
+                            color: AppColors.cardSurfaceOf(context),
                             child: Container(
                               constraints: const BoxConstraints(minHeight: 44),
                               padding: const EdgeInsets.symmetric(
@@ -147,10 +147,10 @@ class LibraryScreenState extends State<LibraryScreen> {
                                 vertical: 6,
                               ),
                               decoration: BoxDecoration(
-                                color: AppColors.glassSecondary,
+                                color: AppColors.cardSurfaceOf(context),
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
-                                  color: AppColors.borderStandard,
+                                  color: AppColors.borderStandardOf(context),
                                 ),
                               ),
                               child: Row(
@@ -158,14 +158,14 @@ class LibraryScreenState extends State<LibraryScreen> {
                                 children: [
                                   const Icon(
                                     Icons.sort_rounded,
-                                    color: AppColors.accentLight,
+                                    color: AppColors.coral,
                                     size: 19,
                                   ),
                                   const SizedBox(width: 4),
                                   Text(
                                     _localSongSort.shortLabel,
-                                    style: const TextStyle(
-                                      color: AppColors.textSecondary,
+                                    style: TextStyle(
+                                      color: AppColors.textSecondaryOf(context),
                                       fontSize: 11,
                                       fontWeight: FontWeight.w600,
                                     ),
@@ -189,7 +189,7 @@ class LibraryScreenState extends State<LibraryScreen> {
                             tooltip: 'Scan device',
                             icon: const Icon(
                               Icons.refresh_rounded,
-                              color: AppColors.accentLight,
+                              color: AppColors.coral,
                               size: 24,
                             ),
                             onPressed: widget.audioService.scanLocalSongs,
@@ -201,7 +201,7 @@ class LibraryScreenState extends State<LibraryScreen> {
                 ),
                 const SizedBox(height: 16),
 
-                // ── Category chips (Spatial UI pills) ─────────────────────────
+                // ── Category chips ───────────────────────────────────────────
                 SizedBox(
                   height: 38,
                   child: ListView.builder(
@@ -221,31 +221,22 @@ class LibraryScreenState extends State<LibraryScreen> {
                           ),
                           decoration: BoxDecoration(
                             color: isSelected
-                                ? AppColors.glassSelected
-                                : AppColors.glassSecondary,
+                                ? AppColors.selectedSurfaceOf(context)
+                                : AppColors.cardSurfaceOf(context),
                             borderRadius: BorderRadius.circular(14),
                             border: Border.all(
                               color: isSelected
-                                  ? AppColors.borderActiveCyan
-                                  : AppColors.borderStandard,
+                                  ? AppColors.coral
+                                  : AppColors.borderStandardOf(context),
                               width: 1,
                             ),
-                            boxShadow: isSelected
-                                ? const [
-                                    BoxShadow(
-                                      color: AppColors.shadowActiveCyan,
-                                      blurRadius: 10,
-                                      offset: Offset(0, 1),
-                                    ),
-                                  ]
-                                : null,
                           ),
                           child: Text(
                             _categories[index],
                             style: TextStyle(
                               color: isSelected
-                                  ? AppColors.textPrimary
-                                  : AppColors.textSecondary,
+                                  ? AppColors.coral
+                                  : AppColors.textSecondaryOf(context),
                               fontSize: 12.5,
                               fontWeight: isSelected
                                   ? FontWeight.w700
@@ -352,7 +343,9 @@ class LibraryScreenState extends State<LibraryScreen> {
       physics: const BouncingScrollPhysics(),
       itemCount: allSongs.length + 1,
       itemBuilder: (context, index) {
-        if (index == allSongs.length) return const SizedBox(height: 120);
+        if (index == allSongs.length) {
+          return SizedBox(height: AppColors.bottomClearanceOf(context));
+        }
         final song = allSongs[index];
         final isActive = currentSong?.identity == song.identity;
         return SongTile(
@@ -376,6 +369,7 @@ class LibraryScreenState extends State<LibraryScreen> {
     }
     return GridView.builder(
       physics: const BouncingScrollPhysics(),
+      padding: EdgeInsets.only(bottom: AppColors.bottomClearanceOf(context)),
       itemCount: playlists.length,
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
@@ -421,17 +415,17 @@ class LibraryScreenState extends State<LibraryScreen> {
                   playlist.name,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.w600,
                     fontSize: 13.5,
-                    color: AppColors.textPrimary,
+                    color: AppColors.textPrimaryOf(context),
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   '${playlist.songs.length} songs',
-                  style: const TextStyle(
-                    color: AppColors.textSecondary,
+                  style: TextStyle(
+                    color: AppColors.textSecondaryOf(context),
                     fontSize: 11.5,
                   ),
                 ),
@@ -451,6 +445,7 @@ class LibraryScreenState extends State<LibraryScreen> {
     final albumKeys = _albumKeys;
     return GridView.builder(
       physics: const BouncingScrollPhysics(),
+      padding: EdgeInsets.only(bottom: AppColors.bottomClearanceOf(context)),
       itemCount: albumKeys.length,
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
@@ -486,10 +481,10 @@ class LibraryScreenState extends State<LibraryScreen> {
                   albumName,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.w600,
                     fontSize: 13.5,
-                    color: AppColors.textPrimary,
+                    color: AppColors.textPrimaryOf(context),
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -497,8 +492,8 @@ class LibraryScreenState extends State<LibraryScreen> {
                   albumSongs[0].artist,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: AppColors.textSecondary,
+                  style: TextStyle(
+                    color: AppColors.textSecondaryOf(context),
                     fontSize: 11.5,
                   ),
                 ),
@@ -591,7 +586,9 @@ class LibraryScreenState extends State<LibraryScreen> {
                   itemCount: filtered.length + 1,
                   itemBuilder: (context, index) {
                     if (index == filtered.length) {
-                      return const SizedBox(height: 120);
+                      return SizedBox(
+                        height: AppColors.bottomClearanceOf(context),
+                      );
                     }
                     final song = filtered[index];
                     final isActive = currentSong?.identity == song.identity;
@@ -617,18 +614,18 @@ class LibraryScreenState extends State<LibraryScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
           color: isSelected
-              ? AppColors.accent.withValues(alpha: 0.20)
-              : AppColors.surfaceHigh,
-          borderRadius: BorderRadius.circular(6),
+              ? AppColors.coral.withValues(alpha: 0.16)
+              : AppColors.cardSurfaceOf(context),
+          borderRadius: BorderRadius.circular(8),
           border: Border.all(
-            color: isSelected ? AppColors.accent : AppColors.surfaceBorder,
+            color: isSelected ? AppColors.coral : AppColors.cardBorderOf(context),
             width: 1,
           ),
         ),
         child: Text(
           label,
           style: TextStyle(
-            color: isSelected ? AppColors.accentLight : AppColors.textSecondary,
+            color: isSelected ? AppColors.coral : AppColors.textSecondaryOf(context),
             fontSize: 10.5,
             fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
           ),
@@ -653,7 +650,9 @@ class LibraryScreenState extends State<LibraryScreen> {
       physics: const BouncingScrollPhysics(),
       itemCount: recentlyPlayed.length + 1,
       itemBuilder: (context, index) {
-        if (index == recentlyPlayed.length) return const SizedBox(height: 120);
+        if (index == recentlyPlayed.length) {
+          return SizedBox(height: AppColors.bottomClearanceOf(context));
+        }
         final song = recentlyPlayed[index];
         final isActive = currentSong?.identity == song.identity;
         return SongTile(
@@ -680,21 +679,21 @@ class LibraryScreenState extends State<LibraryScreen> {
             Icon(
               Icons.audio_file_outlined,
               size: 48,
-              color: AppColors.textMuted.withValues(alpha: 0.4),
+              color: AppColors.textMutedOf(context).withValues(alpha: 0.4),
             ),
             const SizedBox(height: 14),
-            const Text(
+            Text(
               'No local tracks found',
               style: TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
+                color: AppColors.textPrimaryOf(context),
               ),
             ),
             const SizedBox(height: 6),
-            const Text(
+            Text(
               'Scan your storage to add on-device music files',
-              style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+              style: TextStyle(fontSize: 12, color: AppColors.textSecondaryOf(context)),
             ),
             const SizedBox(height: 16),
             FilledButton.icon(
@@ -711,7 +710,9 @@ class LibraryScreenState extends State<LibraryScreen> {
       physics: const BouncingScrollPhysics(),
       itemCount: localSongs.length + 1,
       itemBuilder: (context, index) {
-        if (index == localSongs.length) return const SizedBox(height: 120);
+        if (index == localSongs.length) {
+          return SizedBox(height: AppColors.bottomClearanceOf(context));
+        }
         final song = localSongs[index];
         final isActive = currentSong?.identity == song.identity;
         return SongTile(
@@ -733,13 +734,13 @@ class LibraryScreenState extends State<LibraryScreen> {
           Icon(
             icon,
             size: 48,
-            color: AppColors.textMuted.withValues(alpha: 0.35),
+            color: AppColors.textMutedOf(context).withValues(alpha: 0.35),
           ),
           const SizedBox(height: 14),
           Text(
             message,
-            style: const TextStyle(
-              color: AppColors.textSecondary,
+            style: TextStyle(
+              color: AppColors.textSecondaryOf(context),
               fontSize: 14.5,
               fontWeight: FontWeight.w600,
             ),
@@ -749,7 +750,7 @@ class LibraryScreenState extends State<LibraryScreen> {
             Text(
               subtitle,
               textAlign: TextAlign.center,
-              style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
+              style: TextStyle(color: AppColors.textMutedOf(context), fontSize: 12),
             ),
           ],
           const SizedBox(height: 80),
@@ -763,13 +764,16 @@ class LibraryScreenState extends State<LibraryScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: AppColors.backgroundSurface,
+        backgroundColor: AppColors.cardSurfaceOf(context),
         surfaceTintColor: Colors.transparent,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        title: const Text(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: AppColors.cardBorderOf(context)),
+        ),
+        title: Text(
           'New Playlist',
           style: TextStyle(
-            color: AppColors.textPrimary,
+            color: AppColors.textPrimaryOf(context),
             fontSize: 17,
             fontWeight: FontWeight.bold,
           ),
@@ -777,29 +781,29 @@ class LibraryScreenState extends State<LibraryScreen> {
         content: TextField(
           controller: textController,
           autofocus: true,
-          style: const TextStyle(color: Colors.white, fontSize: 14),
+          style: TextStyle(color: AppColors.textPrimaryOf(context), fontSize: 14),
           decoration: InputDecoration(
             hintText: 'Playlist name',
-            hintStyle: const TextStyle(
-              color: AppColors.textMuted,
+            hintStyle: TextStyle(
+              color: AppColors.textMutedOf(context),
               fontSize: 13,
             ),
             enabledBorder: UnderlineInputBorder(
               borderSide: BorderSide(
-                color: Colors.white.withValues(alpha: 0.2),
+                color: AppColors.borderStandardOf(context),
               ),
             ),
             focusedBorder: const UnderlineInputBorder(
-              borderSide: BorderSide(color: AppColors.accent),
+              borderSide: BorderSide(color: AppColors.coral),
             ),
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text(
+            child: Text(
               'Cancel',
-              style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
+              style: TextStyle(color: AppColors.textSecondaryOf(context), fontSize: 13),
             ),
           ),
           ElevatedButton(
@@ -811,8 +815,8 @@ class LibraryScreenState extends State<LibraryScreen> {
               }
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.accent,
-              foregroundColor: AppColors.background,
+              backgroundColor: AppColors.coral,
+              foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
@@ -851,13 +855,13 @@ class LibraryScreenState extends State<LibraryScreen> {
               const Icon(
                 Icons.offline_pin_rounded,
                 size: 16,
-                color: AppColors.accentLight,
+                color: AppColors.coral,
               ),
               const SizedBox(width: 6),
               Text(
                 '${downloadedSongs.length} downloaded ${downloadedSongs.length == 1 ? "track" : "tracks"} · Available offline',
-                style: const TextStyle(
-                  color: AppColors.textSecondary,
+                style: TextStyle(
+                  color: AppColors.textSecondaryOf(context),
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
                 ),
@@ -871,7 +875,7 @@ class LibraryScreenState extends State<LibraryScreen> {
             itemCount: downloadedSongs.length + 1,
             itemBuilder: (context, index) {
               if (index == downloadedSongs.length) {
-                return const SizedBox(height: 120);
+                return SizedBox(height: AppColors.bottomClearanceOf(context));
               }
               final song = downloadedSongs[index];
               final isActive = currentSong?.identity == song.identity;
@@ -893,7 +897,7 @@ class LibraryScreenState extends State<LibraryScreen> {
   void _showDownloadOptions(BuildContext context, Song song) {
     showModalBottomSheet<void>(
       context: context,
-      backgroundColor: AppColors.sheetSurface,
+      backgroundColor: AppColors.cardSurfaceOf(context),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -922,8 +926,8 @@ class LibraryScreenState extends State<LibraryScreen> {
                           song.title,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            color: AppColors.textPrimary,
+                          style: TextStyle(
+                            color: AppColors.textPrimaryOf(context),
                             fontWeight: FontWeight.w700,
                             fontSize: 15,
                           ),
@@ -935,8 +939,8 @@ class LibraryScreenState extends State<LibraryScreen> {
                               : song.artist,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            color: AppColors.textSecondary,
+                          style: TextStyle(
+                            color: AppColors.textSecondaryOf(context),
                             fontSize: 12,
                           ),
                         ),
@@ -945,22 +949,22 @@ class LibraryScreenState extends State<LibraryScreen> {
                   ),
                 ],
               ),
-              const Divider(color: AppColors.glassBorder, height: 28),
+              Divider(color: AppColors.dividerOf(context), height: 28),
               ListTile(
                 leading: const Icon(Icons.play_arrow_rounded,
-                    color: AppColors.accentLight),
-                title: const Text('Play Now',
-                    style: TextStyle(color: AppColors.textPrimary)),
+                    color: AppColors.coral),
+                title: Text('Play Now',
+                    style: TextStyle(color: AppColors.textPrimaryOf(context))),
                 onTap: () {
                   Navigator.pop(sheetCtx);
                   _onSongTap(song);
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.playlist_add_rounded,
-                    color: AppColors.textSecondary),
-                title: const Text('Add to playlist',
-                    style: TextStyle(color: AppColors.textPrimary)),
+                leading: Icon(Icons.playlist_add_rounded,
+                    color: AppColors.textSecondaryOf(context)),
+                title: Text('Add to playlist',
+                    style: TextStyle(color: AppColors.textPrimaryOf(context))),
                 onTap: () {
                   Navigator.pop(sheetCtx);
                   _showAddToPlaylistSelector(context, song);
@@ -995,7 +999,7 @@ class LibraryScreenState extends State<LibraryScreen> {
     final messenger = ScaffoldMessenger.of(context);
     showModalBottomSheet<void>(
       context: context,
-      backgroundColor: AppColors.sheetSurface,
+      backgroundColor: AppColors.cardSurfaceOf(context),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -1005,22 +1009,22 @@ class LibraryScreenState extends State<LibraryScreen> {
           shrinkWrap: true,
           padding: const EdgeInsets.all(24),
           children: [
-            const Text(
+            Text(
               'Add to playlist',
               style: TextStyle(
-                color: AppColors.textPrimary,
+                color: AppColors.textPrimaryOf(context),
                 fontSize: 20,
                 fontWeight: FontWeight.w600,
               ),
             ),
             const SizedBox(height: 16),
             if (widget.audioService.playlists.isEmpty)
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 24),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 24),
                 child: Text(
                   'No playlists available',
                   style:
-                      TextStyle(color: AppColors.textSecondary, fontSize: 14),
+                      TextStyle(color: AppColors.textSecondaryOf(context), fontSize: 14),
                 ),
               )
             else
@@ -1037,8 +1041,8 @@ class LibraryScreenState extends State<LibraryScreen> {
                     playlist.name,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                        color: AppColors.textPrimary, fontSize: 14),
+                    style: TextStyle(
+                        color: AppColors.textPrimaryOf(context), fontSize: 14),
                   ),
                   onTap: () {
                     widget.audioService.addSongToPlaylist(song, playlist);

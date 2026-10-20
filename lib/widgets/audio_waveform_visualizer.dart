@@ -43,9 +43,22 @@ class _AudioWaveformVisualizerState extends State<AudioWaveformVisualizer>
       vsync: this,
       duration: const Duration(milliseconds: 1200),
     );
+  }
 
-    if (widget.isPlaying) {
-      _animController.repeat();
+  bool _reduceMotion = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _reduceMotion = MediaQuery.disableAnimationsOf(context);
+    _syncAnimation();
+  }
+
+  void _syncAnimation() {
+    if (widget.isPlaying && !_reduceMotion) {
+      if (!_animController.isAnimating) _animController.repeat();
+    } else {
+      _animController.stop();
     }
   }
 
@@ -53,11 +66,7 @@ class _AudioWaveformVisualizerState extends State<AudioWaveformVisualizer>
   void didUpdateWidget(AudioWaveformVisualizer oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.isPlaying != oldWidget.isPlaying) {
-      if (widget.isPlaying) {
-        if (!_animController.isAnimating) _animController.repeat();
-      } else {
-        _animController.stop();
-      }
+      _syncAnimation();
     }
   }
 

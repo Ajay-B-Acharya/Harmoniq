@@ -211,8 +211,60 @@ class AppColors {
     gradientDarkOrbit,
   ];
 
+  // Coordinated dark gradients for dark mode album art placeholders
+  static const List<List<Color>> allDarkGradients = [
+    [Color(0xFF2C3545), Color(0xFF1E232F)],
+    [Color(0xFF323D4E), Color(0xFF232A37)],
+    [Color(0xFF363F52), Color(0xFF252C3A)],
+    [Color(0xFF2D3847), Color(0xFF1F2531)],
+    [Color(0xFF343B49), Color(0xFF222732)],
+    [Color(0xFF2A3442), Color(0xFF1D222D)],
+    [Color(0xFF384050), Color(0xFF242A35)],
+    [Color(0xFF303948), Color(0xFF202633)],
+  ];
+
   static List<Color> getGradientForId(int id) =>
       allGradients[id % allGradients.length];
+
+  static List<Color> getGradientForIdTheme(int id, bool isDark) =>
+      isDark
+          ? allDarkGradients[id % allDarkGradients.length]
+          : allGradients[id % allGradients.length];
+
+  // Coordinated, restrained dark-slate category tones
+  static const List<Color> categoryOceanBlueDark = [
+    Color(0xFF243347),
+    Color(0xFF1D2635),
+  ];
+  static const List<Color> categoryCyanDepthDark = [
+    Color(0xFF352C28),
+    Color(0xFF242730),
+  ];
+  static const List<Color> categoryBlueAuraDark = [
+    Color(0xFF223545),
+    Color(0xFF1C2734),
+  ];
+  static const List<Color> categoryMidnightSteelDark = [
+    Color(0xFF2B333E),
+    Color(0xFF1F252E),
+  ];
+  static const List<Color> categoryElectricBlueDark = [
+    Color(0xFF283148),
+    Color(0xFF1E2536),
+  ];
+  static const List<Color> categoryBlueCosmicDark = [
+    Color(0xFF27323B),
+    Color(0xFF1E252D),
+  ];
+
+  static const List<Color> gradientHeroDark = [
+    Color(0xFF282F3D),
+    Color(0xFF202631),
+    Color(0xFF191D25),
+  ];
+
+  static List<Color> heroGradientOf(BuildContext context) =>
+      isDark(context) ? gradientHeroDark : gradientHero;
 
   // Context-aware theme color helpers
   static bool isDark(BuildContext context) =>
@@ -257,6 +309,9 @@ class AppColors {
   static Color borderStandardOf(BuildContext context) =>
       isDark(context) ? AppDarkColors.borderStandard : borderStandard;
 
+  static Color borderElevatedOf(BuildContext context) =>
+      isDark(context) ? AppDarkColors.borderElevated : borderElevated;
+
   static Color dividerOf(BuildContext context) =>
       isDark(context) ? AppDarkColors.divider : divider;
 
@@ -271,4 +326,26 @@ class AppColors {
 
   static Color dockInactiveOf(BuildContext context) =>
       isDark(context) ? AppDarkColors.dockInactive : dockInactive;
+
+  static Color glassBackgroundOf(BuildContext context) =>
+      isDark(context) ? AppDarkColors.cardSurface : cardSurface;
+
+  static Color glassSecondaryOf(BuildContext context) =>
+      isDark(context) ? AppDarkColors.backgroundSurface : cardSurface;
+
+  static Color glassSelectedOf(BuildContext context) =>
+      isDark(context) ? AppDarkColors.dockActiveSurface : glassSelected;
+
+  static Color glassBorderOf(BuildContext context) =>
+      isDark(context) ? AppDarkColors.borderStandard : glassBorder;
+
+  static Color selectedSurfaceOf(BuildContext context) =>
+      isDark(context) ? AppDarkColors.dockActiveSurface : glassSelected;
+
+  /// Consistent bottom clearance for scrollable views above the persistent
+  /// floating bottom navigation dock and mini-player, accounting for safe-area insets.
+  static double bottomClearanceOf(BuildContext context, {bool hasMiniPlayer = true}) {
+    final bottomInset = MediaQuery.paddingOf(context).bottom;
+    return (hasMiniPlayer ? 164.0 : 96.0) + bottomInset;
+  }
 }

@@ -574,7 +574,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                           const SizedBox(height: 6),
 
-                          // Membership status pill (warm amber indicator for legibility)
+                          // Membership status pill (consistent Harmoniq coral / theme pill)
                           Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 14,
@@ -587,9 +587,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
                                 color: isAuthenticated
-                                    ? (isDark
-                                        ? const Color(0xFFF59E0B).withValues(alpha: 0.5)
-                                        : const Color(0xFFD97706).withValues(alpha: 0.4))
+                                    ? AppColors.coral.withValues(alpha: isDark ? 0.45 : 0.35)
                                     : (isDark
                                         ? AppDarkColors.cardBorder
                                         : AppColors.cardBorder),
@@ -599,12 +597,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 if (isAuthenticated) ...[
-                                  Icon(
-                                    Icons.star_rounded,
+                                  const Icon(
+                                    Icons.verified_rounded,
                                     size: 15,
-                                    color: isDark
-                                        ? const Color(0xFFFFB020)
-                                        : const Color(0xFFD97706),
+                                    color: AppColors.coral,
                                   ),
                                   const SizedBox(width: 5),
                                 ],
@@ -614,9 +610,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       : 'Guest Mode',
                                   style: TextStyle(
                                     color: isAuthenticated
-                                        ? (isDark
-                                            ? const Color(0xFFFFC040)
-                                            : const Color(0xFFB45309))
+                                        ? AppColors.coral
                                         : (isDark
                                             ? AppDarkColors.textSecondary
                                             : AppColors.textSecondary),
@@ -718,148 +712,190 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
 
                   SliverToBoxAdapter(
-                    child: SizedBox(
-                      height: 184,
-                      child: ListView(
-                        scrollDirection: Axis.horizontal,
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        children: [
-                          // Card 1: Listening Time
-                          _activityCard(
-                            title: 'Listening Time',
-                            content: Row(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                SizedBox(
-                                  height: 34,
-                                  child: Row(
-                                    crossAxisAlignment: CrossAxisAlignment.end,
-                                    children: [
-                                      _miniBar(14, AppColors.accentLight),
-                                      _miniBar(22, AppColors.accent),
-                                      _miniBar(10, AppColors.accentLight),
-                                      _miniBar(28, AppColors.electricBlue),
-                                      _miniBar(18, AppColors.accent),
-                                      _miniBar(24, AppColors.accentLight),
-                                      _miniBar(16, AppColors.electricBlue),
-                                    ],
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        final screenWidth = MediaQuery.sizeOf(context).width;
+                        final isTablet = constraints.maxWidth >= 540;
+
+                        final cardListening = _activityCard(
+                          title: 'Listening Time',
+                          content: Row(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              SizedBox(
+                                height: 34,
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    _miniBar(14, AppColors.accentLight),
+                                    _miniBar(22, AppColors.accent),
+                                    _miniBar(10, AppColors.accentLight),
+                                    _miniBar(28, AppColors.electricBlue),
+                                    _miniBar(18, AppColors.accent),
+                                    _miniBar(24, AppColors.accentLight),
+                                    _miniBar(16, AppColors.electricBlue),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  '$listeningTimeStr recently',
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    color: isDark
+                                        ? AppDarkColors.textSecondary
+                                        : AppColors.textSecondary,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w500,
                                   ),
                                 ),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: Text(
-                                    '$listeningTimeStr recently',
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(
-                                      color: isDark
-                                          ? AppDarkColors.textSecondary
-                                          : AppColors.textSecondary,
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ),
-                              ],
+                              ),
+                            ],
+                          ),
+                        );
+
+                        final cardGenre = _activityCard(
+                          title: 'Top Genre',
+                          content: Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              topGenre,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: isDark
+                                    ? AppDarkColors.textPrimary
+                                    : AppColors.textPrimary,
+                                fontSize: 14.5,
+                                fontWeight: FontWeight.w700,
+                              ),
                             ),
                           ),
-                          const SizedBox(width: 12),
+                        );
 
-                          // Card 2: Top Genre
-                          _activityCard(
-                            title: 'Top Genre',
-                            content: Align(
-                              alignment: Alignment.centerLeft,
-                              child: Text(
-                                topGenre,
-                                maxLines: 2,
+                        final cardArtists = _activityCard(
+                          title: 'Top Artists',
+                          content: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const SizedBox(height: 7),
+                              if (topArtists.isNotEmpty)
+                                Row(
+                                  children: List.generate(
+                                    topArtists.length,
+                                    (i) => Padding(
+                                      padding: EdgeInsets.only(
+                                        left: i == 0 ? 0 : 6,
+                                      ),
+                                      child: Container(
+                                        width: 30,
+                                        height: 30,
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          color: AppColors.getGradientForIdTheme(
+                                            i,
+                                            isDark,
+                                          )[0],
+                                          border: Border.all(
+                                            color: isDark
+                                                ? AppDarkColors.cardBorder
+                                                : AppColors.cardBorder,
+                                            width: 1.5,
+                                          ),
+                                        ),
+                                        alignment: Alignment.center,
+                                        child: Text(
+                                          topArtists[i].substring(0, 1),
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                )
+                              else
+                                Text(
+                                  'Listen to discover',
+                                  style: TextStyle(
+                                    color: isDark
+                                        ? AppDarkColors.textSecondary
+                                        : AppColors.textSecondary,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              const SizedBox(height: 6),
+                              Text(
+                                topArtists.isNotEmpty
+                                    ? topArtists.first
+                                    : 'No artists yet',
+                                maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
                                   color: isDark
                                       ? AppDarkColors.textPrimary
                                       : AppColors.textPrimary,
-                                  fontSize: 14.5,
-                                  fontWeight: FontWeight.w700,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
-                            ),
+                            ],
                           ),
-                          const SizedBox(width: 12),
+                        );
 
-                          // Card 3: My Favorite Artists
-                          _activityCard(
-                            title: 'Top Artists',
-                            content: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisSize: MainAxisSize.min,
+                        if (isTablet) {
+                          final cardWidth = (constraints.maxWidth - 40 - 24) / 3;
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            child: Row(
                               children: [
-                                const SizedBox(height: 7),
-                                if (topArtists.isNotEmpty)
-                                  Row(
-                                    children: List.generate(
-                                      topArtists.length,
-                                      (i) => Padding(
-                                        padding: EdgeInsets.only(
-                                          left: i == 0 ? 0 : 6,
-                                        ),
-                                        child: Container(
-                                          width: 30,
-                                          height: 30,
-                                          decoration: BoxDecoration(
-                                            shape: BoxShape.circle,
-                                            color: AppColors.getGradientForId(
-                                              i,
-                                            )[0],
-                                            border: Border.all(
-                                              color: isDark
-                                                  ? AppDarkColors.cardBorder
-                                                  : AppColors.cardBorder,
-                                              width: 1.5,
-                                            ),
-                                          ),
-                                          alignment: Alignment.center,
-                                          child: Text(
-                                            topArtists[i].substring(0, 1),
-                                            style: const TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 11,
-                                              fontWeight: FontWeight.w700,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  )
-                                else
-                                  Text(
-                                    'Listen to discover',
-                                    style: TextStyle(
-                                      color: isDark
-                                          ? AppDarkColors.textSecondary
-                                          : AppColors.textSecondary,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                const SizedBox(height: 6),
-                                Text(
-                                  topArtists.isNotEmpty
-                                      ? topArtists.first
-                                      : 'No artists yet',
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(
-                                    color: isDark
-                                        ? AppDarkColors.textPrimary
-                                        : AppColors.textPrimary,
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w600,
-                                  ),
+                                SizedBox(
+                                  width: cardWidth,
+                                  height: 124,
+                                  child: cardListening,
+                                ),
+                                const SizedBox(width: 12),
+                                SizedBox(
+                                  width: cardWidth,
+                                  height: 124,
+                                  child: cardGenre,
+                                ),
+                                const SizedBox(width: 12),
+                                SizedBox(
+                                  width: cardWidth,
+                                  height: 124,
+                                  child: cardArtists,
                                 ),
                               ],
                             ),
+                          );
+                        }
+
+                        // Mobile viewport: intentional horizontal carousel
+                        // Sizing proportioned so cards start flush within 20px padding and 3rd card peeks intentionally
+                        final cardWidth = ((screenWidth - 40 - 12) / 2.18).clamp(142.0, 168.0);
+                        return SizedBox(
+                          height: 124,
+                          child: ListView(
+                            scrollDirection: Axis.horizontal,
+                            physics: const BouncingScrollPhysics(),
+                            clipBehavior: Clip.none,
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            children: [
+                              SizedBox(width: cardWidth, child: cardListening),
+                              const SizedBox(width: 12),
+                              SizedBox(width: cardWidth, child: cardGenre),
+                              const SizedBox(width: 12),
+                              SizedBox(width: cardWidth, child: cardArtists),
+                            ],
                           ),
-                        ],
-                      ),
+                        );
+                      },
                     ),
                   ),
 
@@ -1029,7 +1065,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                   // Log Out Button (Screenshot 1: red-tinted glass panel)
                   SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(20, 22, 20, 120),
+                    padding: EdgeInsets.fromLTRB(
+                      20,
+                      22,
+                      20,
+                      AppColors.bottomClearanceOf(context),
+                    ),
                     sliver: SliverToBoxAdapter(
                       child: Pressable(
                         onTap: _handleLogout,
@@ -1119,14 +1160,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _activityCard({required String title, required Widget content}) {
+  Widget _activityCard({
+    required String title,
+    required Widget content,
+    double? width,
+  }) {
     final isDark = ThemeController.instance.isDark;
     final shadowLight =
         isDark ? AppDarkColors.lightShadow : AppColors.lightShadow;
     final shadowDark =
         isDark ? AppDarkColors.darkShadow : AppColors.darkShadow;
     return Container(
-      width: 152,
+      width: width,
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: isDark
@@ -1152,7 +1197,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ],
       ),
       child: Column(
-        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
@@ -1165,8 +1209,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
               fontWeight: FontWeight.w600,
             ),
           ),
-          const SizedBox(height: 10),
-          content,
+          const SizedBox(height: 8),
+          Expanded(
+            child: SingleChildScrollView(
+              physics: const NeverScrollableScrollPhysics(),
+              child: content,
+            ),
+          ),
         ],
       ),
     );
