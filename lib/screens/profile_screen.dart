@@ -169,13 +169,13 @@ class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserv
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: _batteryOptimizationIgnored
-                    ? AppColors.softCyan.withOpacity(0.12)
-                    : AppColors.coral.withOpacity(0.12),
+                    ? AppColors.softCyan.withValues(alpha: 0.12)
+                    : AppColors.coral.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
                   color: _batteryOptimizationIgnored
-                      ? AppColors.softCyan.withOpacity(0.3)
-                      : AppColors.coral.withOpacity(0.3),
+                      ? AppColors.softCyan.withValues(alpha: 0.3)
+                      : AppColors.coral.withValues(alpha: 0.3),
                 ),
               ),
               child: Row(
@@ -272,9 +272,9 @@ class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserv
     showDialog<void>(
       context: context,
       builder: (ctx) => StatefulBuilder(
-        builder: (context, setDialogState) {
+        builder: (dialogCtx, setDialogState) {
           final surface = isDark ? AppDarkColors.backgroundSecondary : AppColors.backgroundSecondary;
-          final border = AppColors.glassBorderOf(context);
+          final border = AppColors.glassBorderOf(dialogCtx);
           final textCol = isDark ? AppDarkColors.textPrimary : AppColors.textPrimary;
           final secText = isDark ? AppDarkColors.textSecondary : AppColors.textSecondary;
 
@@ -415,7 +415,7 @@ class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserv
                             ),
                           );
                         }
-                        if (Navigator.canPop(ctx)) Navigator.pop(ctx);
+                        if (ctx.mounted && Navigator.canPop(ctx)) Navigator.pop(ctx);
                       },
                 child: saving
                     ? const SizedBox(
@@ -1444,8 +1444,8 @@ class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserv
                                 ),
                                 decoration: BoxDecoration(
                                   color: _batteryOptimizationIgnored
-                                      ? AppColors.softCyan.withOpacity(0.12)
-                                      : AppColors.coral.withOpacity(0.12),
+                                      ? AppColors.softCyan.withValues(alpha: 0.12)
+                                      : AppColors.coral.withValues(alpha: 0.12),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Text(

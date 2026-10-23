@@ -124,8 +124,8 @@ class ProfileService extends ChangeNotifier {
         if (displayName != null) 'display_name': displayName.trim(),
         if (username != null) 'username': username.trim().replaceAll('@', ''),
         if (bio != null) 'bio': bio.trim(),
-        if (avatarUrl != null) 'avatar_url': avatarUrl,
-        if (favoriteGenre != null) 'favorite_genre': favoriteGenre,
+        'avatar_url': ?avatarUrl,
+        'favorite_genre': ?favoriteGenre,
         'updated_at': DateTime.now().toUtc().toIso8601String(),
       };
 
