@@ -416,7 +416,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
                   SliverPadding(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     sliver: SliverList.builder(
-                      itemCount: catalogue.length.clamp(0, 12),
+                      itemCount: catalogue.length,
                       itemBuilder: (context, index) {
                         final song = catalogue[index];
                         final isPlaying =
@@ -458,7 +458,10 @@ class _ExploreScreenState extends State<ExploreScreen> {
 
                 SliverToBoxAdapter(
                   child: SizedBox(
-                    height: AppColors.bottomClearanceOf(context),
+                    height: AppColors.bottomClearanceOf(
+                      context,
+                      hasMiniPlayer: widget.audioService.currentSong != null,
+                    ) + 24,
                   ),
                 ),
               ],
@@ -567,6 +570,18 @@ class _ExploreScreenState extends State<ExploreScreen> {
   }
 
   Widget _genreCard(String name, List<Color> gradient) {
+    final cardBg = AppColors.cardSurfaceOf(context);
+    // Accurately blend the card gradient overlay with the surface background
+    final effectiveBg = Color.alphaBlend(
+      gradient.first.withValues(alpha: 0.65),
+      cardBg,
+    );
+    // WCAG luminance threshold: use dark text on light backgrounds and light text on dark backgrounds
+    final isDarkSurface = effectiveBg.computeLuminance() < 0.4;
+    final labelColor = isDarkSurface
+        ? AppDarkColors.textPrimary
+        : AppColors.textPrimaryOf(context);
+
     return Pressable(
       onTap: () => widget.onSearchTap?.call('$name music'),
       child: Container(
@@ -575,7 +590,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
           gradient: LinearGradient(
             colors: [
               gradient.first.withValues(alpha: 0.65),
-              AppColors.cardSurfaceOf(context),
+              cardBg,
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
@@ -587,10 +602,10 @@ class _ExploreScreenState extends State<ExploreScreen> {
         alignment: Alignment.bottomLeft,
         child: Text(
           name,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w700,
-            color: Colors.white,
+            color: labelColor,
           ),
         ),
       ),
@@ -603,8 +618,14 @@ class _ExploreScreenState extends State<ExploreScreen> {
     required List<Color> gradient,
     required VoidCallback onTap,
   }) {
+    final cardBg = AppColors.cardSurfaceOf(context);
+    final isLightIconBg = gradient.first.computeLuminance() > 0.4;
+    final iconColor = isLightIconBg
+        ? AppColors.textPrimaryOf(context)
+        : Colors.white;
+
     return Material(
-      color: AppColors.cardSurfaceOf(context),
+      color: cardBg,
       borderRadius: BorderRadius.circular(16),
       child: InkWell(
         onTap: onTap,
@@ -624,8 +645,11 @@ class _ExploreScreenState extends State<ExploreScreen> {
                 decoration: BoxDecoration(
                   gradient: LinearGradient(colors: gradient),
                   borderRadius: BorderRadius.circular(12),
+                  border: isLightIconBg
+                      ? Border.all(color: AppColors.cardBorderOf(context))
+                      : null,
                 ),
-                child: Icon(icon, color: Colors.white, size: 24),
+                child: Icon(icon, color: iconColor, size: 24),
               ),
               const SizedBox(width: 12),
               Expanded(
