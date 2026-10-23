@@ -5,6 +5,9 @@ import '../models/song.dart';
 import '../services/audio_service.dart';
 import '../services/auth_service.dart';
 import '../services/power_manager_service.dart';
+import '../models/user_profile.dart';
+import '../services/profile_service.dart';
+import 'history_screen.dart';
 import '../theme/app_colors.dart';
 import '../theme/theme_controller.dart';
 import '../widgets/account_dialog.dart';
@@ -37,6 +40,7 @@ class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserv
   String _audioQuality = 'High';
   bool _offlineMode = false;
   bool _batteryOptimizationIgnored = true;
+  UserProfile? _userProfile;
 
   @override
   void initState() {
@@ -44,6 +48,7 @@ class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserv
     WidgetsBinding.instance.addObserver(this);
     _loadPreferences();
     _checkBatteryStatus();
+    _loadProfile();
   }
 
   @override
@@ -56,6 +61,7 @@ class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserv
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       _checkBatteryStatus();
+    _loadProfile();
     }
   }
 
@@ -63,6 +69,23 @@ class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserv
     final ignored = await PowerManagerService.instance.isIgnoringBatteryOptimizations();
     if (mounted) {
       setState(() => _batteryOptimizationIgnored = ignored);
+    }
+  }
+
+  Future<void> _loadProfile() async {
+    final user = widget.authService.currentUser;
+    if (user != null) {
+      final profile = await ProfileService.instance.fetchProfile(
+        user.id,
+        authUser: user,
+      );
+      if (mounted) {
+        setState(() => _userProfile = profile);
+      }
+    } else {
+      if (mounted) {
+        setState(() => _userProfile = null);
+      }
     }
   }
 
@@ -220,6 +243,191 @@ class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserv
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  void _showEditProfileDialog() {
+    final user = widget.authService.currentUser;
+    if (user == null) {
+      AccountDialog.show(
+        context,
+        authService: widget.authService,
+        onAuthChanged: () {
+          _loadProfile();
+          if (mounted) setState(() {});
+        },
+      );
+      return;
+    }
+
+    final isDark = ThemeController.instance.isDark;
+    final currentProfile = ProfileService.instance.currentProfile ?? _userProfile;
+    final nameCtrl = TextEditingController(text: currentProfile?.displayName ?? user.email?.split('@').first ?? '');
+    final userCtrl = TextEditingController(text: currentProfile?.username ?? user.email?.split('@').first ?? '');
+    final bioCtrl = TextEditingController(text: currentProfile?.bio ?? 'Music lover on Harmoniq');
+    final genreCtrl = TextEditingController(text: currentProfile?.favoriteGenre ?? 'All Genres');
+    bool saving = false;
+
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          final surface = isDark ? AppDarkColors.backgroundSecondary : AppColors.backgroundSecondary;
+          final border = AppColors.glassBorderOf(context);
+          final textCol = isDark ? AppDarkColors.textPrimary : AppColors.textPrimary;
+          final secText = isDark ? AppDarkColors.textSecondary : AppColors.textSecondary;
+
+          return AlertDialog(
+            backgroundColor: surface,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+              side: BorderSide(color: border),
+            ),
+            title: Row(
+              children: [
+                const Icon(Icons.edit_note_rounded, color: AppColors.coral, size: 24),
+                const SizedBox(width: 8),
+                Text(
+                  'Edit Profile',
+                  style: TextStyle(
+                    color: textCol,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Update your Harmoniq identity and valid public profile.',
+                    style: TextStyle(color: secText, fontSize: 13),
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: nameCtrl,
+                    style: TextStyle(color: textCol, fontSize: 14),
+                    decoration: InputDecoration(
+                      labelText: 'Display Name',
+                      labelStyle: TextStyle(color: secText),
+                      prefixIcon: const Icon(Icons.badge_rounded, color: AppColors.coral, size: 20),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: border),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(color: AppColors.coral),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: userCtrl,
+                    style: TextStyle(color: textCol, fontSize: 14),
+                    decoration: InputDecoration(
+                      labelText: 'Username Handle',
+                      labelStyle: TextStyle(color: secText),
+                      prefixIcon: const Icon(Icons.alternate_email_rounded, color: AppColors.coral, size: 20),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: border),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(color: AppColors.coral),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: bioCtrl,
+                    maxLines: 2,
+                    style: TextStyle(color: textCol, fontSize: 14),
+                    decoration: InputDecoration(
+                      labelText: 'Bio',
+                      labelStyle: TextStyle(color: secText),
+                      prefixIcon: const Icon(Icons.description_rounded, color: AppColors.coral, size: 20),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: border),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(color: AppColors.coral),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: genreCtrl,
+                    style: TextStyle(color: textCol, fontSize: 14),
+                    decoration: InputDecoration(
+                      labelText: 'Favorite Genre',
+                      labelStyle: TextStyle(color: secText),
+                      prefixIcon: const Icon(Icons.music_note_rounded, color: AppColors.coral, size: 20),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: border),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(color: AppColors.coral),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: saving ? null : () => Navigator.pop(ctx),
+                child: Text('Cancel', style: TextStyle(color: isDark ? AppDarkColors.textTertiary : AppColors.textTertiary)),
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.coral,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                onPressed: saving
+                    ? null
+                    : () async {
+                        setDialogState(() => saving = true);
+                        final updated = await ProfileService.instance.updateProfile(
+                          userId: user.id,
+                          displayName: nameCtrl.text.trim(),
+                          username: userCtrl.text.trim(),
+                          bio: bioCtrl.text.trim(),
+                          favoriteGenre: genreCtrl.text.trim(),
+                        );
+                        if (mounted) {
+                          setState(() => _userProfile = updated);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Profile updated successfully!'),
+                              backgroundColor: AppColors.accent,
+                              duration: Duration(seconds: 2),
+                            ),
+                          );
+                        }
+                        if (Navigator.canPop(ctx)) Navigator.pop(ctx);
+                      },
+                child: saving
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      )
+                    : const Text('Save Changes', style: TextStyle(fontWeight: FontWeight.w700)),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -568,16 +776,15 @@ class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserv
   Widget build(BuildContext context) {
     return ListenableBuilder(
       listenable: Listenable.merge(
-          [widget.authService, widget.audioService, ThemeController.instance]),
+          [widget.authService, widget.audioService, ThemeController.instance, ProfileService.instance]),
       builder: (context, _) {
         final user = widget.authService.currentUser;
         final isAuthenticated = user != null;
-        final username =
+        final profile = ProfileService.instance.currentProfile ?? _userProfile;
+        final username = profile?.username ??
             user?.userMetadata?['username'] as String? ??
-            user?.userMetadata?['display_name'] as String? ??
-            (user?.email != null
-                ? user!.email!.split('@').first
-                : 'Guest User');
+            (user?.email != null ? user!.email!.split('@').first : 'Guest User');
+        final displayName = profile?.effectiveName ?? username;
 
         final favorites = widget.audioService.favorites;
         final playlists = widget.audioService.playlists;
@@ -662,14 +869,21 @@ class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserv
                           ),
                           IconButton(
                             tooltip: isAuthenticated
-                                ? 'Edit Account'
+                                ? 'Edit Profile'
                                 : 'Sign In',
                             onPressed: () {
-                              AccountDialog.show(
-                                context,
-                                authService: widget.authService,
-                                onAuthChanged: () => setState(() {}),
-                              );
+                              if (isAuthenticated) {
+                                _showEditProfileDialog();
+                              } else {
+                                AccountDialog.show(
+                                  context,
+                                  authService: widget.authService,
+                                  onAuthChanged: () {
+                                    _loadProfile();
+                                    if (mounted) setState(() {});
+                                  },
+                                );
+                              }
                             },
                             icon: Icon(
                               isAuthenticated
@@ -715,9 +929,9 @@ class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserv
                           ),
                           const SizedBox(height: 14),
 
-                          // User Name
+                          // User Name & Handle
                           Text(
-                            username,
+                            displayName,
                             textAlign: TextAlign.center,
                             style: TextStyle(
                               color: isDark
@@ -728,6 +942,39 @@ class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserv
                               letterSpacing: -0.4,
                             ),
                           ),
+                          if (isAuthenticated) ...[
+                            const SizedBox(height: 2),
+                            Text(
+                              profile?.handle ?? '@',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: isDark
+                                    ? AppDarkColors.textSecondary
+                                    : AppColors.textSecondary,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                          if (profile?.bio != null && profile!.bio.trim().isNotEmpty) ...[
+                            const SizedBox(height: 6),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 24),
+                              child: Text(
+                                profile.bio,
+                                textAlign: TextAlign.center,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  color: isDark
+                                      ? AppDarkColors.textSecondary.withValues(alpha: 0.85)
+                                      : AppColors.textSecondary.withValues(alpha: 0.85),
+                                  fontSize: 12,
+                                  fontStyle: FontStyle.italic,
+                                ),
+                              ),
+                            ),
+                          ],
                           const SizedBox(height: 6),
 
                           // Membership status pill (consistent Harmoniq coral / theme pill)
@@ -835,10 +1082,23 @@ class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserv
                                 ),
                                 _statDivider(),
                                 Expanded(
-                                  child: _statSegment(
-                                    '${history.length}',
-                                    'History',
-                                    isDark,
+                                  child: GestureDetector(
+                                    behavior: HitTestBehavior.opaque,
+                                    onTap: () {
+                                      Navigator.of(context).push(
+                                        MaterialPageRoute(
+                                          builder: (_) => HistoryScreen(
+                                            audioService: widget.audioService,
+                                            authService: widget.authService,
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                    child: _statSegment(
+                                      '${history.length}',
+                                      'History',
+                                      isDark,
+                                    ),
                                   ),
                                 ),
                               ],
@@ -1220,6 +1480,31 @@ class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserv
                                 onChanged: _toggleOfflineMode,
                               ),
                               onTap: () => _toggleOfflineMode(!_offlineMode),
+                            ),
+                            _settingsDivider(),
+                            _settingsTile(
+                              icon: Icons.history_rounded,
+                              title: 'Song History',
+                              trailing: Text(
+                                '${history.length} tracks >',
+                                style: TextStyle(
+                                  color: isDark
+                                      ? AppDarkColors.textSecondary
+                                      : AppColors.textSecondary,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              onTap: () {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (_) => HistoryScreen(
+                                      audioService: widget.audioService,
+                                      authService: widget.authService,
+                                    ),
+                                  ),
+                                );
+                              },
                             ),
                             _settingsDivider(),
                             _settingsTile(

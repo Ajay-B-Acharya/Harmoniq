@@ -54,3 +54,10 @@ app.*.map.json
 # Editor local metadata
 .zcode/
 .zcodeignore
+
+# Environment and secrets (DO NOT COMMIT)
+.env*
+*.env
+.env.json
+*.local.dart
+supabase_keys.json

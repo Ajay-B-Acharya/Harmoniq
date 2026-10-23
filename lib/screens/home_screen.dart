@@ -721,7 +721,12 @@ class _HomeScreenState extends State<HomeScreen> {
                 onTap: () {
                   Navigator.pop(ctx);
                   Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const HistoryScreen()),
+                    MaterialPageRoute(
+                      builder: (_) => HistoryScreen(
+                        audioService: widget.audioService,
+                        authService: widget.authService,
+                      ),
+                    ),
                   );
                 },
               ),

@@ -61,6 +61,8 @@ class Song {
 
   bool get isOnline => source != SongSource.local;
 
+  bool get isYoutube => source == SongSource.youtube;
+
   String? get sourceUrl =>
       source == SongSource.youtube &&
           RegExp(r'^[A-Za-z0-9_-]{11}$').hasMatch(videoId ?? '')

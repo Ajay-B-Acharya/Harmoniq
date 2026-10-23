@@ -10,6 +10,7 @@ import 'package:just_audio/just_audio.dart';
 import 'package:just_audio_background/just_audio_background.dart';
 import 'package:audio_session/audio_session.dart';
 import 'power_manager_service.dart';
+import 'song_history_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/song.dart';
@@ -44,6 +45,8 @@ class AudioService extends ChangeNotifier {
   List<Song> get favorites => _favorites;
 
   // ── Persistent Recently Played ────────────────────────────────────────────────
+  String? _currentUserId;
+  String? get currentUserId => _currentUserId;
   static const String _prefsKeyRecentlyPlayed = 'harmoniq_recently_played_v1';
   List<Song> _recentlyPlayed = [];
   List<Song> get recentlyPlayed => _recentlyPlayed;
@@ -323,6 +326,44 @@ class AudioService extends ChangeNotifier {
     }
   }
 
+  void setUserId(String? userId) {
+    if (_currentUserId == userId) return;
+    _currentUserId = userId;
+    if (userId != null && userId.isNotEmpty) {
+      _loadUserHistoryFromSupabase(userId);
+    } else {
+      _loadRecentlyPlayed();
+    }
+  }
+
+  Future<void> _loadUserHistoryFromSupabase(String userId) async {
+    try {
+      final entries =
+          await SongHistoryService.instance.fetchUserHistory(userId: userId);
+      if (_disposed) return;
+      if (entries.isNotEmpty) {
+        _recentlyPlayed = entries.map((e) => e.toSong()).toList();
+        _syncFavoriteStates();
+        notifyListeners();
+      } else {
+        await _loadRecentlyPlayed();
+      }
+    } catch (e) {
+      debugPrint('[AUDIO_SERVICE] Error loading Supabase history: $e');
+      await _loadRecentlyPlayed();
+    }
+  }
+
+  Future<void> clearHistory() async {
+    final uid = _currentUserId;
+    if (uid != null && uid.isNotEmpty) {
+      await SongHistoryService.instance.clearUserHistory(userId: uid);
+    }
+    _recentlyPlayed.clear();
+    await _saveRecentlyPlayed();
+    notifyListeners();
+  }
+
   void _recordRecentlyPlayed(Song song) {
     _recentlyPlayed.removeWhere((s) => s.identity == song.identity);
     _recentlyPlayed.insert(0, song.copyWith(isFavorite: isSongFavorite(song)));
@@ -330,6 +371,14 @@ class AudioService extends ChangeNotifier {
       _recentlyPlayed.removeLast();
     }
     _saveRecentlyPlayed();
+
+    final uid = _currentUserId;
+    if (uid != null && uid.isNotEmpty) {
+      SongHistoryService.instance.recordSongPlayback(
+        userId: uid,
+        song: song,
+      );
+    }
   }
 
   bool isSongFavorite(Song song) =>

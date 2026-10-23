@@ -60,6 +60,7 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   late final AuthService _authService;
+  StreamSubscription? _authSub;
 
   @override
   void initState() {
@@ -70,6 +71,7 @@ class _MyAppState extends State<MyApp> {
 
   @override
   void dispose() {
+    _authSub?.cancel();
     _authService.dispose();
     super.dispose();
   }
@@ -159,6 +161,7 @@ class _MainContainerState extends State<MainContainer> {
   late final PageController _pageController;
   late final AudioService _audioService;
   late final AuthService _authService;
+  StreamSubscription? _authSub;
 
   late final List<Widget> _pages;
   final _searchKey = GlobalKey<SearchScreenState>();
@@ -170,6 +173,10 @@ class _MainContainerState extends State<MainContainer> {
     _audioService = widget.audioService ?? AudioService();
     _authService = widget.authService ?? AuthService();
     DownloadService.instance.setAudioService(_audioService);
+    _audioService.setUserId(_authService.currentUser?.id);
+    _authSub = _authService.authStateChanges.listen((state) {
+      _audioService.setUserId(state.session?.user.id);
+    });
     _pageController = PageController();
 
     _pages = [
@@ -239,6 +246,7 @@ class _MainContainerState extends State<MainContainer> {
 
   @override
   void dispose() {
+    _authSub?.cancel();
     _pageController.dispose();
     if (widget.audioService == null) _audioService.dispose();
     if (widget.authService == null) _authService.dispose();
