@@ -53,6 +53,12 @@ class _DownloadQualitySheetState extends State<DownloadQualitySheet> {
   @override
   Widget build(BuildContext context) {
     final duration = widget.song.duration;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textPrimary = isDark ? AppDarkColors.textPrimary : AppColors.textPrimary;
+    final textSecondary = isDark ? AppDarkColors.textSecondary : AppColors.textSecondary;
+    final textMuted = isDark ? AppDarkColors.textMuted : AppColors.textMuted;
+    final surfaceColor = isDark ? AppDarkColors.cardSurface : AppColors.glassSecondary;
+    final borderColor = isDark ? AppDarkColors.cardBorder : AppColors.borderStandard;
 
     return SafeArea(
       top: false,
@@ -69,27 +75,27 @@ class _DownloadQualitySheetState extends State<DownloadQualitySheet> {
                 height: 4,
                 margin: const EdgeInsets.only(bottom: 16),
                 decoration: BoxDecoration(
-                  color: AppColors.textMuted.withValues(alpha: 0.4),
+                  color: textMuted.withValues(alpha: 0.4),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
             ),
 
             // Sheet Title & Subtitle
-            const Text(
+            Text(
               'Download Song',
               style: TextStyle(
-                color: AppColors.textPrimary,
+                color: textPrimary,
                 fontSize: 22,
                 fontWeight: FontWeight.w800,
                 letterSpacing: -0.4,
               ),
             ),
             const SizedBox(height: 4),
-            const Text(
+            Text(
               'Choose audio quality for offline listening.',
               style: TextStyle(
-                color: AppColors.textSecondary,
+                color: textSecondary,
                 fontSize: 13,
               ),
             ),
@@ -99,9 +105,9 @@ class _DownloadQualitySheetState extends State<DownloadQualitySheet> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: AppColors.glassSecondary,
+                color: surfaceColor,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppColors.borderStandard),
+                border: Border.all(color: borderColor),
               ),
               child: Row(
                 children: [
@@ -121,10 +127,10 @@ class _DownloadQualitySheetState extends State<DownloadQualitySheet> {
                           widget.song.title,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.w700,
-                            color: AppColors.textPrimary,
+                            color: textPrimary,
                           ),
                         ),
                         const SizedBox(height: 3),
@@ -132,9 +138,9 @@ class _DownloadQualitySheetState extends State<DownloadQualitySheet> {
                           widget.song.artist,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 13,
-                            color: AppColors.textSecondary,
+                            color: textSecondary,
                           ),
                         ),
                       ],
@@ -210,7 +216,7 @@ class _DownloadQualitySheetState extends State<DownloadQualitySheet> {
                                         style: TextStyle(
                                           color: isSelected
                                               ? AppColors.accentLight
-                                              : AppColors.textPrimary,
+                                              : textPrimary,
                                           fontWeight: FontWeight.w700,
                                           fontSize: 14,
                                           letterSpacing: 0.5,
@@ -219,8 +225,8 @@ class _DownloadQualitySheetState extends State<DownloadQualitySheet> {
                                       const SizedBox(width: 8),
                                       Text(
                                         '· ${quality.approxBitrateKbps} kbps (${quality.format})',
-                                        style: const TextStyle(
-                                          color: AppColors.textSecondary,
+                                        style: TextStyle(
+                                          color: textSecondary,
                                           fontSize: 12,
                                         ),
                                       ),
@@ -258,8 +264,8 @@ class _DownloadQualitySheetState extends State<DownloadQualitySheet> {
                                   const SizedBox(height: 4),
                                   Text(
                                     quality.notes,
-                                    style: const TextStyle(
-                                      color: AppColors.textSecondary,
+                                    style: TextStyle(
+                                      color: textSecondary,
                                       fontSize: 12,
                                     ),
                                   ),
@@ -315,16 +321,16 @@ class _DownloadQualitySheetState extends State<DownloadQualitySheet> {
                   child: OutlinedButton(
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 14),
-                      side: const BorderSide(color: AppColors.borderStandard),
+                      side: BorderSide(color: borderColor),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14),
                       ),
                     ),
                     onPressed: () => Navigator.pop(context),
-                    child: const Text(
+                    child: Text(
                       'Cancel',
                       style: TextStyle(
-                        color: AppColors.textSecondary,
+                        color: textSecondary,
                         fontWeight: FontWeight.w600,
                       ),
                     ),

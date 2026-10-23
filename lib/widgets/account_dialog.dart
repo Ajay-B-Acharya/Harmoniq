@@ -56,6 +56,12 @@ class AccountDialog extends StatelessWidget {
         user?.userMetadata?['username'] as String? ??
         user?.userMetadata?['display_name'] as String? ??
         (user?.email != null ? user!.email!.split('@').first : 'Music Lover');
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textPrimary = isDark ? AppDarkColors.textPrimary : AppColors.textPrimary;
+    final textSecondary = isDark ? AppDarkColors.textSecondary : AppColors.textSecondary;
+    final textMuted = isDark ? AppDarkColors.textMuted : AppColors.textMuted;
+    final surfaceBorder = isDark ? AppDarkColors.borderStandard : AppColors.surfaceBorder;
+    final surfaceHigh = isDark ? AppDarkColors.surfaceHigh : AppColors.surfaceHigh;
 
     return Padding(
       padding: EdgeInsets.only(
@@ -74,7 +80,7 @@ class AccountDialog extends StatelessWidget {
               width: 38,
               height: 4,
               decoration: BoxDecoration(
-                color: AppColors.surfaceBorder,
+                color: surfaceBorder,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -89,11 +95,11 @@ class AccountDialog extends StatelessWidget {
                   shape: BoxShape.circle,
                   color: isAuthenticated
                       ? AppColors.accent.withValues(alpha: 0.15)
-                      : AppColors.surfaceHigh,
+                      : surfaceHigh,
                   border: Border.all(
                     color: isAuthenticated
                         ? AppColors.accent.withValues(alpha: 0.5)
-                        : AppColors.surfaceBorder,
+                        : surfaceBorder,
                   ),
                 ),
                 child: Icon(
@@ -102,7 +108,7 @@ class AccountDialog extends StatelessWidget {
                       : Icons.person_outline_rounded,
                   color: isAuthenticated
                       ? AppColors.accent
-                      : AppColors.textSecondary,
+                      : textSecondary,
                   size: 28,
                 ),
               ),
@@ -114,8 +120,8 @@ class AccountDialog extends StatelessWidget {
                   children: [
                     Text(
                       isAuthenticated ? username : 'Guest User',
-                      style: const TextStyle(
-                        color: AppColors.textPrimary,
+                      style: TextStyle(
+                        color: textPrimary,
                         fontSize: 18,
                         fontWeight: FontWeight.w700,
                       ),
@@ -125,8 +131,8 @@ class AccountDialog extends StatelessWidget {
                       isAuthenticated
                           ? (user.email ?? 'Authenticated')
                           : 'Not signed in',
-                      style: const TextStyle(
-                        color: AppColors.textSecondary,
+                      style: TextStyle(
+                        color: textSecondary,
                         fontSize: 13,
                       ),
                     ),
@@ -141,7 +147,7 @@ class AccountDialog extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: isAuthenticated
                       ? AppColors.accent.withValues(alpha: 0.15)
-                      : AppColors.surfaceHigh,
+                      : surfaceHigh,
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
@@ -149,7 +155,7 @@ class AccountDialog extends StatelessWidget {
                   style: TextStyle(
                     color: isAuthenticated
                         ? AppColors.accent
-                        : AppColors.textMuted,
+                        : textMuted,
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
                   ),
@@ -158,14 +164,14 @@ class AccountDialog extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 24),
-          const Divider(color: AppColors.surfaceBorder, height: 1),
+          Divider(color: surfaceBorder, height: 1),
           const SizedBox(height: 20),
 
           if (isAuthenticated) ...[
             Text(
               'Your Harmoniq account is connected to Supabase Auth.',
               style: TextStyle(
-                color: AppColors.textSecondary.withValues(alpha: 0.9),
+                color: textSecondary.withValues(alpha: 0.9),
                 fontSize: 13,
                 height: 1.4,
               ),
@@ -191,10 +197,10 @@ class AccountDialog extends StatelessWidget {
               ),
             ),
           ] else ...[
-            const Text(
+            Text(
               'Sign in with Supabase to sync your playlists, favorites, and listening history across devices.',
               style: TextStyle(
-                color: AppColors.textSecondary,
+                color: textSecondary,
                 fontSize: 13,
                 height: 1.4,
               ),

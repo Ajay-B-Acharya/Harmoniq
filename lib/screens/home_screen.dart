@@ -470,8 +470,10 @@ class _HomeScreenState extends State<HomeScreen> {
                           sliver: SliverToBoxAdapter(
                             child: Text(
                               _error!,
-                              style: const TextStyle(
-                                color: AppColors.textSecondary,
+                              style: TextStyle(
+                                color: isDark
+                                    ? AppDarkColors.textSecondary
+                                    : AppColors.textSecondary,
                                 fontSize: 13,
                               ),
                             ),
@@ -1139,7 +1141,7 @@ class _HomeScreenState extends State<HomeScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Expanded(
+                  Expanded(
                     child: Text(
                       'Bass Boost:',
                       maxLines: 1,
@@ -1147,17 +1149,21 @@ class _HomeScreenState extends State<HomeScreen> {
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
-                        color: AppColors.textSecondary,
+                        color: isDark
+                            ? AppDarkColors.textSecondary
+                            : AppColors.textSecondary,
                       ),
                     ),
                   ),
                   const SizedBox(width: 6),
                   Text(
                     '+${_bassBoost.toInt()} dB',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 14.5,
                       fontWeight: FontWeight.w800,
-                      color: AppColors.textPrimary,
+                      color: isDark
+                          ? AppDarkColors.textPrimary
+                          : AppColors.textPrimary,
                     ),
                   ),
                 ],
@@ -1222,8 +1228,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       borderRadius: BorderRadius.circular(22),
                       gradient: LinearGradient(
                         colors: isDark
-                            ? [const Color(0xFF2C3545), const Color(0xFF1E232F)]
-                            : [const Color(0xFFE2E8F0), const Color(0xFFCBD5E1)],
+                            ? AppColors.allDarkGradients[0]
+                            : AppColors.gradientBlueCosmic,
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),

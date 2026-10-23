@@ -71,6 +71,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textPrimary = isDark ? AppDarkColors.textPrimary : AppColors.textPrimary;
+    final textSecondary = isDark ? AppDarkColors.textSecondary : AppColors.textSecondary;
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SpatialNebulaBackground(
@@ -106,13 +109,13 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 const SizedBox(height: 28),
 
                 // Title: History
-                const Text(
+                Text(
                   'History',
                   style: TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.w800,
                     letterSpacing: -0.6,
-                    color: AppColors.textPrimary,
+                    color: textPrimary,
                   ),
                 ),
                 const SizedBox(height: 22),
@@ -144,10 +147,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     onTap: () => setState(() => _showTransactions = !_showTransactions),
                     child: Text(
                       _showTransactions ? 'Hide transactions' : 'Show my transactions',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary,
+                        color: textPrimary,
                       ),
                     ),
                   ),
@@ -156,12 +159,12 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
                 // Recent Transactions List
                 if (_showTransactions) ...[
-                  const Text(
+                  Text(
                     'Recent Activity',
                     style: TextStyle(
                       fontSize: 17,
                       fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
+                      color: textPrimary,
                     ),
                   ),
                   const SizedBox(height: 14),
@@ -196,18 +199,18 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                   children: [
                                     Text(
                                       item.title,
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                         fontSize: 14,
                                         fontWeight: FontWeight.w600,
-                                        color: AppColors.textPrimary,
+                                        color: textPrimary,
                                       ),
                                     ),
                                     const SizedBox(height: 2),
                                     Text(
                                       '${item.category} · ${item.time}',
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                         fontSize: 11.5,
-                                        color: AppColors.textSecondary,
+                                        color: textSecondary,
                                       ),
                                     ),
                                   ],
@@ -220,7 +223,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                   fontWeight: FontWeight.w700,
                                   color: item.isIncome
                                       ? AppColors.success
-                                      : AppColors.textPrimary,
+                                      : textPrimary,
                                 ),
                               ),
                             ],

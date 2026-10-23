@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/song.dart';
 import '../services/audio_service.dart';
 import '../services/auth_service.dart';
+import '../services/power_manager_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/theme_controller.dart';
 import '../widgets/account_dialog.dart';
@@ -32,14 +33,37 @@ class ProfileScreen extends StatefulWidget {
   State<ProfileScreen> createState() => _ProfileScreenState();
 }
 
-class _ProfileScreenState extends State<ProfileScreen> {
+class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserver {
   String _audioQuality = 'High';
   bool _offlineMode = false;
+  bool _batteryOptimizationIgnored = true;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _loadPreferences();
+    _checkBatteryStatus();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _checkBatteryStatus();
+    }
+  }
+
+  Future<void> _checkBatteryStatus() async {
+    final ignored = await PowerManagerService.instance.isIgnoringBatteryOptimizations();
+    if (mounted) {
+      setState(() => _batteryOptimizationIgnored = ignored);
+    }
   }
 
   Future<void> _loadPreferences() async {
@@ -67,6 +91,137 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (mounted) {
       setState(() => _offlineMode = value);
     }
+  }
+
+  Future<void> _handleBackgroundPowerUsage() async {
+    if (!_batteryOptimizationIgnored) {
+      await PowerManagerService.instance.requestIgnoreBatteryOptimizations();
+      await Future<void>.delayed(const Duration(milliseconds: 500));
+      await _checkBatteryStatus();
+    } else {
+      _showBatteryDetailsDialog();
+    }
+  }
+
+  void _showBatteryDetailsDialog() {
+    final isDark = ThemeController.instance.isDark;
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: isDark ? AppDarkColors.backgroundSecondary : AppColors.backgroundSecondary,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: BorderSide(color: AppColors.glassBorderOf(context)),
+        ),
+        title: Row(
+          children: [
+            const Icon(Icons.bolt_rounded, color: AppColors.softCyan, size: 24),
+            const SizedBox(width: 8),
+            Text(
+              'Background Power Usage',
+              style: TextStyle(
+                color: isDark ? AppDarkColors.textPrimary : AppColors.textPrimary,
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              _batteryOptimizationIgnored
+                  ? 'Harmoniq is granted Unrestricted background access. Music streaming will continue uninterrupted when your screen locks or when the app is minimized.'
+                  : 'Android battery optimization (Doze mode) suspends background audio playback after 1-2 minutes of screen lock. Allowing Unrestricted Power Usage ensures smooth, nonstop playback.',
+              style: TextStyle(
+                color: isDark ? AppDarkColors.textSecondary : AppColors.textSecondary,
+                fontSize: 13,
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 14),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: _batteryOptimizationIgnored
+                    ? AppColors.softCyan.withOpacity(0.12)
+                    : AppColors.coral.withOpacity(0.12),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: _batteryOptimizationIgnored
+                      ? AppColors.softCyan.withOpacity(0.3)
+                      : AppColors.coral.withOpacity(0.3),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    _batteryOptimizationIgnored
+                        ? Icons.check_circle_rounded
+                        : Icons.warning_amber_rounded,
+                    color: _batteryOptimizationIgnored
+                        ? AppColors.softCyan
+                        : AppColors.coral,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      _batteryOptimizationIgnored
+                          ? 'Status: Unrestricted (Background Playback Active)'
+                          : 'Status: Restricted (Stops ~2 mins after screen lock)',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: _batteryOptimizationIgnored
+                            ? AppColors.softCyan
+                            : AppColors.coral,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(
+              'Close',
+              style: TextStyle(
+                color: isDark ? AppDarkColors.textTertiary : AppColors.textTertiary,
+              ),
+            ),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.softCyan,
+              foregroundColor: Colors.black,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            onPressed: () async {
+              Navigator.pop(ctx);
+              if (!_batteryOptimizationIgnored) {
+                await PowerManagerService.instance.requestIgnoreBatteryOptimizations();
+              } else {
+                await PowerManagerService.instance.openBatteryOptimizationSettings();
+              }
+              await Future<void>.delayed(const Duration(milliseconds: 500));
+              await _checkBatteryStatus();
+            },
+            child: Text(
+              _batteryOptimizationIgnored ? 'System Settings' : 'Allow Unrestricted',
+              style: const TextStyle(fontWeight: FontWeight.w700),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   void _showAudioQualityDialog() {
@@ -157,7 +312,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
               subtitle: Text(
-                'Low-contrast soft light canvas',
+                'Warm creamy soft canvas',
                 style: TextStyle(
                   color: isDark
                       ? AppDarkColors.textSecondary
@@ -192,7 +347,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
               subtitle: Text(
-                'Low-contrast soothing dark canvas',
+                'Deep black canvas',
                 style: TextStyle(
                   color: isDark
                       ? AppDarkColors.textSecondary
@@ -989,11 +1144,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 activeThumbColor: Colors.white,
                                 activeTrackColor: AppColors.coral,
                                 inactiveThumbColor: isDark
-                                    ? const Color(0xFF94A3B8)
-                                    : const Color(0xFF7E8F9E),
+                                    ? AppDarkColors.textTertiary
+                                    : AppColors.textTertiary,
                                 inactiveTrackColor: isDark
                                     ? AppDarkColors.insetTrack
-                                    : const Color(0xFFD4DCE8),
+                                    : AppColors.insetTrack,
                                 onChanged: (val) {
                                   ThemeController.instance.setLowContrast(val);
                                 },
@@ -1020,6 +1175,36 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             ),
                             _settingsDivider(),
                             _settingsTile(
+                              icon: Icons.bolt_rounded,
+                              title: 'Background Playback',
+                              trailing: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: _batteryOptimizationIgnored
+                                      ? AppColors.softCyan.withOpacity(0.12)
+                                      : AppColors.coral.withOpacity(0.12),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  _batteryOptimizationIgnored
+                                      ? 'Unrestricted'
+                                      : 'Restricted >',
+                                  style: TextStyle(
+                                    color: _batteryOptimizationIgnored
+                                        ? AppColors.softCyan
+                                        : AppColors.coral,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                              onTap: _handleBackgroundPowerUsage,
+                            ),
+                            _settingsDivider(),
+                            _settingsTile(
                               icon: Icons.cloud_download_outlined,
                               title: 'Offline Mode',
                               trailing: Switch(
@@ -1027,11 +1212,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 activeThumbColor: Colors.white,
                                 activeTrackColor: AppColors.coral,
                                 inactiveThumbColor: isDark
-                                    ? const Color(0xFF94A3B8)
-                                    : const Color(0xFF7E8F9E),
+                                    ? AppDarkColors.textTertiary
+                                    : AppColors.textTertiary,
                                 inactiveTrackColor: isDark
                                     ? AppDarkColors.insetTrack
-                                    : const Color(0xFFD4DCE8),
+                                    : AppColors.insetTrack,
                                 onChanged: _toggleOfflineMode,
                               ),
                               onTap: () => _toggleOfflineMode(!_offlineMode),

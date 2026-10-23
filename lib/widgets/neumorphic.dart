@@ -380,7 +380,7 @@ class _NeumorphicSwitchState extends State<NeumorphicSwitch> {
                   height: _knobDiameter,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: isDark ? const Color(0xFFD4DCE8) : Colors.white,
+                    color: isDark ? AppDarkColors.textPrimary : Colors.white,
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.14),
@@ -686,18 +686,18 @@ class NeumorphicDonutChart extends StatelessWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.close_rounded,
                       size: 13,
-                      color: AppColors.textPrimary,
+                      color: AppColors.textPrimaryOf(context),
                     ),
                     const SizedBox(width: 4),
                     Text(
                       calloutLabel,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary,
+                        color: AppColors.textPrimaryOf(context),
                       ),
                     ),
                   ],
@@ -782,6 +782,10 @@ class NeumorphicCreditCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textPrimary = isDark ? AppDarkColors.textPrimary : AppColors.textPrimary;
+    final textSecondary = isDark ? AppDarkColors.textSecondary : AppColors.textSecondary;
+
     return NeumorphicBox(
       borderRadius: 22,
       depth: 6.0,
@@ -809,11 +813,11 @@ class NeumorphicCreditCard extends StatelessWidget {
           // Masked Card Number
           Text(
             cardNumber,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w800,
               letterSpacing: 2.2,
-              color: AppColors.textPrimary,
+              color: textPrimary,
             ),
           ),
           const SizedBox(height: 24),
@@ -823,22 +827,22 @@ class NeumorphicCreditCard extends StatelessWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     'EXPIRES',
                     style: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.w600,
                       letterSpacing: 1.0,
-                      color: AppColors.textSecondary,
+                      color: textSecondary,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     expires,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 13.5,
                       fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
+                      color: textPrimary,
                     ),
                   ),
                 ],
@@ -847,22 +851,22 @@ class NeumorphicCreditCard extends StatelessWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     'CVV',
                     style: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.w600,
                       letterSpacing: 1.0,
-                      color: AppColors.textSecondary,
+                      color: textSecondary,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     cvv,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 13.5,
                       fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
+                      color: textPrimary,
                     ),
                   ),
                 ],

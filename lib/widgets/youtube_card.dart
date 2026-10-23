@@ -65,8 +65,8 @@ class YoutubeCard extends StatelessWidget {
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
-                    const ColoredBox(
-                      color: AppColors.surfaceHigh,
+                    ColoredBox(
+                      color: isDark ? AppDarkColors.surfaceHigh : AppColors.surfaceHigh,
                       child: Icon(
                         Icons.music_note_rounded,
                         color: AppColors.accent,

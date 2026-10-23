@@ -165,7 +165,7 @@ class _DownloadProgressBarState extends State<DownloadProgressBar> {
                           showShadow: false,
                         )
                       : Container(
-                          color: AppColors.surface,
+                          color: AppColors.surfaceOf(context),
                           child: Icon(
                             isDone
                                 ? Icons.check_circle_rounded
@@ -306,9 +306,9 @@ class _DownloadProgressBarState extends State<DownloadProgressBar> {
               child: isFail
                   ? Container(color: AppColors.error)
                   : frac == null
-                      ? const LinearProgressIndicator(
-                          backgroundColor: AppColors.surface,
-                          valueColor: AlwaysStoppedAnimation<Color>(
+                      ? LinearProgressIndicator(
+                          backgroundColor: AppColors.surfaceOf(context),
+                          valueColor: const AlwaysStoppedAnimation<Color>(
                             AppColors.coral,
                           ),
                         )
@@ -318,7 +318,7 @@ class _DownloadProgressBarState extends State<DownloadProgressBar> {
                               children: [
                                 Container(
                                   width: constraints.maxWidth,
-                                  color: AppColors.surface,
+                                  color: AppColors.surfaceOf(context),
                                 ),
                                 AnimatedContainer(
                                   duration: const Duration(milliseconds: 200),

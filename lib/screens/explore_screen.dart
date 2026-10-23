@@ -102,6 +102,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
   @override
   Widget build(BuildContext context) {
     final catalogue = _getAllAvailable();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -110,7 +111,7 @@ class _ExploreScreenState extends State<ExploreScreen> {
           bottom: false,
           child: RefreshIndicator(
             color: AppColors.primaryCyan,
-            backgroundColor: AppColors.backgroundSecondary,
+            backgroundColor: AppColors.backgroundSecondaryOf(context),
             onRefresh: () async {
               await _loadDiscoveryTracks(refresh: true);
               if (mounted) setState(() {});
@@ -250,15 +251,15 @@ class _ExploreScreenState extends State<ExploreScreen> {
                       scrollDirection: Axis.horizontal,
                       padding: const EdgeInsets.symmetric(horizontal: 20),
                       children: [
-                        _genreCard('Pop', AppColors.gradientOceanBlue),
+                        _genreCard('Pop', isDark ? AppColors.categoryOceanBlueDark : AppColors.gradientOceanBlue),
                         const SizedBox(width: 12),
-                        _genreCard('Hip-Hop', AppColors.gradientElectricBlue),
+                        _genreCard('Hip-Hop', isDark ? AppColors.categoryElectricBlueDark : AppColors.gradientElectricBlue),
                         const SizedBox(width: 12),
-                        _genreCard('Rock', AppColors.gradientMidnightSteel),
+                        _genreCard('Rock', isDark ? AppColors.categoryMidnightSteelDark : AppColors.gradientMidnightSteel),
                         const SizedBox(width: 12),
-                        _genreCard('Electronic', AppColors.gradientCyanDepth),
+                        _genreCard('Electronic', isDark ? AppColors.categoryCyanDepthDark : AppColors.gradientCyanDepth),
                         const SizedBox(width: 12),
-                        _genreCard('Bollywood', AppColors.gradientBlueAura),
+                        _genreCard('Bollywood', isDark ? AppColors.categoryBlueAuraDark : AppColors.gradientBlueAura),
                       ],
                     ),
                   ),
@@ -290,7 +291,9 @@ class _ExploreScreenState extends State<ExploreScreen> {
                         _trendingPlaylistCard(
                           title: 'Global Hits',
                           icon: Icons.public_rounded,
-                          gradient: AppColors.gradientOceanBlue,
+                          gradient: isDark
+                              ? AppColors.categoryOceanBlueDark
+                              : AppColors.gradientOceanBlue,
                           onTap: () {
                             if (catalogue.isNotEmpty) {
                               widget.onSongTap(catalogue.first, catalogue);
@@ -303,7 +306,9 @@ class _ExploreScreenState extends State<ExploreScreen> {
                         _trendingPlaylistCard(
                           title: 'Viral Tracks',
                           icon: Icons.star_rounded,
-                          gradient: AppColors.gradientCyanDepth,
+                          gradient: isDark
+                              ? AppColors.categoryCyanDepthDark
+                              : AppColors.gradientCyanDepth,
                           onTap: () {
                             if (catalogue.length > 1) {
                               widget.onSongTap(catalogue[1], catalogue);

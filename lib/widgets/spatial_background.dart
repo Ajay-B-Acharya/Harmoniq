@@ -35,14 +35,14 @@ class _NeumorphicCanvasPainter extends CustomPainter {
     final rect = Offset.zero & size;
     final colors = isDark
         ? const [
-            Color(0xFF242A35),
-            Color(0xFF1E222B),
-            Color(0xFF15181F),
+            Color(0xFF080808),
+            AppDarkColors.background,
+            Color(0xFF000000),
           ]
         : const [
-            Color(0xFFEFF3F8),
+            Color(0xFFFFFDF8),
             AppColors.background,
-            Color(0xFFE2E7ED),
+            Color(0xFFEFE6D6),
           ];
 
     canvas.drawRect(

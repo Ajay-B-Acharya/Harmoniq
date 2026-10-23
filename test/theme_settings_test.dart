@@ -83,18 +83,20 @@ void main() {
       expect(prefs.getBool('pref_low_contrast'), isTrue);
     });
 
-    test('validates low contrast color tokens for dark and light modes', () {
-      // Light Mode low contrast text and soft shadow checks
-      expect(AppColors.textPrimary, const Color(0xFF222E3C));
-      expect(AppColors.textSecondary, const Color(0xFF4E5E72));
-      expect(AppColors.lightShadow, const Color(0xFFF7F9FC));
-      expect(AppColors.darkShadow, const Color(0xFFBAC7D5));
+    test('validates creamy light and deep dark black color tokens', () {
+      // Creamy Light Mode tokens
+      expect(AppColors.background, const Color(0xFFFBF6EC));
+      expect(AppColors.textPrimary, const Color(0xFF282017));
+      expect(AppColors.textSecondary, const Color(0xFF655848));
+      expect(AppColors.lightShadow, const Color(0xFFFFFFFF));
+      expect(AppColors.darkShadow, const Color(0xFFD8CFBF));
 
-      // Dark Mode low contrast text and shadow checks
-      expect(AppDarkColors.textPrimary, const Color(0xFFE2E8F0));
-      expect(AppDarkColors.textSecondary, const Color(0xFF94A3B8));
-      expect(AppDarkColors.darkShadow, const Color(0xFF12151B));
-      expect(AppDarkColors.lightShadow, const Color(0xFF282F3C));
+      // Pure Pitch Black Dark Mode tokens
+      expect(AppDarkColors.background, const Color(0xFF000000));
+      expect(AppDarkColors.textPrimary, const Color(0xFFFFFFFF));
+      expect(AppDarkColors.textSecondary, const Color(0xFFA1A1AA));
+      expect(AppDarkColors.darkShadow, const Color(0xFF000000));
+      expect(AppDarkColors.lightShadow, const Color(0xFF1A1A1A));
     });
   });
 

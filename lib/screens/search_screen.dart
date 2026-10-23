@@ -896,8 +896,8 @@ class SearchScreenState extends State<SearchScreen> {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         text: TextSpan(
-                          style: const TextStyle(
-                            color: AppColors.textPrimary,
+                          style: TextStyle(
+                            color: AppColors.textPrimaryOf(context),
                             fontSize: 13,
                           ),
                           children: [
@@ -926,8 +926,8 @@ class SearchScreenState extends State<SearchScreen> {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   text: TextSpan(
-                    style: const TextStyle(
-                      color: AppColors.textPrimary,
+                    style: TextStyle(
+                      color: AppColors.textPrimaryOf(context),
                       fontSize: 13,
                     ),
                     children: [
@@ -957,13 +957,13 @@ class SearchScreenState extends State<SearchScreen> {
                       color: AppColors.softCyan,
                     ),
                     const SizedBox(width: 6),
-                    const Text(
+                    Text(
                       'SONG & SEARCH SUGGESTIONS',
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
                         letterSpacing: 1.1,
-                        color: AppColors.textSecondary,
+                        color: AppColors.textSecondaryOf(context),
                       ),
                     ),
                     if (_loadingSuggestions) ...[
@@ -1002,7 +1002,7 @@ class SearchScreenState extends State<SearchScreen> {
                     };
                     final iconColor = switch (suggestion.type) {
                       SuggestionType.library => AppColors.coral,
-                      SuggestionType.recent => AppColors.textMuted,
+                      SuggestionType.recent => AppColors.textMutedOf(context),
                       SuggestionType.online => AppColors.softCyan,
                     };
                     return Container(
@@ -1085,8 +1085,8 @@ class SearchScreenState extends State<SearchScreen> {
                 padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
                 child: Text(
                   _error!,
-                  style: const TextStyle(
-                    color: AppColors.textSecondary,
+                  style: TextStyle(
+                    color: AppColors.textSecondaryOf(context),
                     fontSize: 13,
                   ),
                 ),
@@ -1142,10 +1142,10 @@ class SearchScreenState extends State<SearchScreen> {
                         size: 18,
                         color: AppColors.coral,
                       ),
-                      label: const Text(
+                      label: Text(
                         'Load more songs',
                         style: TextStyle(
-                          color: AppColors.textPrimary,
+                          color: AppColors.textPrimaryOf(context),
                           fontWeight: FontWeight.w600,
                           fontSize: 13,
                         ),
@@ -1184,8 +1184,8 @@ class SearchScreenState extends State<SearchScreen> {
                       ),
                       label: Text(
                         _loadMoreError!,
-                        style: const TextStyle(
-                          color: AppColors.textSecondary,
+                        style: TextStyle(
+                          color: AppColors.textSecondaryOf(context),
                           fontSize: 13,
                         ),
                       ),
@@ -1198,13 +1198,13 @@ class SearchScreenState extends State<SearchScreen> {
               _error == null &&
               _submitted == _query &&
               _videos.isEmpty)
-            const SliverToBoxAdapter(
+            SliverToBoxAdapter(
               child: Padding(
-                padding: EdgeInsets.fromLTRB(20, 0, 20, 16),
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
                 child: Text(
                   'No tracks found. Try a different query.',
                   style: TextStyle(
-                    color: AppColors.textSecondary,
+                    color: AppColors.textSecondaryOf(context),
                     fontSize: 13,
                   ),
                 ),

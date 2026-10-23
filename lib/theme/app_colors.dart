@@ -1,73 +1,73 @@
 import 'package:flutter/material.dart';
 
-/// Dark Theme Neumorphic Palette Tokens (Low-Contrast Soft Dark)
+/// Dark Theme Neumorphic Palette Tokens (Pure Pitch Black AMOLED Dark)
 class AppDarkColors {
   const AppDarkColors._();
 
-  static const Color background = Color(0xFF1E222B);
-  static const Color backgroundSecondary = Color(0xFF191C24);
-  static const Color backgroundSurface = Color(0xFF222731);
+  static const Color background = Color(0xFF000000);
+  static const Color backgroundSecondary = Color(0xFF050505);
+  static const Color backgroundSurface = Color(0xFF0A0A0A);
   static const Color surface = background;
-  static const Color surfaceHigh = Color(0xFF252B36);
-  static const Color lightShadow = Color(0xFF282F3C);
-  static const Color darkShadow = Color(0xFF12151B);
-  static const Color darkShadowSubtle = Color(0xFF151820);
-  static const Color shadowStandard = Color(0x40000000);
-  static const Color shadowFloating = Color(0x60000000);
-  static const Color insetTrack = Color(0xFF171A21);
-  static const Color insetHighlight = Color(0xFF262C38);
-  static const Color insetShadow = Color(0xFF0E1015);
-  static const Color textPrimary = Color(0xFFE2E8F0);
-  static const Color textSecondary = Color(0xFF94A3B8);
-  static const Color textTertiary = Color(0xFF6E8096);
+  static const Color surfaceHigh = Color(0xFF101010);
+  static const Color lightShadow = Color(0xFF1A1A1A);
+  static const Color darkShadow = Color(0xFF000000);
+  static const Color darkShadowSubtle = Color(0xFF000000);
+  static const Color shadowStandard = Color(0x90000000);
+  static const Color shadowFloating = Color(0xD0000000);
+  static const Color insetTrack = Color(0xFF050505);
+  static const Color insetHighlight = Color(0xFF141414);
+  static const Color insetShadow = Color(0xFF000000);
+  static const Color textPrimary = Color(0xFFFFFFFF);
+  static const Color textSecondary = Color(0xFFA1A1AA);
+  static const Color textTertiary = Color(0xFF71717A);
   static const Color textMuted = textTertiary;
-  static const Color silver = Color(0xFF282F3B);
-  static const Color borderStandard = Color(0x18FFFFFF);
-  static const Color borderElevated = Color(0x28FFFFFF);
+  static const Color silver = Color(0xFF101010);
+  static const Color borderStandard = Color(0x1FFFFFFF);
+  static const Color borderElevated = Color(0x33FFFFFF);
   static const Color divider = Color(0x18FFFFFF);
-  static const Color dockSurface = Color(0xFF1E222B);
-  static const Color dockBorder = Color(0x20FFFFFF);
-  static const Color dockActiveSurface = Color(0xFF262C38);
-  static const Color dockInactive = Color(0xFF7E8F9E);
-  static const Color cardSurface = Color(0xFF242A35);
-  static const Color cardBorder = Color(0x18FFFFFF);
+  static const Color dockSurface = Color(0xFF050505);
+  static const Color dockBorder = Color(0x22FFFFFF);
+  static const Color dockActiveSurface = Color(0xFF141414);
+  static const Color dockInactive = Color(0xFF71717A);
+  static const Color cardSurface = Color(0xFF0A0A0A);
+  static const Color cardBorder = Color(0x1FFFFFFF);
   static const Color playControlSurface = background;
   static const Color playControlForeground = textPrimary;
 }
 
-/// Neumorphism & Soft 3D UI Color Palette
+/// Neumorphism & Soft 3D UI Color Palette (Rich Warm Cream Light Canvas)
 ///
-/// Monochromatic soft surfaces, dual outer shadows for extruded plastic-like
+/// Monochromatic warm cream surfaces, dual outer shadows for extruded plastic-like
 /// elevation, tactile indentations for recessed tracks and active states,
-/// with signature gentle Coral (`#F06A4F`) accents and low-contrast palettes.
+/// with signature gentle Coral (`#F06A4F`) accents.
 class AppColors {
   const AppColors._();
 
-  // Neumorphic canvas and surfaces (identical monochromatic tone for plastic extrusion)
-  static const Color background = Color(0xFFE8ECF2);
-  static const Color backgroundSecondary = Color(0xFFE2E7ED);
-  static const Color surface = Color(0xFFE8ECF2);
-  static const Color surfaceHigh = Color(0xFFE8ECF2);
-  static const Color backgroundSurface = Color(0xFFE8ECF2);
+  // Neumorphic canvas and surfaces (identical warm creamy tone)
+  static const Color background = Color(0xFFFBF6EC);
+  static const Color backgroundSecondary = Color(0xFFF3ECE0);
+  static const Color surface = Color(0xFFFBF6EC);
+  static const Color surfaceHigh = Color(0xFFFBF6EC);
+  static const Color backgroundSurface = Color(0xFFFDFBF5);
 
-  // Dual shadows for extruded 3D surfaces (Low-contrast softened depth)
-  static const Color lightShadow = Color(0xFFF7F9FC);
-  static const Color darkShadow = Color(0xFFBAC7D5);
-  static const Color darkShadowSubtle = Color(0xFFBCC8D6);
-  static const Color shadowStandard = Color(0x40BAC5D5);
-  static const Color shadowFloating = Color(0x50A6B4C9);
+  // Dual shadows for extruded 3D surfaces (Warm cream specular highlight & warm taupe drop shadow)
+  static const Color lightShadow = Color(0xFFFFFFFF);
+  static const Color darkShadow = Color(0xFFD8CFBF);
+  static const Color darkShadowSubtle = Color(0xFFE2D9CA);
+  static const Color shadowStandard = Color(0x3BB0A494);
+  static const Color shadowFloating = Color(0x4DA09482);
   static const Color glassShadow = shadowStandard;
 
   // Inset / Concave track & indentation colors
-  static const Color insetTrack = Color(0xFFDFE5EB);
-  static const Color insetHighlight = Color(0xFFF7F9FC);
-  static const Color insetShadow = Color(0xFFB4C1D2);
+  static const Color insetTrack = Color(0xFFECE4D5);
+  static const Color insetHighlight = Color(0xFFFFFFFF);
+  static const Color insetShadow = Color(0xFFD1C7B5);
 
-  // Deep navy & slate tones for contrast
-  static const Color midnightNavy = Color(0xFF2C394B);
-  static const Color deepBlue = Color(0xFF38495C);
+  // Deep espresso & warm charcoal tones for contrast
+  static const Color midnightNavy = Color(0xFF282017);
+  static const Color deepBlue = Color(0xFF3E3326);
 
-  // Signature Coral / Orange Accent (gentle, low-contrast coral)
+  // Signature Coral / Orange Accent (gentle, warm coral)
   static const Color coral = Color(0xFFF06A4F);
   static const Color coralLight = Color(0xFFF5856C);
   static const Color coralDark = Color(0xFFDB553A);
@@ -80,7 +80,7 @@ class AppColors {
   static const Color softCyan = coralLight;
   static const Color electricBlue = Color(0xFF5582CE);
   static const Color blue = Color(0xFF5582CE);
-  static const Color silver = Color(0xFFE8ECF2);
+  static const Color silver = Color(0xFFFBF6EC);
   static const Color heartColor = Color(0xFFF25570);
   static const Color error = Color(0xFFF87171);
   static const Color success = Color(0xFF34D399);
@@ -104,14 +104,14 @@ class AppColors {
   ];
 
   // Soft glass / surface compat aliases for Neumorphic cards
-  static const Color glassPrimary = Color(0xFFE8ECF2);
-  static const Color glassSecondary = Color(0xFFE8ECF2);
-  static const Color glassElevated = Color(0xFFE8ECF2);
-  static const Color glassSelected = Color(0xFFDFE5ED);
-  static const Color glassBlueTint = Color(0xFFE4EBF4);
-  static const Color glassCyanTint = Color(0xFFE4EBF4);
-  static const Color floatingGlass = Color(0xFFE8ECF2);
-  static const Color sheetSurface = Color(0xFFE8ECF2);
+  static const Color glassPrimary = Color(0xFFFBF6EC);
+  static const Color glassSecondary = Color(0xFFFBF6EC);
+  static const Color glassElevated = Color(0xFFFBF6EC);
+  static const Color glassSelected = Color(0xFFECE4D5);
+  static const Color glassBlueTint = Color(0xFFF6EFE3);
+  static const Color glassCyanTint = Color(0xFFF6EFE3);
+  static const Color floatingGlass = Color(0xFFFBF6EC);
+  static const Color sheetSurface = Color(0xFFFBF6EC);
   static const Color glassBackground = glassPrimary;
 
   // Overlays
@@ -121,10 +121,10 @@ class AppColors {
   static const Color blurSelectedOverlay = Color(0x20FF6444);
 
   // Subtle borders & specular highlights
-  static const Color borderStandard = Color(0x20FFFFFF);
-  static const Color borderElevated = Color(0x35FFFFFF);
+  static const Color borderStandard = Color(0x185C4E3D);
+  static const Color borderElevated = Color(0x245C4E3D);
   static const Color surfaceBorder = borderStandard;
-  static const Color divider = Color(0x15000000);
+  static const Color divider = Color(0x125C4E3D);
   static const Color borderActiveCyan = Color(0x80FF6444);
   static const Color specularHighlight = Color(0x60FFFFFF);
   static const Color glassBorder = borderStandard;
@@ -135,69 +135,69 @@ class AppColors {
   static const Color shadowCyanAccent = Color(0x25FF6444);
 
   // Card & Panel surfaces
-  static const Color cardSurface = Color(0xFFEFF3F8);
-  static const Color cardBorder = Color(0x15000000);
+  static const Color cardSurface = Color(0xFFFFFDF8);
+  static const Color cardBorder = Color(0x165C4E3D);
 
-  // High-legibility, low-contrast typography (crisp slate for strong contrast)
-  static const Color textPrimary = Color(0xFF222E3C);
-  static const Color textSecondary = Color(0xFF4E5E72);
-  static const Color textTertiary = Color(0xFF6E8096);
+  // High-legibility, warm typography (warm espresso charcoal)
+  static const Color textPrimary = Color(0xFF282017);
+  static const Color textSecondary = Color(0xFF655848);
+  static const Color textTertiary = Color(0xFF918270);
   static const Color textMuted = textTertiary;
 
   // Floating dock & bottom navigation
-  static const Color dockSurface = Color(0xFFE8ECF2);
-  static const Color dockBorder = Color(0x18000000);
-  static const Color dockActiveSurface = Color(0xFFDFE5EB);
+  static const Color dockSurface = Color(0xFFFBF6EC);
+  static const Color dockBorder = Color(0x165C4E3D);
+  static const Color dockActiveSurface = Color(0xFFECE4D5);
   static const Color dockActiveBorder = Color(0x35FFFFFF);
   static const Color dockActiveGlow = Color(0x20F06A4F);
-  static const Color dockInactive = Color(0xFF5E7186);
+  static const Color dockInactive = Color(0xFF756755);
 
   // Playback control surfaces
-  static const Color playControlSurface = Color(0xFFE8ECF2);
-  static const Color playControlForeground = Color(0xFF222E3C);
-  static const Color metallicAccent = Color(0xFFBAC7D5);
+  static const Color playControlSurface = Color(0xFFFBF6EC);
+  static const Color playControlForeground = Color(0xFF282017);
+  static const Color metallicAccent = Color(0xFFD8CFBF);
 
   // Atmosphere gradients
   static const Color nebulaBlue = Color(0x104A7BD0);
   static const Color nebulaCyan = Color(0x10FF6444);
-  static const Color nebulaCoolBlue = Color(0x12BAC5D5);
+  static const Color nebulaCoolBlue = Color(0x12D8CFBF);
 
   static const List<Color> gradientBlueCosmic = [
-    Color(0xFFE2E8F0),
-    Color(0xFFCBD5E1),
+    Color(0xFFF3EFE6),
+    Color(0xFFE5DDD0),
   ];
   static const List<Color> gradientElectricBlue = [
-    Color(0xFFE0E7FF),
-    Color(0xFFC7D2FE),
+    Color(0xFFEDE8DE),
+    Color(0xFFDFD6C7),
   ];
   static const List<Color> gradientCyanDepth = [
-    Color(0xFFFFEDD5),
-    Color(0xFFFED7AA),
+    Color(0xFFFBF3E8),
+    Color(0xFFF2E2CF),
   ];
   static const List<Color> gradientBlueAura = [
-    Color(0xFFE0F2FE),
-    Color(0xFFBAE6FD),
+    Color(0xFFF0EBE1),
+    Color(0xFFE2D9CB),
   ];
   static const List<Color> gradientMidnightSteel = [
-    Color(0xFFF1F5F9),
-    Color(0xFFE2E8F0),
+    Color(0xFFF8F5EF),
+    Color(0xFFECE6DC),
   ];
   static const List<Color> gradientStarlightTeal = [
-    Color(0xFFCCFBF1),
-    Color(0xFF99F6E4),
+    Color(0xFFEAF5EE),
+    Color(0xFFD6EAE0),
   ];
   static const List<Color> gradientOceanBlue = [
-    Color(0xFFDBEAFE),
-    Color(0xFFBFDBFE),
+    Color(0xFFEBF1F5),
+    Color(0xFFD7E2E9),
   ];
   static const List<Color> gradientDarkOrbit = [
-    Color(0xFFE2E8F0),
-    Color(0xFFCBD5E1),
+    Color(0xFFECE5DA),
+    Color(0xFFDFD7CA),
   ];
   static const List<Color> gradientHero = [
-    Color(0xFFE8ECF2),
-    Color(0xFFDFE5ED),
-    background,
+    Color(0xFFFFFDF8),
+    Color(0xFFFBF6EC),
+    Color(0xFFEFE6D6),
   ];
 
   static const List<List<Color>> allGradients = [
@@ -211,16 +211,16 @@ class AppColors {
     gradientDarkOrbit,
   ];
 
-  // Coordinated dark gradients for dark mode album art placeholders
+  // Coordinated dark gradients for dark mode album art placeholders (pure black tones)
   static const List<List<Color>> allDarkGradients = [
-    [Color(0xFF2C3545), Color(0xFF1E232F)],
-    [Color(0xFF323D4E), Color(0xFF232A37)],
-    [Color(0xFF363F52), Color(0xFF252C3A)],
-    [Color(0xFF2D3847), Color(0xFF1F2531)],
-    [Color(0xFF343B49), Color(0xFF222732)],
-    [Color(0xFF2A3442), Color(0xFF1D222D)],
-    [Color(0xFF384050), Color(0xFF242A35)],
-    [Color(0xFF303948), Color(0xFF202633)],
+    [Color(0xFF161616), Color(0xFF000000)],
+    [Color(0xFF181818), Color(0xFF000000)],
+    [Color(0xFF141414), Color(0xFF000000)],
+    [Color(0xFF1A1A1A), Color(0xFF050505)],
+    [Color(0xFF151515), Color(0xFF000000)],
+    [Color(0xFF171717), Color(0xFF020202)],
+    [Color(0xFF191919), Color(0xFF000000)],
+    [Color(0xFF131313), Color(0xFF000000)],
   ];
 
   static List<Color> getGradientForId(int id) =>
@@ -231,36 +231,36 @@ class AppColors {
           ? allDarkGradients[id % allDarkGradients.length]
           : allGradients[id % allGradients.length];
 
-  // Coordinated, restrained dark-slate category tones
+  // Coordinated, restrained deep-black category tones
   static const List<Color> categoryOceanBlueDark = [
-    Color(0xFF243347),
-    Color(0xFF1D2635),
+    Color(0xFF141F2B),
+    Color(0xFF0A0F17),
   ];
   static const List<Color> categoryCyanDepthDark = [
-    Color(0xFF352C28),
-    Color(0xFF242730),
+    Color(0xFF241B18),
+    Color(0xFF0E0F14),
   ];
   static const List<Color> categoryBlueAuraDark = [
-    Color(0xFF223545),
-    Color(0xFF1C2734),
+    Color(0xFF12202B),
+    Color(0xFF0A1017),
   ];
   static const List<Color> categoryMidnightSteelDark = [
-    Color(0xFF2B333E),
-    Color(0xFF1F252E),
+    Color(0xFF1C2026),
+    Color(0xFF0D0F13),
   ];
   static const List<Color> categoryElectricBlueDark = [
-    Color(0xFF283148),
-    Color(0xFF1E2536),
+    Color(0xFF171E2D),
+    Color(0xFF0B0F1A),
   ];
   static const List<Color> categoryBlueCosmicDark = [
-    Color(0xFF27323B),
-    Color(0xFF1E252D),
+    Color(0xFF182025),
+    Color(0xFF0B0E11),
   ];
 
   static const List<Color> gradientHeroDark = [
-    Color(0xFF282F3D),
-    Color(0xFF202631),
-    Color(0xFF191D25),
+    Color(0xFF121212),
+    Color(0xFF060606),
+    Color(0xFF000000),
   ];
 
   static List<Color> heroGradientOf(BuildContext context) =>

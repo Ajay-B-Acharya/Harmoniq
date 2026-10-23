@@ -571,10 +571,10 @@ class LibraryScreenState extends State<LibraryScreen> {
         const SizedBox(height: 12),
         if (legacyFavs.isNotEmpty &&
             (_favoriteFilterIndex == 0 || _favoriteFilterIndex == 2)) ...[
-          const Text(
+          Text(
             'Previous-source favorites are saved but unavailable. '
             'Search their title and artist in YouTube Music.',
-            style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
+            style: TextStyle(color: AppColors.textSecondaryOf(context), fontSize: 12),
           ),
           const SizedBox(height: 12),
         ],

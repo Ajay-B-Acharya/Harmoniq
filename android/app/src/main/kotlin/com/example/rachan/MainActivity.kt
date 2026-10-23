@@ -17,6 +17,11 @@ import android.os.Looper
 import android.provider.MediaStore
 import androidx.annotation.NonNull
 import androidx.core.app.ActivityCompat
+import android.content.Intent
+import android.net.Uri
+import android.net.wifi.WifiManager
+import android.os.PowerManager
+import android.provider.Settings
 import androidx.core.content.ContextCompat
 import com.arthenica.ffmpegkit.FFmpegKit
 import com.arthenica.ffmpegkit.ReturnCode
@@ -46,6 +51,8 @@ class MainActivity : AudioServiceActivity() {
     private var musicChannel: MethodChannel? = null
     private var ytDlpChannel: MethodChannel? = null
     private var ytDlpActive = true
+    private var wakeLock: PowerManager.WakeLock? = null
+    private var wifiLock: WifiManager.WifiLock? = null
 
     override fun configureFlutterEngine(@NonNull flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
@@ -58,6 +65,23 @@ class MainActivity : AudioServiceActivity() {
                 }
                 "checkAllPermissions" -> {
                     result.success(checkAllPermissions())
+                }
+                "isIgnoringBatteryOptimizations" -> {
+                    result.success(isIgnoringBatteryOptimizations())
+                }
+                "requestIgnoreBatteryOptimizations" -> {
+                    requestIgnoreBatteryOptimizations(result)
+                }
+                "openBatteryOptimizationSettings" -> {
+                    openBatteryOptimizationSettings(result)
+                }
+                "acquirePlaybackWakeLock" -> {
+                    acquirePlaybackWakeLock()
+                    result.success(true)
+                }
+                "releasePlaybackWakeLock" -> {
+                    releasePlaybackWakeLock()
+                    result.success(true)
                 }
                 "requestPermission", "requestAllPermissions" -> {
                     pendingPermissionResults.add(result)
@@ -174,6 +198,7 @@ class MainActivity : AudioServiceActivity() {
         return mapOf(
             "storage" to storage,
             "notification" to notification,
+            "batteryOptimizationsIgnored" to isIgnoringBatteryOptimizations(),
             "allGranted" to (storage && notification)
         )
     }
@@ -237,6 +262,7 @@ class MainActivity : AudioServiceActivity() {
     }
 
     override fun onDestroy() {
+        releasePlaybackWakeLock()
         ytDlpActive = false
         ytDlpChannel?.setMethodCallHandler(null)
         ytDlpChannel = null
@@ -538,4 +564,104 @@ class MainActivity : AudioServiceActivity() {
             NotificationManagerCompat.from(this).cancel(id)
         } catch (_: Exception) {}
     }
+
+
+
+    private fun isIgnoringBatteryOptimizations(): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            val powerManager = getSystemService(Context.POWER_SERVICE) as? PowerManager
+            powerManager?.isIgnoringBatteryOptimizations(packageName) ?: true
+        } else {
+            true
+        }
+    }
+
+    private fun requestIgnoreBatteryOptimizations(result: MethodChannel.Result) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+            result.success(true)
+            return
+        }
+        try {
+            if (isIgnoringBatteryOptimizations()) {
+                result.success(true)
+                return
+            }
+            val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
+                data = Uri.parse("package:$packageName")
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            startActivity(intent)
+            result.success(true)
+        } catch (_: Exception) {
+            openBatteryOptimizationSettings(result)
+        }
+    }
+
+    private fun openBatteryOptimizationSettings(result: MethodChannel.Result) {
+        try {
+            val intent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS).apply {
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
+            } else {
+                Intent(Settings.ACTION_SETTINGS).apply {
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
+            }
+            startActivity(intent)
+            result.success(true)
+        } catch (_: Exception) {
+            try {
+                val appDetailsIntent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                    data = Uri.parse("package:$packageName")
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
+                startActivity(appDetailsIntent)
+                result.success(true)
+            } catch (e2: Exception) {
+                result.error("SETTINGS_ERROR", "Could not open settings: ${e2.message}", null)
+            }
+        }
+    }
+
+    @Synchronized
+    private fun acquirePlaybackWakeLock() {
+        try {
+            if (wakeLock == null) {
+                val powerManager = getSystemService(Context.POWER_SERVICE) as? PowerManager
+                wakeLock = powerManager?.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "Harmoniq:PlaybackWakeLock")
+                wakeLock?.setReferenceCounted(false)
+            }
+            if (wakeLock?.isHeld == false) {
+                wakeLock?.acquire(4 * 60 * 60 * 1000L)
+            }
+
+            if (wifiLock == null) {
+                val wifiManager = applicationContext.getSystemService(Context.WIFI_SERVICE) as? WifiManager
+                @Suppress("DEPRECATION")
+                wifiLock = wifiManager?.createWifiLock(WifiManager.WIFI_MODE_FULL_HIGH_PERF, "Harmoniq:PlaybackWifiLock")
+                wifiLock?.setReferenceCounted(false)
+            }
+            if (wifiLock?.isHeld == false) {
+                wifiLock?.acquire()
+            }
+        } catch (e: Exception) {
+            android.util.Log.w("MainActivity", "Failed to acquire wake/wifi lock: ${e.message}")
+        }
+    }
+
+    @Synchronized
+    private fun releasePlaybackWakeLock() {
+        try {
+            if (wakeLock?.isHeld == true) {
+                wakeLock?.release()
+            }
+            if (wifiLock?.isHeld == true) {
+                wifiLock?.release()
+            }
+        } catch (e: Exception) {
+            android.util.Log.w("MainActivity", "Failed to release wake/wifi lock: ${e.message}")
+        }
+    }
+
 }

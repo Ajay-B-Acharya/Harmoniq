@@ -8,6 +8,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:just_audio_background/just_audio_background.dart';
+import 'package:audio_session/audio_session.dart';
+import 'power_manager_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/song.dart';
@@ -169,6 +171,7 @@ class AudioService extends ChangeNotifier {
     _loadRecentlyPlayed();
     _loadDownloads();
     _loadAudioQuality();
+    _initAudioSession();
   }
 
   /// Expose the underlying YouTube audio stream resolver for authorized downloads.
@@ -176,6 +179,15 @@ class AudioService extends ChangeNotifier {
     String videoId, {
     String? quality,
   }) => _resolveYoutubeAudio(videoId, quality: quality ?? _audioQuality);
+
+  Future<void> _initAudioSession() async {
+    try {
+      final session = await AudioSession.instance;
+      await session.configure(const AudioSessionConfiguration.music());
+    } catch (e) {
+      debugPrint('[AUDIO_SERVICE] AudioSession configure notice: $e');
+    }
+  }
 
   Future<void> _loadAudioQuality() async {
     try {
@@ -523,6 +535,11 @@ class AudioService extends ChangeNotifier {
       if (state.playing != _isPlaying ||
           state.playing != _wantsToPlay ||
           loading != _isLoading) {
+        if (state.playing) {
+          PowerManagerService.instance.acquirePlaybackWakeLock();
+        } else {
+          PowerManagerService.instance.releasePlaybackWakeLock();
+        }
         // Native notification controls/audio interruptions also change intent.
         _wantsToPlay = state.playing;
         _isPlaying = state.playing;
@@ -810,6 +827,7 @@ class AudioService extends ChangeNotifier {
     _isLoading = false;
     _isPlaying = false;
     _wantsToPlay = false;
+    PowerManagerService.instance.releasePlaybackWakeLock();
     final isYoutube = _currentSong?.source == SongSource.youtube;
     _playbackError = isYoutube && kIsWeb
         ? 'YouTube audio is not supported on the web.'
@@ -900,6 +918,7 @@ class AudioService extends ChangeNotifier {
     _isLoading = false;
     _playbackError = null;
     _wantsToPlay = false;
+    PowerManagerService.instance.releasePlaybackWakeLock();
     _isPlaying = false;
     _preloadingVideoId = null;
     _playbackPosition = Duration.zero;
@@ -1207,6 +1226,7 @@ class AudioService extends ChangeNotifier {
     _isLoading = false;
     _isPlaying = false;
     _wantsToPlay = false;
+    PowerManagerService.instance.releasePlaybackWakeLock();
     playbackPositionNotifier.dispose();
     _preloadedStreams.clear();
     unawaited(_playerStateSub?.cancel());
@@ -1214,6 +1234,7 @@ class AudioService extends ChangeNotifier {
     unawaited(_playerCompleteSub?.cancel());
     unawaited(_playbackErrorSub?.cancel());
     unawaited(_mutatePlayer(_player.dispose).catchError((Object _) {}));
+    PowerManagerService.instance.releasePlaybackWakeLock();
     super.dispose();
   }
 }

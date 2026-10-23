@@ -72,7 +72,7 @@ class _OpeningAnimationViewState extends State<OpeningAnimationView>
   @override
   Widget build(BuildContext context) {
     if (MediaQuery.disableAnimationsOf(context)) {
-      return const ColoredBox(color: AppColors.background);
+      return ColoredBox(color: Theme.of(context).brightness == Brightness.dark ? AppDarkColors.background : AppColors.background);
     }
 
     return AnimatedBuilder(
@@ -120,7 +120,7 @@ class _OpeningAnimationViewState extends State<OpeningAnimationView>
             : (1.0 - ((t - 0.947) / 0.053)).clamp(0.0, 1.0);
 
         return Scaffold(
-          backgroundColor: AppColors.background,
+          backgroundColor: Theme.of(context).brightness == Brightness.dark ? AppDarkColors.background : AppColors.background,
           body: GestureDetector(
             behavior: HitTestBehavior.opaque,
             onTap: _finishImmediately,
@@ -159,9 +159,9 @@ class _OpeningAnimationViewState extends State<OpeningAnimationView>
                               height: 104,
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(16),
-                                color: AppColors.backgroundSecondary,
+                                color: Theme.of(context).brightness == Brightness.dark ? AppDarkColors.backgroundSecondary : AppColors.backgroundSecondary,
                                 border: Border.all(
-                                  color: AppColors.surfaceBorder,
+                                  color: Theme.of(context).brightness == Brightness.dark ? AppDarkColors.borderStandard : AppColors.surfaceBorder,
                                   width: 1,
                                 ),
                                 boxShadow: [
@@ -187,13 +187,13 @@ class _OpeningAnimationViewState extends State<OpeningAnimationView>
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                const Text(
+                                Text(
                                   'HARMONIQ',
                                   style: TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.w800,
                                     letterSpacing: 6.0,
-                                    color: AppColors.textPrimary,
+                                    color: Theme.of(context).brightness == Brightness.dark ? AppDarkColors.textPrimary : AppColors.textPrimary,
                                   ),
                                 ),
                                 const SizedBox(height: 6),
@@ -203,7 +203,7 @@ class _OpeningAnimationViewState extends State<OpeningAnimationView>
                                     fontSize: 10,
                                     fontWeight: FontWeight.w600,
                                     letterSpacing: 2.2,
-                                    color: AppColors.textSecondary,
+                                    color: Theme.of(context).brightness == Brightness.dark ? AppDarkColors.textSecondary : AppColors.textSecondary,
                                   ),
                                 ),
                               ],

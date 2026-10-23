@@ -158,13 +158,13 @@ class AppTheme {
             if (states.contains(WidgetState.selected)) {
               return Colors.white;
             }
-            return const Color(0xFF7E8F9E);
+            return AppColors.textTertiary;
           }),
           trackColor: WidgetStateProperty.resolveWith((states) {
             if (states.contains(WidgetState.selected)) {
               return AppColors.coral;
             }
-            return const Color(0xFFD4DCE8);
+            return AppColors.insetTrack;
           }),
           trackOutlineColor: WidgetStateProperty.all(Colors.transparent),
         ),
@@ -320,7 +320,7 @@ class AppTheme {
             if (states.contains(WidgetState.selected)) {
               return Colors.white;
             }
-            return const Color(0xFF94A3B8);
+            return AppDarkColors.textTertiary;
           }),
           trackColor: WidgetStateProperty.resolveWith((states) {
             if (states.contains(WidgetState.selected)) {
