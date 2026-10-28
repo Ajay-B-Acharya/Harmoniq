@@ -58,6 +58,9 @@ class RelatedSongsService {
     return title.replaceAll(RegExp(r'\s+'), ' ');
   }
 
+  /// Returns a canonical lowercase string representing the song's title for deduplication.
+  static String normalizeTitle(String raw) => cleanTitle(raw).trim().toLowerCase();
+
   /// Identifies generic record label and corporate channel names on YouTube.
   static bool isRecordLabel(String raw) {
     final lower = raw.toLowerCase();
@@ -150,6 +153,7 @@ class RelatedSongsService {
   Future<List<Song>> findRelatedSongs(
     Song currentSong, {
     List<Song>? currentQueue,
+    bool Function(Song)? isExcluded,
     int limit = 12,
   }) async {
     if (!_catalog.isAvailable) return const [];
@@ -158,12 +162,16 @@ class RelatedSongsService {
     if (_cache.containsKey(cacheKey)) {
       final cached = _cache[cacheKey]!;
       if (cached.isNotEmpty) {
-        // Exclude songs already in the current queue
+        // Exclude songs already in the current queue and excluded/played songs
         final queueIds = (currentQueue ?? const [])
             .map((s) => s.videoId)
             .whereType<String>()
             .toSet();
-        return cached.where((s) => !queueIds.contains(s.videoId)).toList();
+        return cached
+            .where((s) =>
+                !queueIds.contains(s.videoId) &&
+                (isExcluded == null || !isExcluded(s)))
+            .toList();
       }
     }
 
@@ -222,6 +230,8 @@ class RelatedSongsService {
         final videos = await _catalog.search(query, page: 1);
         for (final video in videos) {
           if (seenIds.add(video.id) && _isValidRelatedVideo(video, currentSong)) {
+            final song = Song.fromYoutube(video);
+            if (isExcluded != null && isExcluded(song)) continue;
             candidateVideos.add(video);
             if (candidateVideos.length >= limit) break;
           }
@@ -245,6 +255,93 @@ class RelatedSongsService {
     }
 
     return resultSongs;
+  }
+
+  /// Discovers continuous music for explore/radio mode.
+  /// Combines related songs with trending/discovery tracks like YouTube autoplay radio,
+  /// ensuring an endless variety of music while excluding previously played songs.
+  Future<List<Song>> findExploreRadioSongs({
+    required Song currentSong,
+    List<Song>? currentQueue,
+    bool Function(Song)? isExcluded,
+    int limit = 10,
+  }) async {
+    final results = <Song>[];
+    final seenIds = <String>{};
+
+    bool isAllowed(Song song) {
+      if (song.videoId != null && seenIds.contains(song.videoId)) return false;
+      if (currentSong.videoId != null && song.videoId == currentSong.videoId) return false;
+      if (isExcluded != null && isExcluded(song)) return false;
+      if (currentQueue != null) {
+        for (final q in currentQueue) {
+          if (q.identity == song.identity) return false;
+          if (q.videoId != null && song.videoId != null && q.videoId == song.videoId) return false;
+          final qNorm = normalizeTitle(q.title);
+          final sNorm = normalizeTitle(song.title);
+          if (qNorm.isNotEmpty && qNorm == sNorm) return false;
+        }
+      }
+      return true;
+    }
+
+    // 1. Fetch related songs first (highest affinity: same movie, soundtrack, artist)
+    try {
+      final related = await findRelatedSongs(
+        currentSong,
+        currentQueue: currentQueue,
+        isExcluded: isExcluded,
+        limit: limit,
+      );
+      for (final song in related) {
+        if (isAllowed(song)) {
+          if (song.videoId != null) seenIds.add(song.videoId!);
+          results.add(song);
+          if (results.length >= limit) return results;
+        }
+      }
+    } catch (_) {}
+
+    // 2. Proactively augment with public discovery / trending tracks from YouTube
+    if (results.length < limit && _catalog.isAvailable) {
+      try {
+        final discoverVideos = await _catalog.discover();
+        for (final v in discoverVideos) {
+          final song = Song.fromYoutube(v);
+          if (isAllowed(song) && _isValidRelatedVideo(v, currentSong)) {
+            if (song.videoId != null) seenIds.add(song.videoId!);
+            results.add(song);
+            if (results.length >= limit) return results;
+          }
+        }
+      } catch (_) {}
+    }
+
+    // 3. Fallback: Search diverse YouTube music categories to ensure infinite music
+    if (results.length < limit && _catalog.isAvailable) {
+      const vibes = [
+        'top music hits',
+        'viral songs',
+        'trending music',
+        'popular songs',
+        'bollywood hits',
+        'global top songs',
+      ];
+      final query = vibes[_random.nextInt(vibes.length)];
+      try {
+        final videos = await _catalog.search(query, page: 1);
+        for (final v in videos) {
+          final song = Song.fromYoutube(v);
+          if (isAllowed(song) && _isValidRelatedVideo(v, currentSong)) {
+            if (song.videoId != null) seenIds.add(song.videoId!);
+            results.add(song);
+            if (results.length >= limit) return results;
+          }
+        }
+      } catch (_) {}
+    }
+
+    return results;
   }
 
   /// Filters out non-music videos (e.g. trailers, interviews, podcasts, clips)
@@ -299,6 +396,7 @@ class RelatedSongsService {
     Song currentSong,
     List<Song> localSongs, {
     List<Song>? currentQueue,
+    bool Function(Song)? isExcluded,
     int limit = 10,
   }) {
     final excludeIdentities = <String>{currentSong.identity};
@@ -309,7 +407,9 @@ class RelatedSongsService {
     }
 
     final pool = localSongs
-        .where((s) => !excludeIdentities.contains(s.identity))
+        .where((s) =>
+            !excludeIdentities.contains(s.identity) &&
+            (isExcluded == null || !isExcluded(s)))
         .toList();
     if (pool.isEmpty) return const [];
 

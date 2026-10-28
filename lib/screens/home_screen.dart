@@ -725,6 +725,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       builder: (_) => HistoryScreen(
                         audioService: widget.audioService,
                         authService: widget.authService,
+                        onSongTap: widget.onSongTap,
                       ),
                     ),
                   );

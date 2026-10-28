@@ -10,7 +10,7 @@ import 'package:harmoniq/services/youtube_audio_stream_native.dart' as native;
 import 'package:harmoniq/services/yt_dlp_channel.dart';
 import 'package:harmoniq/services/youtube_audio_other.dart' as web;
 import 'package:just_audio/just_audio.dart';
-import 'package:just_audio_background/just_audio_background.dart';
+import 'package:audio_service/audio_service.dart' show MediaItem;
 import 'package:shared_preferences/shared_preferences.dart';
 
 // Implements the injectable public player API without plugins or network I/O.

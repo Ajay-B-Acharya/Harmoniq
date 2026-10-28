@@ -321,5 +321,124 @@ void main() {
 
       service.dispose();
     });
+
+    test('continuous explore mode keeps next songs ready without ending or repeating played songs', () async {
+      final player = _FakeAudioPlayer();
+      final songA = makeYoutubeSong('vidAAAAAAAA', 'Kesariya', 'Arijit Singh');
+      final songB = makeYoutubeSong('vidBBBBBBBB', 'Deva Deva', 'Arijit Singh');
+      final songC = makeYoutubeSong('vidCCCCCCCC', 'Rasiya', 'Pritam');
+      final songD = makeYoutubeSong('vidDDDDDDDD', 'Apna Bana Le', 'Arijit Singh');
+
+      final preloadedIds = <String>[];
+      Future<YoutubeAudioStream> resolve(String id, {String? quality}) async {
+        preloadedIds.add(id);
+        return YoutubeAudioStream(Uri.parse('https://audio.example/$id'));
+      }
+
+      int fetchCallCount = 0;
+      final service = AudioService(
+        resolveYoutubeStream: resolve,
+        audioPlayer: player,
+        findRelatedSongs: (song, {currentQueue, limit = 12}) async {
+          fetchCallCount++;
+          if (fetchCallCount == 1) {
+            return [songB, songC];
+          } else {
+            // Simulator tries to return duplicate of songA, songB, and a fresh songD
+            return [songA, songB, songD];
+          }
+        },
+      );
+
+      // Start continuous explore playback
+      await service.playSong(songA, continuousDiscovery: true);
+      expect(service.continuousDiscovery, isTrue);
+      expect(service.hasSongBeenPlayed(songA), isTrue);
+
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+
+      // Next songs are ready in the queue
+      expect(service.queue.map((s) => s.videoId).toList(), [
+        'vidAAAAAAAA',
+        'vidBBBBBBBB',
+        'vidCCCCCCCC',
+      ]);
+
+      // Immediate next song (songB) is already preloaded
+      expect(preloadedIds, contains('vidBBBBBBBB'));
+
+      // Transition to songB
+      await service.next();
+      expect(service.currentSong?.videoId, 'vidBBBBBBBB');
+      expect(service.hasSongBeenPlayed(songB), isTrue);
+
+      // Transition to songC
+      await service.next();
+      expect(service.currentSong?.videoId, 'vidCCCCCCCC');
+      expect(service.hasSongBeenPlayed(songC), isTrue);
+
+      // At or near end of queue, continuous discovery appends songD without repeating songA or songB
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      await service.next();
+
+      expect(service.currentSong?.videoId, 'vidDDDDDDDD');
+      expect(service.hasSongBeenPlayed(songD), isTrue);
+
+      // Verify that no song identity appears more than once anywhere in the queue
+      final queueIds = service.queue.map((s) => s.videoId).toList();
+      expect(queueIds.toSet().length, queueIds.length,
+          reason: 'Queue must never contain repeated song IDs');
+      expect(queueIds, containsAll(['vidAAAAAAAA', 'vidBBBBBBBB', 'vidCCCCCCCC', 'vidDDDDDDDD']));
+
+      service.dispose();
+    });
+
+    test('shuffle in continuous mode never repeats previously played songs', () async {
+      final player = _FakeAudioPlayer();
+      final song1 = makeYoutubeSong('vid00000001', 'Song 1', 'Artist 1');
+      final song2 = makeYoutubeSong('vid00000002', 'Song 2', 'Artist 2');
+      final song3 = makeYoutubeSong('vid00000003', 'Song 3', 'Artist 3');
+      final song4 = makeYoutubeSong('vid00000004', 'Song 4', 'Artist 4');
+
+      Future<YoutubeAudioStream> resolve(String id, {String? quality}) async {
+        return YoutubeAudioStream(Uri.parse('https://audio.example/$id'));
+      }
+
+      final service = AudioService(
+        resolveYoutubeStream: resolve,
+        audioPlayer: player,
+      );
+
+      // Play song1 with queue of 4 songs in continuous mode
+      await service.playSong(
+        song1,
+        contextQueue: [song1, song2, song3, song4],
+        continuousDiscovery: true,
+      );
+
+      expect(service.hasSongBeenPlayed(song1), isTrue);
+
+      // Advance to song2
+      await service.next();
+      expect(service.currentSong?.videoId, 'vid00000002');
+      expect(service.hasSongBeenPlayed(song2), isTrue);
+
+      // Now enable shuffle
+      service.toggleShuffle();
+      expect(service.shuffleEnabled, isTrue);
+
+      // Trigger next with shuffle enabled
+      await service.next();
+
+      // Must pick between unplayed song3 or song4, NEVER repeating song1 or song2
+      expect(
+        service.currentSong?.videoId == 'vid00000003' ||
+            service.currentSong?.videoId == 'vid00000004',
+        isTrue,
+        reason: 'Shuffle must only pick unplayed songs and not repeat played tracks',
+      );
+
+      service.dispose();
+    });
   });
 }

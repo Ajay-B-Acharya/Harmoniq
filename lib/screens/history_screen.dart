@@ -18,6 +18,7 @@ class HistoryScreen extends StatefulWidget {
   final AuthService? authService;
   final VoidCallback? onBackTap;
   final VoidCallback? onMenuTap;
+  final void Function(Song song, [List<Song>? queue])? onSongTap;
 
   const HistoryScreen({
     super.key,
@@ -25,6 +26,7 @@ class HistoryScreen extends StatefulWidget {
     this.authService,
     this.onBackTap,
     this.onMenuTap,
+    this.onSongTap,
   });
 
   @override
@@ -325,10 +327,14 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                       : null,
                                   padding: const EdgeInsets.all(10),
                                   onTap: () {
-                                    audio.playSong(
-                                      song,
-                                      contextQueue: filtered,
-                                    );
+                                    if (widget.onSongTap != null) {
+                                      widget.onSongTap!(song, filtered);
+                                    } else {
+                                      audio.playSong(
+                                        song,
+                                        contextQueue: filtered,
+                                      );
+                                    }
                                   },
                                   child: Row(
                                     children: [

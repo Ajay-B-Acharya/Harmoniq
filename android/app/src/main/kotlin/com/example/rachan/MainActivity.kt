@@ -39,7 +39,7 @@ class MainActivity : AudioServiceActivity() {
     private val CHANNEL = "com.example.harmoniq/local_music"
     private val NOTIFICATION_CHANNEL_ID = "harmoniq_downloads"
     private val PERMISSION_REQUEST_CODE = 1001
-    private val pendingPermissionResults = mutableListOf<MethodChannel.Result>()
+    private val pendingPermissionRequests = mutableListOf<Pair<String, MethodChannel.Result>>()
     private val pendingScanResults = mutableSetOf<MethodChannel.Result>()
     private val scanExecutor = Executors.newSingleThreadExecutor()
     private val ytDlpExecutor = java.util.concurrent.ThreadPoolExecutor(
@@ -84,8 +84,8 @@ class MainActivity : AudioServiceActivity() {
                     result.success(true)
                 }
                 "requestPermission", "requestAllPermissions" -> {
-                    pendingPermissionResults.add(result)
-                    if (pendingPermissionResults.size == 1) requestRequiredPermissions()
+                    pendingPermissionRequests.add(Pair(call.method, result))
+                    if (pendingPermissionRequests.size == 1) requestRequiredPermissions()
                 }
                 "fetchLocalSongs" -> {
                     if (checkMusicPermission()) {
@@ -213,7 +213,7 @@ class MainActivity : AudioServiceActivity() {
         }
 
         if (permissionsToRequest.isEmpty()) {
-            completePermissionRequests(true)
+            completePermissionRequests()
         } else {
             ActivityCompat.requestPermissions(
                 this, permissionsToRequest.toTypedArray(), PERMISSION_REQUEST_CODE
@@ -228,15 +228,26 @@ class MainActivity : AudioServiceActivity() {
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == PERMISSION_REQUEST_CODE) {
-            val storageGranted = checkMusicPermission()
-            completePermissionRequests(storageGranted)
+            completePermissionRequests()
         }
     }
 
-    private fun completePermissionRequests(granted: Boolean) {
-        val results = pendingPermissionResults.toList()
-        pendingPermissionResults.clear()
-        results.forEach { it.success(granted) }
+    private fun completePermissionRequests() {
+        val requests = pendingPermissionRequests.toList()
+        pendingPermissionRequests.clear()
+        val storageGranted = checkMusicPermission()
+        val allPermissions = checkAllPermissions()
+        for ((method, result) in requests) {
+            try {
+                if (method == "requestAllPermissions") {
+                    result.success(allPermissions)
+                } else {
+                    result.success(storageGranted)
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("MainActivity", "Failed to deliver permission result", e)
+            }
+        }
     }
 
     private fun fetchLocalSongsAsync(result: MethodChannel.Result) {
@@ -273,7 +284,12 @@ class MainActivity : AudioServiceActivity() {
             it.error("ACTIVITY_DESTROYED", "Local music scan interrupted", null)
         }
         pendingScanResults.clear()
-        completePermissionRequests(false)
+        pendingPermissionRequests.forEach { (_, result) ->
+            try {
+                result.error("ACTIVITY_DESTROYED", "Permission request cancelled", null)
+            } catch (_: Exception) {}
+        }
+        pendingPermissionRequests.clear()
         scanExecutor.shutdownNow()
         super.onDestroy()
     }
@@ -289,7 +305,7 @@ class MainActivity : AudioServiceActivity() {
             MediaStore.Audio.Media.ALBUM,
             MediaStore.Audio.Media.DURATION
         )
-        val selection = "${MediaStore.Audio.Media.IS_MUSIC} != 0"
+        val selection = "(${MediaStore.Audio.Media.IS_MUSIC} != 0 OR ${MediaStore.Audio.Media.DURATION} >= 10000) AND (${MediaStore.Audio.Media.DURATION} >= 5000)"
         val sortOrder = "${MediaStore.Audio.Media.TITLE} ASC"
 
         val cursor: Cursor? = resolver.query(uri, projection, selection, null, sortOrder)
@@ -302,10 +318,13 @@ class MainActivity : AudioServiceActivity() {
 
             while (!Thread.currentThread().isInterrupted && it.moveToNext()) {
                 val id       = it.getLong(idCol)
-                val title    = it.getString(titleCol)    ?: "Unknown Title"
-                val artist   = it.getString(artistCol)   ?: "Unknown Artist"
-                val album    = it.getString(albumCol)    ?: "Unknown Album"
-                val duration = it.getLong(durationCol)
+                val rawTitle = it.getString(titleCol)?.trim()
+                val title    = if (rawTitle.isNullOrEmpty() || rawTitle.equals("<unknown>", ignoreCase = true)) "Unknown Title" else rawTitle
+                val rawArtist = it.getString(artistCol)?.trim()
+                val artist   = if (rawArtist.isNullOrEmpty() || rawArtist.equals("<unknown>", ignoreCase = true)) "Unknown Artist" else rawArtist
+                val rawAlbum = it.getString(albumCol)?.trim()
+                val album    = if (rawAlbum.isNullOrEmpty() || rawAlbum.equals("<unknown>", ignoreCase = true)) "Local Storage" else rawAlbum
+                val duration = maxOf(0L, it.getLong(durationCol))
 
                 val contentUri = ContentUris.withAppendedId(
                     MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, id

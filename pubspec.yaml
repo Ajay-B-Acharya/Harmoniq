@@ -38,7 +38,7 @@ dependencies:
   # Real audio playback using ExoPlayer on Android.
   # Handles content:// MediaStore URIs directly â€” no file path conversion needed.
   just_audio: ^0.9.43
-  just_audio_background: ^0.0.1-beta.17
+  audio_service: ^0.18.12
   audio_session: ^0.1.25
   shared_preferences: ^2.5.5
   http: ^1.2.2

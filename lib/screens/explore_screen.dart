@@ -19,7 +19,7 @@ import '../widgets/shimmer_skeleton.dart';
 /// "Trending Playlists", "Moods & Activities", and real discovered music.
 class ExploreScreen extends StatefulWidget {
   final AudioService audioService;
-  final Function(Song, [List<Song>? queue]) onSongTap;
+  final Function onSongTap;
   final Function(Song) onFavoriteTap;
   final ValueChanged<String>? onSearchTap;
   final VoidCallback? onProfileTap;
@@ -40,6 +40,17 @@ class ExploreScreen extends StatefulWidget {
 }
 
 class _ExploreScreenState extends State<ExploreScreen> {
+  void _onSongTap(Song song, [List<Song>? queue, bool? continuous]) {
+    try {
+      (widget.onSongTap as dynamic)(song, queue, continuous);
+    } catch (_) {
+      try {
+        (widget.onSongTap as dynamic)(song, queue);
+      } catch (_) {
+        (widget.onSongTap as dynamic)(song);
+      }
+    }
+  }
   final Random _random = Random();
   List<Song> _discoveredOnline = [];
   bool _isLoading = false;
@@ -94,9 +105,14 @@ class _ExploreScreenState extends State<ExploreScreen> {
       widget.onSearchTap?.call('Trending Music');
       return;
     }
-    final randomSong = catalogue[_random.nextInt(catalogue.length)];
-    final queue = List<Song>.from(catalogue)..shuffle(_random);
-    widget.onSongTap(randomSong, queue);
+    // Filter out previously played songs so the continuous explore session is completely fresh
+    final unplayed = catalogue
+        .where((s) => !widget.audioService.hasSongBeenPlayed(s))
+        .toList();
+    final pool = unplayed.isNotEmpty ? unplayed : catalogue;
+    final randomSong = pool[_random.nextInt(pool.length)];
+    final queue = List<Song>.from(pool)..shuffle(_random);
+    _onSongTap(randomSong, queue, true);
   }
 
   @override
@@ -296,7 +312,11 @@ class _ExploreScreenState extends State<ExploreScreen> {
                               : AppColors.gradientOceanBlue,
                           onTap: () {
                             if (catalogue.isNotEmpty) {
-                              widget.onSongTap(catalogue.first, catalogue);
+                              final unplayed = catalogue
+                                  .where((s) => !widget.audioService.hasSongBeenPlayed(s))
+                                  .toList();
+                              final pool = unplayed.isNotEmpty ? unplayed : catalogue;
+                              _onSongTap(pool.first, pool, true);
                             } else {
                               widget.onSearchTap?.call('Global Hits');
                             }
@@ -311,7 +331,12 @@ class _ExploreScreenState extends State<ExploreScreen> {
                               : AppColors.gradientCyanDepth,
                           onTap: () {
                             if (catalogue.length > 1) {
-                              widget.onSongTap(catalogue[1], catalogue);
+                              final unplayed = catalogue
+                                  .where((s) => !widget.audioService.hasSongBeenPlayed(s))
+                                  .toList();
+                              final pool = unplayed.isNotEmpty ? unplayed : catalogue;
+                              final song = pool.length > 1 ? pool[1] : pool.first;
+                              _onSongTap(song, pool, true);
                             } else {
                               widget.onSearchTap?.call('Viral Tracks');
                             }
@@ -427,7 +452,18 @@ class _ExploreScreenState extends State<ExploreScreen> {
                           song: song,
                           isPlaying: isPlaying,
                           isActive: isPlaying,
-                          onTap: () => widget.onSongTap(song, catalogue),
+                          onTap: () {
+                            final unplayed = catalogue
+                                .where((s) =>
+                                    s.identity == song.identity ||
+                                    !widget.audioService.hasSongBeenPlayed(s))
+                                .toList();
+                            _onSongTap(
+                              song,
+                              unplayed.isNotEmpty ? unplayed : catalogue,
+                              true,
+                            );
+                          },
                           onFavoriteTap: () => widget.onFavoriteTap(song),
                         );
                       },

@@ -7,7 +7,8 @@ import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:just_audio/just_audio.dart';
-import 'package:just_audio_background/just_audio_background.dart';
+import 'package:audio_service/audio_service.dart' show MediaItem;
+import 'harmoniq_audio_handler.dart';
 import 'package:audio_session/audio_session.dart';
 import 'power_manager_service.dart';
 import 'song_history_service.dart';
@@ -58,6 +59,9 @@ class AudioService extends ChangeNotifier {
   int _downloadsRevision = 0;
   int get downloadsRevision => _downloadsRevision;
 
+  // ── Persistent Cached Local Songs ───────────────────────────────────────────
+  static const String _prefsKeyLocalSongs = 'harmoniq_cached_local_songs_v1';
+
   List<Song> get allAvailableSongs {
     final seen = <String>{};
     final result = <Song>[];
@@ -89,6 +93,7 @@ class AudioService extends ChangeNotifier {
   String get audioQuality => _audioQuality;
 
   final AudioPlayer _player;
+  final HarmoniqAudioHandler? _audioHandler;
   final Future<YoutubeAudioStream> Function(String videoId, {String? quality})
       _resolveYoutubeAudio;
   final Future<List<Song>> Function(
@@ -103,6 +108,60 @@ class AudioService extends ChangeNotifier {
   bool _fetchingRelatedSongs = false;
   bool _autoQueueRelated = false;
   bool get autoQueueRelated => _autoQueueRelated;
+
+  bool _continuousDiscovery = false;
+  bool get continuousDiscovery => _continuousDiscovery;
+  void setContinuousDiscovery(bool enabled) {
+    _continuousDiscovery = enabled;
+    if (enabled && !_autoQueueRelated) {
+      _autoQueueRelated = true;
+    }
+    notifyListeners();
+  }
+
+  // Played tracks tracking to guarantee no repetitive songs during playback
+  final Set<String> _playedSongIdentities = <String>{};
+  final Set<String> _playedVideoIds = <String>{};
+  final Set<String> _playedTitles = <String>{};
+
+  void _markSongAsPlayed(Song song) {
+    _playedSongIdentities.add(song.identity);
+    if (song.videoId != null && song.videoId!.isNotEmpty) {
+      _playedVideoIds.add(song.videoId!);
+    }
+    final normalized = RelatedSongsService.normalizeTitle(song.title);
+    if (normalized.isNotEmpty) {
+      _playedTitles.add(normalized);
+    }
+  }
+
+  /// Checks if a song has already been played in this session or recently
+  bool hasSongBeenPlayed(Song song) {
+    if (_playedSongIdentities.contains(song.identity)) return true;
+    if (song.videoId != null &&
+        song.videoId!.isNotEmpty &&
+        _playedVideoIds.contains(song.videoId!)) {
+      return true;
+    }
+    final normalized = RelatedSongsService.normalizeTitle(song.title);
+    if (normalized.isNotEmpty && _playedTitles.contains(normalized)) {
+      return true;
+    }
+    for (final recent in _recentlyPlayed) {
+      if (recent.identity == song.identity) return true;
+      if (recent.videoId != null &&
+          song.videoId != null &&
+          recent.videoId == song.videoId) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  int get _remainingQueueCount {
+    if (_queue.isEmpty || _currentQueueIndex < 0) return 0;
+    return _queue.length - 1 - _currentQueueIndex;
+  }
   Future<void> _playerMutations = Future<void>.value();
   int _generation = 0;
   int? _readyGeneration;
@@ -146,6 +205,9 @@ class AudioService extends ChangeNotifier {
   int _currentQueueIndex = -1;
   int get currentQueueIndex => _currentQueueIndex;
 
+  int _manualQueueCount = 0;
+  int get manualQueueCount => _manualQueueCount;
+
   // ── Subscriptions ─────────────────────────────────────────────────────────────
   StreamSubscription<PlayerState>? _playerStateSub;
   StreamSubscription<Duration>? _positionSub;
@@ -157,7 +219,9 @@ class AudioService extends ChangeNotifier {
     Function? resolveYoutubeStream,
     AudioPlayer? audioPlayer,
     this._findRelatedSongs,
+    HarmoniqAudioHandler? audioHandler,
   }) : _player = audioPlayer ?? AudioPlayer(),
+       _audioHandler = audioHandler ?? HarmoniqAudioHandler.instance,
        _resolveYoutubeAudio = _wrapResolver(
          resolveYoutubeStream: resolveYoutubeStream,
          resolveYoutubeAudio: resolveYoutubeAudio,
@@ -173,8 +237,11 @@ class AudioService extends ChangeNotifier {
     _loadFavorites();
     _loadRecentlyPlayed();
     _loadDownloads();
+    _loadCachedLocalSongs();
     _loadAudioQuality();
     _initAudioSession();
+    autoScanIfPermitted();
+    _audioHandler?.attachAudioService(this);
   }
 
   /// Expose the underlying YouTube audio stream resolver for authorized downloads.
@@ -308,6 +375,9 @@ class AudioService extends ChangeNotifier {
         final map = json.decode(str) as Map<String, dynamic>;
         return Song.fromJson(map);
       }).toList();
+      for (final s in _recentlyPlayed) {
+        _markSongAsPlayed(s);
+      }
       _syncFavoriteStates();
       notifyListeners();
     } catch (e) {
@@ -343,6 +413,9 @@ class AudioService extends ChangeNotifier {
       if (_disposed) return;
       if (entries.isNotEmpty) {
         _recentlyPlayed = entries.map((e) => e.toSong()).toList();
+        for (final s in _recentlyPlayed) {
+          _markSongAsPlayed(s);
+        }
         _syncFavoriteStates();
         notifyListeners();
       } else {
@@ -360,6 +433,12 @@ class AudioService extends ChangeNotifier {
       await SongHistoryService.instance.clearUserHistory(userId: uid);
     }
     _recentlyPlayed.clear();
+    _playedSongIdentities.clear();
+    _playedVideoIds.clear();
+    _playedTitles.clear();
+    if (_currentSong != null) {
+      _markSongAsPlayed(_currentSong!);
+    }
     await _saveRecentlyPlayed();
     notifyListeners();
   }
@@ -475,6 +554,39 @@ class AudioService extends ChangeNotifier {
       await prefs.setStringList(_prefsKeyDownloads, jsonList);
     } catch (e) {
       debugPrint('[AUDIO_SERVICE] Error saving downloads: $e');
+    }
+  }
+
+  // ── Persistent Cached Local Songs Loading & Saving ───────────────────────────
+  Future<void> _loadCachedLocalSongs() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (_disposed) return;
+      final jsonList = prefs.getStringList(_prefsKeyLocalSongs) ?? [];
+      if (jsonList.isNotEmpty && _localSongs.isEmpty) {
+        final favIds = _favorites.map((s) => s.identity).toSet();
+        _localSongs = jsonList.map((str) {
+          final map = json.decode(str) as Map<String, dynamic>;
+          final song = Song.fromJson(map);
+          return song.copyWith(isFavorite: favIds.contains(song.identity));
+        }).toList();
+        _localSongsRevision++;
+        _registerSongs(_localSongs);
+        notifyListeners();
+      }
+    } catch (e) {
+      debugPrint('[AUDIO_SERVICE] Error loading cached local songs: $e');
+    }
+  }
+
+  Future<void> _saveCachedLocalSongs() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final jsonList =
+          _localSongs.map((s) => json.encode(s.toJson())).toList();
+      await prefs.setStringList(_prefsKeyLocalSongs, jsonList);
+    } catch (e) {
+      debugPrint('[AUDIO_SERVICE] Error saving cached local songs: $e');
     }
   }
 
@@ -608,6 +720,14 @@ class AudioService extends ChangeNotifier {
       if (!_acceptPlayerEvents) return;
       _playbackPosition = pos;
       playbackPositionNotifier.value = pos;
+      if (pos.inSeconds > 0 &&
+          pos.inSeconds % 10 == 0 &&
+          (_continuousDiscovery || _autoQueueRelated) &&
+          !_fetchingRelatedSongs &&
+          _remainingQueueCount <= 3 &&
+          _currentSong != null) {
+        unawaited(_fetchAndAppendRelatedSongs(_currentSong!));
+      }
     });
     _playerCompleteSub = _player.processingStateStream
         .where((s) => s == ProcessingState.completed)
@@ -647,13 +767,46 @@ class AudioService extends ChangeNotifier {
         RegExp(r'^[A-Za-z]:[\\/]').hasMatch(path);
   }
 
+  /// Enqueues [song] to play immediately after the active song (or after
+  /// previously queued "play next" tracks).
+  void queueNext(Song song) {
+    if (_disposed || !_canPlay(song)) return;
+    _registerSongs([song]);
+
+    if (_currentSong == null || _queue.isEmpty) {
+      unawaited(playSong(song));
+      return;
+    }
+
+    // If this song already exists after the current track, remove old instance
+    final existingIdx = _queue.indexWhere((s) => s.identity == song.identity);
+    if (existingIdx > _currentQueueIndex) {
+      _queue.removeAt(existingIdx);
+      if (existingIdx <= _currentQueueIndex + _manualQueueCount) {
+        _manualQueueCount = (_manualQueueCount - 1).clamp(0, _queue.length);
+      }
+    }
+
+    final insertIndex =
+        (_currentQueueIndex + 1 + _manualQueueCount).clamp(0, _queue.length);
+    _queue.insert(insertIndex, song);
+    _manualQueueCount++;
+
+    _preloadNextTrack();
+    notifyListeners();
+  }
+
   Future<void> playSong(
     Song song, {
     List<Song>? contextQueue,
     bool autoQueueRelated = false,
+    bool continuousDiscovery = false,
   }) async {
     if (_disposed || !_canPlay(song)) return;
-    _autoQueueRelated = autoQueueRelated ||
+    _manualQueueCount = 0;
+    _continuousDiscovery = continuousDiscovery;
+    _autoQueueRelated = continuousDiscovery ||
+        autoQueueRelated ||
         song.source == SongSource.youtube ||
         (contextQueue == null || contextQueue.length <= 1);
     _registerSongs([song]);
@@ -667,7 +820,7 @@ class AudioService extends ChangeNotifier {
     }
     await _selectSong(song);
 
-    if (_autoQueueRelated) {
+    if (_continuousDiscovery || _autoQueueRelated) {
       unawaited(_fetchAndAppendRelatedSongs(song));
     }
   }
@@ -676,6 +829,7 @@ class AudioService extends ChangeNotifier {
   /// while keeping the currently playing track active at its new position.
   void reorderQueue(List<Song> newOrder) {
     if (_disposed || _queue.isEmpty) return;
+    _manualQueueCount = 0;
     final current = _currentSong;
     if (current == null) {
       _queue = newOrder.where(_canPlay).toList();
@@ -693,6 +847,7 @@ class AudioService extends ChangeNotifier {
   }
 
   Future<void> skipToIndex(int index) async {
+    _manualQueueCount = 0;
     if (_disposed ||
         index < 0 ||
         index >= _queue.length ||
@@ -715,6 +870,7 @@ class AudioService extends ChangeNotifier {
     _retryAttempted = retry;
     _currentSong = song.copyWith(isFavorite: isSongFavorite(song));
     _recordRecentlyPlayed(song);
+    _markSongAsPlayed(song);
     _isPlaying = false;
     _wantsToPlay = wantsToPlay ?? !_isSimulated(song);
     _isLoading = !_isSimulated(song);
@@ -803,6 +959,12 @@ class AudioService extends ChangeNotifier {
         notifyListeners();
         if (_isCurrent(generation) && _wantsToPlay) _startPlaying(generation);
         _preloadNextTrack();
+        if ((_continuousDiscovery || _autoQueueRelated) &&
+            _remainingQueueCount <= 3 &&
+            !_fetchingRelatedSongs &&
+            _currentSong != null) {
+          unawaited(_fetchAndAppendRelatedSongs(_currentSong!));
+        }
       });
     } catch (error) {
       if (song.source == SongSource.youtube && loadingSource) {
@@ -838,6 +1000,7 @@ class AudioService extends ChangeNotifier {
     }
     // Use current metadata, not the snapshot from before resolution/favoriting.
     _currentSong = _currentSong!.copyWith(duration: duration);
+    _audioHandler?.syncState();
   }
 
   Future<void> _handlePlaybackError(
@@ -924,28 +1087,29 @@ class AudioService extends ChangeNotifier {
     await _selectSong(_currentSong!, resumeAt: _playbackPosition);
   }
 
-  Future<void> togglePlay() async {
+  Future<void> play() async {
     if (_disposed || _currentSong == null || !_canPlay(_currentSong!)) return;
     if (_isSimulated(_currentSong!)) {
-      _wantsToPlay = _isPlaying = !_isPlaying;
-      notifyListeners();
+      if (!_isPlaying) {
+        _wantsToPlay = _isPlaying = true;
+        notifyListeners();
+      }
       return;
     }
     if (_playbackError != null) {
       await retryPlayback();
       return;
     }
-    _wantsToPlay = !_wantsToPlay;
-    if (!_wantsToPlay) _isPlaying = false;
+    if (_wantsToPlay && _isPlaying) return;
+    _wantsToPlay = true;
+    _isPlaying = true;
     notifyListeners();
     if (_readyGeneration != _generation) return;
     final generation = _generation;
     try {
       await _mutatePlayer(() async {
         if (!_isCurrent(generation)) return;
-        if (!_wantsToPlay) {
-          await _player.pause();
-        } else if (_player.processingState == ProcessingState.completed) {
+        if (_player.processingState == ProcessingState.completed) {
           await _player.seek(Duration.zero);
           if (_isCurrent(generation) && _wantsToPlay) _startPlaying(generation);
         } else {
@@ -957,6 +1121,39 @@ class AudioService extends ChangeNotifier {
     }
   }
 
+  Future<void> pause() async {
+    if (_disposed || _currentSong == null) return;
+    if (_isSimulated(_currentSong!)) {
+      if (_isPlaying) {
+        _wantsToPlay = _isPlaying = false;
+        notifyListeners();
+      }
+      return;
+    }
+    if (!_wantsToPlay && !_isPlaying) return;
+    _wantsToPlay = false;
+    _isPlaying = false;
+    notifyListeners();
+    if (_readyGeneration != _generation) return;
+    final generation = _generation;
+    try {
+      await _mutatePlayer(() async {
+        if (!_isCurrent(generation)) return;
+        await _player.pause();
+      });
+    } catch (error) {
+      _failPlayback(generation, error: error);
+    }
+  }
+
+  Future<void> togglePlay() async {
+    if (_wantsToPlay) {
+      await pause();
+    } else {
+      await play();
+    }
+  }
+
   /// Dismiss immediately and invalidate pending loads. Keep the queue for reuse.
   Future<void> stopAndClear() async {
     if (_disposed) return;
@@ -964,6 +1161,7 @@ class AudioService extends ChangeNotifier {
     _readyGeneration = null;
     _currentSong = null;
     _currentQueueIndex = -1;
+    _manualQueueCount = 0;
     _isLoading = false;
     _playbackError = null;
     _wantsToPlay = false;
@@ -995,6 +1193,7 @@ class AudioService extends ChangeNotifier {
       await _mutatePlayer(() async {
         if (_isCurrent(generation) && canSeek) await _player.seek(position);
       });
+      _audioHandler?.syncState();
     } catch (error) {
       _failPlayback(generation, error: error);
     }
@@ -1008,20 +1207,61 @@ class AudioService extends ChangeNotifier {
     }
 
     // Proactively fetch more related songs if we are at the end of the queue and auto-queue is enabled
-    if ((_autoQueueRelated || _currentSong?.source == SongSource.youtube) &&
-        !_shuffleEnabled &&
+    if ((_continuousDiscovery ||
+            _autoQueueRelated ||
+            _currentSong?.source == SongSource.youtube) &&
         _currentQueueIndex + 1 >= _queue.length) {
       if (_currentSong != null) {
         await _fetchAndAppendRelatedSongs(_currentSong!);
       }
     }
 
-    final index = _shuffleEnabled
-        ? Random().nextInt(_queue.length)
-        : (_currentQueueIndex + 1) % _queue.length;
-    if (!_canPlay(_queue[index])) return;
-    _currentQueueIndex = index;
-    await _selectSong(_queue[index]);
+    int nextIndex;
+    if (_manualQueueCount > 0) {
+      nextIndex = (_currentQueueIndex + 1) % _queue.length;
+      _manualQueueCount--;
+    } else if (_shuffleEnabled) {
+      // Pick only from unplayed songs to guarantee no repetitions
+      final unplayedIndices = <int>[];
+      for (int i = 0; i < _queue.length; i++) {
+        if (i != _currentQueueIndex && !hasSongBeenPlayed(_queue[i])) {
+          unplayedIndices.add(i);
+        }
+      }
+      if (unplayedIndices.isNotEmpty) {
+        nextIndex = unplayedIndices[Random().nextInt(unplayedIndices.length)];
+      } else if (_continuousDiscovery) {
+        if (_currentSong != null) {
+          await _fetchAndAppendRelatedSongs(_currentSong!);
+        }
+        nextIndex = _currentQueueIndex + 1 < _queue.length
+            ? _currentQueueIndex + 1
+            : 0;
+      } else {
+        nextIndex = (_currentQueueIndex + 1) % _queue.length;
+      }
+    } else {
+      if (_currentQueueIndex + 1 < _queue.length) {
+        nextIndex = _currentQueueIndex + 1;
+      } else if (_continuousDiscovery) {
+        // In continuous explore mode, do not wrap around to repeat played songs
+        if (_currentSong != null) {
+          await _fetchAndAppendRelatedSongs(_currentSong!);
+        }
+        if (_currentQueueIndex + 1 < _queue.length) {
+          nextIndex = _currentQueueIndex + 1;
+        } else {
+          return;
+        }
+      } else {
+        nextIndex = (_currentQueueIndex + 1) % _queue.length;
+      }
+    }
+
+    if (nextIndex < 0 || nextIndex >= _queue.length) return;
+    if (!_canPlay(_queue[nextIndex])) return;
+    _currentQueueIndex = nextIndex;
+    await _selectSong(_queue[nextIndex]);
   }
 
   Future<void> previous() async {
@@ -1053,14 +1293,21 @@ class AudioService extends ChangeNotifier {
   /// so that when the next track starts or is triggered, there is zero loading latency.
   void _preloadNextTrack() {
     if (_disposed || _queue.isEmpty) return;
-    final nextIndex = _shuffleEnabled ? -1 : (_currentQueueIndex + 1);
+    final nextIndex = (_manualQueueCount > 0)
+        ? (_currentQueueIndex + 1)
+        : (_shuffleEnabled ? -1 : (_currentQueueIndex + 1));
+
+    // Proactively fetch more songs if upcoming queue is running low
+    if ((_continuousDiscovery ||
+            _autoQueueRelated ||
+            _currentSong?.source == SongSource.youtube) &&
+        _currentSong != null &&
+        !_fetchingRelatedSongs &&
+        _remainingQueueCount <= 3) {
+      unawaited(_fetchAndAppendRelatedSongs(_currentSong!));
+    }
 
     if (nextIndex < 0 || nextIndex >= _queue.length) {
-      if ((_autoQueueRelated || _currentSong?.source == SongSource.youtube) &&
-          _currentSong != null &&
-          !_fetchingRelatedSongs) {
-        unawaited(_fetchAndAppendRelatedSongs(_currentSong!));
-      }
       return;
     }
 
@@ -1102,14 +1349,27 @@ class AudioService extends ChangeNotifier {
     );
   }
 
-  /// Discovers related songs based on the current track (same movie/soundtrack,
-  /// same artist, or similar language/genre) and appends them to the queue.
+  /// Discovers related and random music based on the current track (same movie/soundtrack,
+  /// same artist, or explore radio discovery) and appends them to the queue without repeating
+  /// previously played tracks.
   Future<void> _fetchAndAppendRelatedSongs(Song song) async {
     if (_disposed || _fetchingRelatedSongs) return;
     _fetchingRelatedSongs = true;
     try {
       List<Song> related = const [];
-      if (song.source == SongSource.youtube) {
+      if (_continuousDiscovery) {
+        final finder = _findRelatedSongs;
+        if (finder != null) {
+          related = await finder(song, currentQueue: _queue);
+        } else {
+          related = await RelatedSongsService.instance.findExploreRadioSongs(
+            currentSong: song,
+            currentQueue: _queue,
+            isExcluded: hasSongBeenPlayed,
+            limit: 10,
+          );
+        }
+      } else if (song.source == SongSource.youtube) {
         final finder = _findRelatedSongs;
         if (finder != null) {
           related = await finder(song, currentQueue: _queue);
@@ -1117,6 +1377,7 @@ class AudioService extends ChangeNotifier {
           related = await RelatedSongsService.instance.findRelatedSongs(
             song,
             currentQueue: _queue,
+            isExcluded: hasSongBeenPlayed,
           );
         }
       } else if (song.source == SongSource.local) {
@@ -1124,23 +1385,45 @@ class AudioService extends ChangeNotifier {
           song,
           [..._localSongs, ..._songs],
           currentQueue: _queue,
+          isExcluded: hasSongBeenPlayed,
         );
       }
 
       if (_disposed || related.isEmpty) return;
 
       final currentIdentities = _queue.map((s) => s.identity).toSet();
-      final newTracks = related
-          .where((s) => !currentIdentities.contains(s.identity))
-          .toList();
+      final currentVideoIds =
+          _queue.map((s) => s.videoId).whereType<String>().toSet();
+      final currentTitles = _queue
+          .map((s) => RelatedSongsService.normalizeTitle(s.title))
+          .where((t) => t.isNotEmpty)
+          .toSet();
+
+      final newTracks = related.where((s) {
+        if (hasSongBeenPlayed(s)) return false;
+        if (currentIdentities.contains(s.identity)) return false;
+        if (s.videoId != null && currentVideoIds.contains(s.videoId!)) {
+          return false;
+        }
+        final t = RelatedSongsService.normalizeTitle(s.title);
+        if (t.isNotEmpty && currentTitles.contains(t)) return false;
+        return true;
+      }).toList();
+
       if (newTracks.isEmpty) return;
 
       _registerSongs(newTracks);
-      final insertPos =
-          (_currentQueueIndex >= 0 && _currentQueueIndex < _queue.length)
-              ? _currentQueueIndex + 1
-              : _queue.length;
-      _queue.insertAll(insertPos, newTracks);
+
+      if (_continuousDiscovery ||
+          _currentQueueIndex + 1 + _manualQueueCount >= _queue.length) {
+        _queue.addAll(newTracks);
+      } else {
+        final insertPos =
+            (_currentQueueIndex >= 0 && _currentQueueIndex < _queue.length)
+                ? _currentQueueIndex + 1 + _manualQueueCount
+                : _queue.length;
+        _queue.insertAll(insertPos, newTracks);
+      }
       notifyListeners();
 
       _preloadNextTrack();
@@ -1189,6 +1472,21 @@ class AudioService extends ChangeNotifier {
   }
 
   // ── Local storage scanning ────────────────────────────────────────────────────
+  /// Automatically scans local storage for music if permission is already granted.
+  /// Does not show a permission prompt to the user.
+  Future<void> autoScanIfPermitted() async {
+    if (_disposed || _isScanning) return;
+    try {
+      final bool granted =
+          await _platform.invokeMethod<bool>('checkPermission') ?? false;
+      if (granted && !_disposed && !_isScanning) {
+        await scanLocalSongs(forcePrompt: false);
+      }
+    } catch (e) {
+      debugPrint('[AUDIO_SOURCE] autoScanIfPermitted notice: $e');
+    }
+  }
+
   Future<void> scanLocalSongs({bool forcePrompt = false}) {
     if (_disposed) return Future<void>.value();
     return _scanFuture ??= Future<void>.microtask(
@@ -1250,6 +1548,7 @@ class AudioService extends ChangeNotifier {
             _songIndices[_songs[i].identity] = i;
           }
           _registerSongs(_localSongs);
+          await _saveCachedLocalSongs();
           debugPrint(
             '[AUDIO_SOURCE] Scanned ${_localSongs.length} local songs.',
           );
@@ -1270,6 +1569,7 @@ class AudioService extends ChangeNotifier {
   void dispose() {
     if (_disposed) return;
     _disposed = true;
+    _audioHandler?.detachAudioService(this);
     ++_generation;
     _readyGeneration = null;
     _isLoading = false;

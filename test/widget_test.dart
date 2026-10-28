@@ -9,6 +9,7 @@ import 'package:harmoniq/screens/search_screen.dart';
 import 'package:harmoniq/services/audio_service.dart';
 import 'package:harmoniq/theme/app_theme.dart';
 import 'package:harmoniq/widgets/mini_player.dart';
+import 'package:harmoniq/widgets/play_or_queue_sheet.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 const _firstTrack = YoutubeVideo(
@@ -64,6 +65,7 @@ class _RoutingAudioService extends AudioService {
     Song song, {
     List<Song>? contextQueue,
     bool autoQueueRelated = false,
+    bool continuousDiscovery = false,
   }) async {
     requests.add(song);
     _selected = song;
@@ -198,6 +200,14 @@ void main() {
 
           playSingle!(_firstTrack);
           await tester.pumpAndSettle();
+          final playNowFinder = find.descendant(
+            of: find.byType(PlayOrQueueSheet),
+            matching: find.text('Play Now'),
+          );
+          if (playNowFinder.evaluate().isNotEmpty) {
+            await tester.tap(playNowFinder);
+            await tester.pumpAndSettle();
+          }
           expect(find.byType(NowPlayingScreen), findsOneWidget);
           expect(service.requests, hasLength(2));
           expect(service.currentSong!.videoId, _firstTrack.id);
@@ -213,6 +223,14 @@ void main() {
             await tester.pumpAndSettle();
             await tester.tap(find.text('Play this song'));
             await tester.pumpAndSettle();
+            final playNowFinder2 = find.descendant(
+              of: find.byType(PlayOrQueueSheet),
+              matching: find.text('Play Now'),
+            );
+            if (playNowFinder2.evaluate().isNotEmpty) {
+              await tester.tap(playNowFinder2);
+              await tester.pumpAndSettle();
+            }
             expect(find.byType(NowPlayingScreen), findsOneWidget);
             expect(service.requests, hasLength(3));
             expect(service.currentSong!.source, SongSource.youtube);

@@ -121,6 +121,7 @@ class _FakeAudioService extends AudioService {
     Song song, {
     List<Song>? contextQueue,
     bool autoQueueRelated = false,
+    bool continuousDiscovery = false,
   }) async {
     playRequests.add(song.identity);
     if (contextQueue != null) testQueue = List.of(contextQueue);

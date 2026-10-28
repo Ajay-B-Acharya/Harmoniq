@@ -56,6 +56,14 @@ class LibraryScreenState extends State<LibraryScreen> {
   void initState() {
     super.initState();
     _selectedCategoryIndex = widget.initialCategoryIndex;
+    _checkAutoScan();
+  }
+
+  void _checkAutoScan() {
+    if (widget.audioService.localSongs.isEmpty &&
+        !widget.audioService.isScanning) {
+      widget.audioService.autoScanIfPermitted();
+    }
   }
 
   void _refreshLibraryCache() {
@@ -88,6 +96,9 @@ class LibraryScreenState extends State<LibraryScreen> {
   void selectCategory(int index) {
     if (index >= 0 && index < _categories.length) {
       setState(() => _selectedCategoryIndex = index);
+      if (index == 5 || index == 0) {
+        _checkAutoScan();
+      }
     }
   }
 
@@ -195,7 +206,8 @@ class LibraryScreenState extends State<LibraryScreen> {
                               color: AppColors.coral,
                               size: 24,
                             ),
-                            onPressed: widget.audioService.scanLocalSongs,
+                            onPressed: () =>
+                                widget.audioService.scanLocalSongs(forcePrompt: true),
                             splashRadius: 24,
                           ),
                         ],
@@ -678,6 +690,32 @@ class LibraryScreenState extends State<LibraryScreen> {
     Song? currentSong,
     bool isPlaying,
   ) {
+    if (widget.audioService.isScanning) {
+      return Center(
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(AppColors.coral),
+                strokeWidth: 3,
+              ),
+              const SizedBox(height: 20),
+              Text(
+                'Scanning device for music...',
+                style: TextStyle(
+                  color: AppColors.textSecondaryOf(context),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 80),
+            ],
+          ),
+        ),
+      );
+    }
+
     if (localSongs.isEmpty) {
       return Center(
         child: Column(
@@ -704,9 +742,9 @@ class LibraryScreenState extends State<LibraryScreen> {
             ),
             const SizedBox(height: 16),
             FilledButton.icon(
-              onPressed: widget.audioService.scanLocalSongs,
+              onPressed: () => widget.audioService.scanLocalSongs(forcePrompt: true),
               icon: const Icon(Icons.refresh_rounded, size: 18),
-              label: const Text('Scan Storage'),
+              label: const Text('Scan Storage / Grant Access'),
             ),
             const SizedBox(height: 80),
           ],

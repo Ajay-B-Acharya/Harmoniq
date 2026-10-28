@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import '../services/audio_service.dart';
 import '../models/song.dart';
@@ -27,8 +26,6 @@ class LocalScreen extends StatefulWidget {
 }
 
 class _LocalScreenState extends State<LocalScreen> {
-  static const _platform = MethodChannel('com.example.harmoniq/local_music');
-
   // Tracks whether we've already attempted the auto-scan this lifecycle so we
   // don't fire it repeatedly on rebuilds.
   bool _autoScanAttempted = false;
@@ -53,14 +50,7 @@ class _LocalScreenState extends State<LocalScreen> {
     }
 
     try {
-      final bool granted =
-          await _platform.invokeMethod<bool>('checkPermission') ?? false;
-      if (granted &&
-          mounted &&
-          widget.audioService.localSongs.isEmpty &&
-          !widget.audioService.isScanning) {
-        await widget.onScanTap();
-      }
+      await widget.audioService.autoScanIfPermitted();
     } catch (e) {
       debugPrint('[LOCAL_SCREEN] Auto-scan check failed: $e');
     }
