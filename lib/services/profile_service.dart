@@ -58,15 +58,33 @@ class ProfileService extends ChangeNotifier {
       // If no profile row exists, provision one automatically from auth metadata
       final metadata = authUser?.userMetadata ?? c.auth.currentUser?.userMetadata;
       final email = authUser?.email ?? c.auth.currentUser?.email;
-      final fallbackUsername = metadata?['username'] as String? ??
+
+      String baseUsername = metadata?['username'] as String? ??
+          metadata?['display_name'] as String? ??
+          metadata?['full_name'] as String? ??
+          metadata?['name'] as String? ??
           (email != null ? email.split('@').first : 'user');
-      final fallbackDisplay = metadata?['display_name'] as String? ?? fallbackUsername;
+      baseUsername = baseUsername
+          .toLowerCase()
+          .replaceAll(RegExp(r'\s+'), '_')
+          .replaceAll(RegExp(r'[^a-z0-9_]'), '');
+      if (baseUsername.isEmpty) baseUsername = 'user';
+
+      final uniqueSuffix = userId.length >= 6
+          ? userId.substring(0, 6)
+          : '${DateTime.now().millisecondsSinceEpoch % 10000}';
+      final fallbackUsername = metadata?['username'] as String? ?? '${baseUsername}_$uniqueSuffix';
+      final fallbackDisplay = metadata?['display_name'] as String? ??
+          metadata?['full_name'] as String? ??
+          metadata?['name'] as String? ??
+          fallbackUsername;
 
       final initialProfile = UserProfile(
         id: userId,
         username: fallbackUsername,
         displayName: fallbackDisplay,
-        avatarUrl: metadata?['avatar_url'] as String?,
+        avatarUrl: (metadata?['avatar_url'] as String?) ??
+            (metadata?['picture'] as String?),
       );
 
       final insertRes = await c

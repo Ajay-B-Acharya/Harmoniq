@@ -89,18 +89,29 @@ class _ExploreScreenState extends State<ExploreScreen> {
     final service = widget.audioService;
     final map = <String, Song>{};
 
-    for (final song in service.allAvailableSongs) {
-      map[song.identity] = song;
-    }
+    // Discover screen strictly plays online / internet tracks — never local storage files
     for (final song in _discoveredOnline) {
-      map.putIfAbsent(song.identity, () => song);
+      if (song.isOnline) {
+        map[song.identity] = song;
+      }
+    }
+    for (final song in service.allAvailableSongs) {
+      if (song.isOnline) {
+        map.putIfAbsent(song.identity, () => song);
+      }
     }
 
     return map.values.toList();
   }
 
-  void _shufflePlay() {
-    final catalogue = _getAllAvailable();
+  Future<void> _shufflePlay() async {
+    var catalogue = _getAllAvailable();
+    if (catalogue.isEmpty) {
+      if (!_isLoading) {
+        await _loadDiscoveryTracks();
+      }
+      catalogue = _getAllAvailable();
+    }
     if (catalogue.isEmpty) {
       widget.onSearchTap?.call('Trending Music');
       return;

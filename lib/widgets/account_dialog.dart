@@ -55,6 +55,8 @@ class AccountDialog extends StatelessWidget {
     final username =
         user?.userMetadata?['username'] as String? ??
         user?.userMetadata?['display_name'] as String? ??
+        user?.userMetadata?['full_name'] as String? ??
+        user?.userMetadata?['name'] as String? ??
         (user?.email != null ? user!.email!.split('@').first : 'Music Lover');
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final textPrimary = isDark ? AppDarkColors.textPrimary : AppColors.textPrimary;

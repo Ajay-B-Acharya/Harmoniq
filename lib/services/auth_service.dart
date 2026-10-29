@@ -68,15 +68,18 @@ class AuthService extends ChangeNotifier {
     }
 
     try {
+      final sanitizedEmail = email.trim();
+      final effectiveUsername = (username != null && username.trim().isNotEmpty)
+          ? username.trim()
+          : '${sanitizedEmail.split('@').first.replaceAll(RegExp(r'[^a-zA-Z0-9_]'), '')}_${DateTime.now().millisecondsSinceEpoch % 10000}';
+
       final response = await client.auth.signUp(
-        email: email.trim(),
+        email: sanitizedEmail,
         password: password,
-        data: username != null && username.trim().isNotEmpty
-            ? {
-                'username': username.trim(),
-                'display_name': username.trim(),
-              }
-            : null,
+        data: {
+          'username': effectiveUsername,
+          'display_name': effectiveUsername,
+        },
       );
       return response;
     } on AuthException catch (e) {
@@ -106,6 +109,28 @@ class AuthService extends ChangeNotifier {
       throw _formatAuthException(e);
     } catch (e) {
       throw Exception('Sign in failed: ${e.toString()}');
+    }
+  }
+
+  /// Authenticate user via Google OAuth using Supabase Auth.
+  Future<bool> signInWithGoogle({String? redirectTo}) async {
+    final client = _client;
+    if (client == null) {
+      throw Exception(
+        'Authentication service is currently offline. Please check your internet connection.',
+      );
+    }
+
+    try {
+      final redirect = redirectTo ?? SupabaseConfig.authCallbackUrl;
+      return await client.auth.signInWithOAuth(
+        OAuthProvider.google,
+        redirectTo: redirect,
+      );
+    } on AuthException catch (e) {
+      throw _formatAuthException(e);
+    } catch (e) {
+      throw Exception('Google sign in failed: ${e.toString()}');
     }
   }
 
@@ -141,6 +166,10 @@ class AuthService extends ChangeNotifier {
       return 'Please enter a valid email address.';
     } else if (msg.contains('email not confirmed')) {
       return 'Please check your inbox and confirm your email address.';
+    } else if (msg.contains('canceled') ||
+        msg.contains('cancelled') ||
+        msg.contains('user_cancelled')) {
+      return 'Google sign-in was canceled.';
     }
     return e.message;
   }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../services/auth_service.dart';
 import '../theme/app_colors.dart';
+import '../widgets/google_logo.dart';
 import '../widgets/spatial_background.dart';
 import 'signup_screen.dart';
 
@@ -28,6 +29,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   bool _obscurePassword = true;
   bool _isLoading = false;
+  bool _isGoogleLoading = false;
   String? _errorMessage;
 
   @override
@@ -38,6 +40,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _handleLogin() async {
+    if (_isLoading || _isGoogleLoading) return;
     if (!_formKey.currentState!.validate()) return;
 
     setState(() {
@@ -63,6 +66,34 @@ class _LoginScreenState extends State<LoginScreen> {
       if (mounted) {
         setState(() {
           _isLoading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _handleGoogleSignIn() async {
+    if (_isLoading || _isGoogleLoading) return;
+
+    setState(() {
+      _isGoogleLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      await widget.authService.signInWithGoogle();
+      if (mounted && widget.authService.isAuthenticated) {
+        widget.onLoginSuccess();
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _errorMessage = e.toString().replaceAll('Exception: ', '');
+        });
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isGoogleLoading = false;
         });
       }
     }
@@ -249,7 +280,9 @@ class _LoginScreenState extends State<LoginScreen> {
                       SizedBox(
                         height: 48,
                         child: FilledButton(
-                          onPressed: _isLoading ? null : _handleLogin,
+                          onPressed: (_isLoading || _isGoogleLoading)
+                              ? null
+                              : _handleLogin,
                           child: _isLoading
                               ? const SizedBox(
                                   width: 22,
@@ -265,6 +298,88 @@ class _LoginScreenState extends State<LoginScreen> {
                                     fontSize: 15,
                                     fontWeight: FontWeight.w600,
                                   ),
+                                ),
+                        ),
+                      ),
+                      const SizedBox(height: 18),
+
+                      // Divider with 'OR'
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Container(
+                              height: 1,
+                              color: AppColors.borderElevated,
+                            ),
+                          ),
+                          const Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 14),
+                            child: Text(
+                              'OR',
+                              style: TextStyle(
+                                color: AppColors.textMuted,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            child: Container(
+                              height: 1,
+                              color: AppColors.borderElevated,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 18),
+
+                      // Google Sign-In Button
+                      SizedBox(
+                        height: 48,
+                        child: OutlinedButton(
+                          onPressed: (_isLoading || _isGoogleLoading)
+                              ? null
+                              : _handleGoogleSignIn,
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(horizontal: 14),
+                            side: const BorderSide(
+                              color: AppColors.borderElevated,
+                              width: 1.2,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            backgroundColor: AppColors.surfaceHigh,
+                          ),
+                          child: _isGoogleLoading
+                              ? const SizedBox(
+                                  width: 22,
+                                  height: 22,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2.5,
+                                    color: AppColors.accent,
+                                  ),
+                                )
+                              : const Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    GoogleLogo(size: 18),
+                                    SizedBox(width: 10),
+                                    Flexible(
+                                      child: Text(
+                                        'Continue with Google',
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w600,
+                                          color: AppColors.textPrimary,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                         ),
                       ),
