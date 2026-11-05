@@ -12,6 +12,8 @@ class AuthService extends ChangeNotifier {
   User? _currentUser;
   Session? _currentSession;
   StreamSubscription<AuthState>? _authSubscription;
+  bool _isOAuthInProgress = false;
+  String? _authError;
 
   AuthService({SupabaseClient? client}) : _client = client ?? _resolveClient() {
     final c = _client;
@@ -20,11 +22,29 @@ class AuthService extends ChangeNotifier {
         _currentUser = c.auth.currentUser;
         _currentSession = c.auth.currentSession;
 
-        _authSubscription = c.auth.onAuthStateChange.listen((data) {
-          _currentUser = data.session?.user;
-          _currentSession = data.session;
-          notifyListeners();
-        });
+        _authSubscription = c.auth.onAuthStateChange.listen(
+          (data) {
+            _currentUser = data.session?.user;
+            _currentSession = data.session;
+            if (data.session != null) {
+              _isOAuthInProgress = false;
+              _authError = null;
+            }
+            notifyListeners();
+          },
+          onError: (error) {
+            _isOAuthInProgress = false;
+            final exception = error is AuthException
+                ? error
+                : AuthException(error.toString());
+
+            // If a session is already present, flow_state_already_used is a harmless duplicate
+            if (_currentUser == null && _currentSession == null) {
+              _authError = _formatAuthException(exception);
+            }
+            notifyListeners();
+          },
+        );
       } catch (e) {
         debugPrint('[AUTH] Supabase session listener notice: $e');
       }
@@ -42,6 +62,21 @@ class AuthService extends ChangeNotifier {
 
   /// Whether Supabase client is configured and available
   bool get isClientAvailable => _client != null;
+
+  /// Whether an OAuth flow is currently in progress
+  bool get isOAuthInProgress => _isOAuthInProgress;
+
+  /// Latest authentication error message, if any
+  String? get authError => _authError;
+
+  /// Reset in-flight OAuth flow state (e.g. after cancellation or user retry)
+  void resetOAuthFlow() {
+    if (_isOAuthInProgress || _authError != null) {
+      _isOAuthInProgress = false;
+      _authError = null;
+      notifyListeners();
+    }
+  }
 
   /// Get currently authenticated Supabase user
   User? get currentUser => _currentUser ?? _client?.auth.currentUser;
@@ -121,15 +156,36 @@ class AuthService extends ChangeNotifier {
       );
     }
 
+    if (_isOAuthInProgress) {
+      debugPrint('[AUTH] Google OAuth flow already in progress. Ignoring duplicate start request.');
+      return false;
+    }
+
+    _isOAuthInProgress = true;
+    _authError = null;
+    SupabaseConfig.clearProcessedAuthCodes();
+    notifyListeners();
+
     try {
-      final redirect = redirectTo ?? SupabaseConfig.authCallbackUrl;
-      return await client.auth.signInWithOAuth(
+      final redirect = redirectTo ?? SupabaseConfig.resolvedAuthCallbackUrl;
+      final launched = await client.auth.signInWithOAuth(
         OAuthProvider.google,
         redirectTo: redirect,
       );
+      if (!launched) {
+        _isOAuthInProgress = false;
+        notifyListeners();
+      }
+      return launched;
     } on AuthException catch (e) {
+      _isOAuthInProgress = false;
+      _authError = _formatAuthException(e);
+      notifyListeners();
       throw _formatAuthException(e);
     } catch (e) {
+      _isOAuthInProgress = false;
+      _authError = 'Google sign in failed: ${e.toString()}';
+      notifyListeners();
       throw Exception('Google sign in failed: ${e.toString()}');
     }
   }
@@ -143,6 +199,9 @@ class AuthService extends ChangeNotifier {
       await client.auth.signOut();
       _currentUser = null;
       _currentSession = null;
+      _isOAuthInProgress = false;
+      _authError = null;
+      SupabaseConfig.clearProcessedAuthCodes();
       notifyListeners();
     } on AuthException catch (e) {
       throw _formatAuthException(e);
@@ -154,7 +213,30 @@ class AuthService extends ChangeNotifier {
   /// Translates raw Supabase AuthExceptions into user-friendly error messages
   String _formatAuthException(AuthException e) {
     final msg = e.message.toLowerCase();
-    if (msg.contains('invalid login credentials') ||
+    final code = e.code?.toLowerCase() ?? '';
+    final statusCode = e.statusCode?.toLowerCase() ?? '';
+
+    if (code.contains('flow_state_already_used') ||
+        statusCode.contains('flow_state_already_used') ||
+        msg.contains('state has already been used') ||
+        msg.contains('flow_state_already_used')) {
+      return 'The sign-in session expired or was already used. Please try signing in again.';
+    } else if (msg.contains('flow_state_not_found') ||
+        code.contains('flow_state_not_found') ||
+        statusCode.contains('flow_state_not_found')) {
+      return 'Sign-in session not found. Please start a new sign-in.';
+    } else if (code.contains('invalid_grant') ||
+        statusCode.contains('invalid_grant') ||
+        msg.contains('invalid_grant')) {
+      return 'Sign-in authorization expired. Please try signing in again.';
+    } else if (code.contains('access_denied') ||
+        statusCode.contains('access_denied') ||
+        msg.contains('access_denied') ||
+        msg.contains('canceled') ||
+        msg.contains('cancelled') ||
+        msg.contains('user_cancelled')) {
+      return 'Google sign-in was canceled.';
+    } else if (msg.contains('invalid login credentials') ||
         msg.contains('invalid_credentials')) {
       return 'Invalid email or password. Please try again.';
     } else if (msg.contains('user already registered') ||
@@ -166,10 +248,6 @@ class AuthService extends ChangeNotifier {
       return 'Please enter a valid email address.';
     } else if (msg.contains('email not confirmed')) {
       return 'Please check your inbox and confirm your email address.';
-    } else if (msg.contains('canceled') ||
-        msg.contains('cancelled') ||
-        msg.contains('user_cancelled')) {
-      return 'Google sign-in was canceled.';
     }
     return e.message;
   }

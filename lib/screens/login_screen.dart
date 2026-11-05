@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../services/auth_service.dart';
@@ -22,7 +23,8 @@ class LoginScreen extends StatefulWidget {
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends State<LoginScreen>
+    with WidgetsBindingObserver {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -31,12 +33,64 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isLoading = false;
   bool _isGoogleLoading = false;
   String? _errorMessage;
+  Timer? _resumeGraceTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    widget.authService.addListener(_onAuthServiceChanged);
+  }
 
   @override
   void dispose() {
+    _resumeGraceTimer?.cancel();
+    WidgetsBinding.instance.removeObserver(this);
+    widget.authService.removeListener(_onAuthServiceChanged);
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  void _onAuthServiceChanged() {
+    if (!mounted) return;
+    if (widget.authService.isAuthenticated) {
+      _resumeGraceTimer?.cancel();
+      setState(() {
+        _isGoogleLoading = false;
+      });
+      widget.onLoginSuccess();
+    } else if (widget.authService.authError != null) {
+      _resumeGraceTimer?.cancel();
+      setState(() {
+        _errorMessage = widget.authService.authError;
+        _isGoogleLoading = false;
+      });
+    } else if (!widget.authService.isOAuthInProgress && _isGoogleLoading) {
+      _resumeGraceTimer?.cancel();
+      setState(() {
+        _isGoogleLoading = false;
+      });
+    }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      // If user returns from external browser without completing auth:
+      // Give reasonable grace period for incoming deep link session exchange
+      if (!widget.authService.isAuthenticated && _isGoogleLoading) {
+        _resumeGraceTimer?.cancel();
+        _resumeGraceTimer = Timer(const Duration(seconds: 10), () {
+          if (mounted && !widget.authService.isAuthenticated && _isGoogleLoading) {
+            setState(() {
+              _isGoogleLoading = false;
+            });
+            widget.authService.resetOAuthFlow();
+          }
+        });
+      }
+    }
   }
 
   Future<void> _handleLogin() async {
@@ -72,7 +126,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _handleGoogleSignIn() async {
-    if (_isLoading || _isGoogleLoading) return;
+    if (_isLoading || _isGoogleLoading || widget.authService.isOAuthInProgress) return;
 
     setState(() {
       _isGoogleLoading = true;
@@ -80,19 +134,16 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      await widget.authService.signInWithGoogle();
-      if (mounted && widget.authService.isAuthenticated) {
-        widget.onLoginSuccess();
+      final started = await widget.authService.signInWithGoogle();
+      if (!started && mounted) {
+        setState(() {
+          _isGoogleLoading = false;
+        });
       }
     } catch (e) {
       if (mounted) {
         setState(() {
           _errorMessage = e.toString().replaceAll('Exception: ', '');
-        });
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
           _isGoogleLoading = false;
         });
       }
@@ -338,7 +389,9 @@ class _LoginScreenState extends State<LoginScreen> {
                       SizedBox(
                         height: 48,
                         child: OutlinedButton(
-                          onPressed: (_isLoading || _isGoogleLoading)
+                          onPressed: (_isLoading ||
+                                  _isGoogleLoading ||
+                                  widget.authService.isOAuthInProgress)
                               ? null
                               : _handleGoogleSignIn,
                           style: OutlinedButton.styleFrom(
@@ -352,7 +405,8 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                             backgroundColor: AppColors.surfaceHigh,
                           ),
-                          child: _isGoogleLoading
+                          child: (_isGoogleLoading ||
+                                  widget.authService.isOAuthInProgress)
                               ? const SizedBox(
                                   width: 22,
                                   height: 22,

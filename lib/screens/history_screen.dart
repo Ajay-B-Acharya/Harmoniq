@@ -261,24 +261,28 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: [
-                          _statTile(
-                            count: '${allHistory.length}',
-                            label: 'Tracks Played',
-                            icon: Icons.music_note_rounded,
-                            textPrimary: textPrimary,
-                            textSecondary: textSecondary,
+                          Expanded(
+                            child: _statTile(
+                              count: '${allHistory.length}',
+                              label: 'Tracks Played',
+                              icon: Icons.music_note_rounded,
+                              textPrimary: textPrimary,
+                              textSecondary: textSecondary,
+                            ),
                           ),
                           Container(
                             width: 1,
                             height: 28,
                             color: isDark ? AppDarkColors.divider : AppColors.cardBorder,
                           ),
-                          _statTile(
-                            count: _formatTotalListeningTime(allHistory),
-                            label: 'Time Listened',
-                            icon: Icons.access_time_rounded,
-                            textPrimary: textPrimary,
-                            textSecondary: textSecondary,
+                          Expanded(
+                            child: _statTile(
+                              count: _formatTotalListeningTime(allHistory),
+                              label: 'Time Listened',
+                              icon: Icons.access_time_rounded,
+                              textPrimary: textPrimary,
+                              textSecondary: textSecondary,
+                            ),
                           ),
                         ],
                       ),
@@ -466,26 +470,28 @@ class _HistoryScreenState extends State<HistoryScreen> {
       children: [
         Icon(icon, size: 20, color: AppColors.coral),
         const SizedBox(width: 8),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              count,
-              style: TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w700,
-                color: textPrimary,
+        Flexible(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                count,
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: textPrimary,
+                ),
               ),
-            ),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 11,
-                color: textSecondary,
-                fontWeight: FontWeight.w500,
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 11,
+                  color: textSecondary,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ],
     );
