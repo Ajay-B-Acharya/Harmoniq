@@ -38,10 +38,22 @@ class YtDlpChannel {
       if (page > 1) {
         arguments['page'] = page;
       }
-      final entries = await _channel.invokeListMethod<Object?>(
-        'search',
-        arguments,
-      );
+      List<Object?>? entries;
+      for (var attempt = 0; attempt < 2; attempt++) {
+        try {
+          entries = await _channel.invokeListMethod<Object?>(
+            'search',
+            arguments,
+          );
+          break;
+        } on PlatformException catch (e) {
+          if (e.code == 'BUSY' && attempt == 0) {
+            await Future<void>.delayed(const Duration(milliseconds: 250));
+            continue;
+          }
+          rethrow;
+        }
+      }
       return List.unmodifiable(
         (entries ?? const []).whereType<Map>().map((entry) {
           final id = entry['id'];
@@ -87,10 +99,22 @@ class YtDlpChannel {
       if (quality != null && quality.isNotEmpty) {
         arguments['quality'] = quality;
       }
-      final result = await _channel.invokeMapMethod<String, Object?>(
-        'resolve',
-        arguments,
-      );
+      Map<String, Object?>? result;
+      for (var attempt = 0; attempt < 2; attempt++) {
+        try {
+          result = await _channel.invokeMapMethod<String, Object?>(
+            'resolve',
+            arguments,
+          );
+          break;
+        } on PlatformException catch (e) {
+          if (e.code == 'BUSY' && attempt == 0) {
+            await Future<void>.delayed(const Duration(milliseconds: 250));
+            continue;
+          }
+          rethrow;
+        }
+      }
       if (result?['id'] != id) {
         throw const FormatException('Unexpected video identity.');
       }

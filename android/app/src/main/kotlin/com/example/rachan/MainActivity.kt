@@ -43,8 +43,8 @@ class MainActivity : AudioServiceActivity() {
     private val pendingScanResults = mutableSetOf<MethodChannel.Result>()
     private val scanExecutor = Executors.newSingleThreadExecutor()
     private val ytDlpExecutor = java.util.concurrent.ThreadPoolExecutor(
-        1, 1, 0L, java.util.concurrent.TimeUnit.MILLISECONDS,
-        java.util.concurrent.ArrayBlockingQueue(4)
+        2, 4, 60L, java.util.concurrent.TimeUnit.SECONDS,
+        java.util.concurrent.LinkedBlockingQueue(64)
     )
     private val ytDlpAdapter by lazy { YtDlpAdapter(applicationContext) }
     private val mainHandler = Handler(Looper.getMainLooper())

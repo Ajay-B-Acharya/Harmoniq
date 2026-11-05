@@ -139,4 +139,45 @@ void main() {
     expect(results, hasLength(1));
     expect(results.single.id, 'abcdefghij2');
   });
+
+  test('resolve retries on BUSY and succeeds on second attempt', () async {
+    var attempts = 0;
+    messenger.setMockMethodCallHandler(channel, (call) async {
+      attempts++;
+      if (attempts == 1) {
+        throw PlatformException(code: 'BUSY', message: 'Busy');
+      }
+      return {
+        'id': 'abcdefghijk',
+        'streamUrl': 'https://audio.example/stream',
+        'headers': {'User-Agent': 'Test'},
+      };
+    });
+    final stream = await YtDlpChannel.instance.resolve('abcdefghijk');
+    expect(attempts, 2);
+    expect(stream.uri.host, 'audio.example');
+  });
+
+  test('search retries on BUSY and succeeds on second attempt', () async {
+    var attempts = 0;
+    messenger.setMockMethodCallHandler(channel, (call) async {
+      attempts++;
+      if (attempts == 1) {
+        throw PlatformException(code: 'BUSY', message: 'Busy');
+      }
+      return [
+        {
+          'id': 'abcdefghijk',
+          'title': 'Retry Success',
+          'artist': 'Channel',
+          'thumbnail': 'https://img.example/art',
+          'duration': 120.0,
+        },
+      ];
+    });
+    final results = await YtDlpChannel.instance.search('retry query');
+    expect(attempts, 2);
+    expect(results, hasLength(1));
+    expect(results.first.title, 'Retry Success');
+  });
 }

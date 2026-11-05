@@ -150,14 +150,18 @@ internal class YtDlpAdapter(private val context: Context) {
         val q = quality?.lowercase()?.trim()
         val formats = info.optJSONArray("formats")
         if (formats != null) {
-            val playable = ArrayList<JSONObject>()
+            val audioOnly = ArrayList<JSONObject>()
+            val withAudio = ArrayList<JSONObject>()
             for (i in 0 until formats.length()) {
                 val fmt = formats.optJSONObject(i) ?: continue
-                if (isPlayableAudioFormat(fmt)) {
-                    playable.add(fmt)
+                if (isPlayableAudioFormat(fmt, audioOnly = true)) {
+                    audioOnly.add(fmt)
+                } else if (isPlayableAudioFormat(fmt, audioOnly = false)) {
+                    withAudio.add(fmt)
                 }
             }
 
+            val playable = if (audioOnly.isNotEmpty()) audioOnly else withAudio
             if (playable.isNotEmpty()) {
                 playable.sortBy { it.optDouble("tbr", it.optDouble("abr", 0.0)) }
                 return when {
@@ -177,16 +181,20 @@ internal class YtDlpAdapter(private val context: Context) {
         if (requested != null) {
             for (i in 0 until requested.length()) {
                 val fmt = requested.optJSONObject(i) ?: continue
-                if (isPlayableAudioFormat(fmt)) return fmt
+                if (isPlayableAudioFormat(fmt, audioOnly = true)) return fmt
+            }
+            for (i in 0 until requested.length()) {
+                val fmt = requested.optJSONObject(i) ?: continue
+                if (isPlayableAudioFormat(fmt, audioOnly = false)) return fmt
             }
         }
 
-        if (isPlayableAudioFormat(info)) return info
+        if (isPlayableAudioFormat(info, audioOnly = false)) return info
 
         return null
     }
 
-    private fun isPlayableAudioFormat(format: JSONObject): Boolean {
+    private fun isPlayableAudioFormat(format: JSONObject, audioOnly: Boolean = false): Boolean {
         val vcodec = format.optString("vcodec")
         val acodec = format.optString("acodec")
         val ext = format.optString("ext")
@@ -194,8 +202,10 @@ internal class YtDlpAdapter(private val context: Context) {
         val hasDrm = format.optBoolean("has_drm", false)
         val protocol = format.optString("protocol")
 
-        return (vcodec == "none" || vcodec.isEmpty()) &&
-                acodec.isNotBlank() && acodec != "none" &&
+        val isAudioOnly = vcodec == "none" || vcodec.isEmpty()
+        if (audioOnly && !isAudioOnly) return false
+
+        return acodec.isNotBlank() && acodec != "none" &&
                 (ext in safeAudioExtensions) &&
                 safeHttps(url) != null &&
                 !hasDrm &&
@@ -230,13 +240,13 @@ internal class YtDlpAdapter(private val context: Context) {
     private fun baseOptions(flat: Boolean, quality: String? = null): JSONObject {
         val formatSelector = when (quality?.lowercase()?.trim()) {
             "low", "data saver" ->
-                "worstaudio[protocol=https]/worstaudio/bestaudio[protocol=https]/bestaudio"
+                "worstaudio[protocol=https]/worstaudio/bestaudio[protocol=https]/bestaudio/best[protocol=https][acodec!=none]/best[acodec!=none]/worst"
             "normal", "standard", "medium", "balanced" ->
-                "bestaudio[ext=m4a][protocol=https]/bestaudio[abr<=160][protocol=https]/bestaudio[protocol=https]/bestaudio"
+                "bestaudio[ext=m4a][protocol=https]/bestaudio[abr<=160][protocol=https]/bestaudio[protocol=https]/bestaudio/best[protocol=https][acodec!=none]/best[acodec!=none]/best"
             "high", "very high", "lossless", "maximum", "very" ->
-                "bestaudio[protocol=https]/bestaudio"
+                "bestaudio[protocol=https]/bestaudio/best[protocol=https][acodec!=none]/best[acodec!=none]/best"
             else ->
-                "bestaudio[protocol=https]/bestaudio"
+                "bestaudio[protocol=https]/bestaudio/best[protocol=https][acodec!=none]/best[acodec!=none]/best"
         }
         return JSONObject()
             .put("quiet", true)
@@ -249,10 +259,10 @@ internal class YtDlpAdapter(private val context: Context) {
             .put("js_runtimes", JSONObject().put("quickjs", JSONObject().put("path", quickJs.absolutePath)))
             .put("remote_components", org.json.JSONArray())
             .put("cachedir", false)
-            .put("socket_timeout", 12)
-            .put("retries", 0)
-            .put("extractor_retries", 0)
-            .put("fragment_retries", 0)
+            .put("socket_timeout", 20)
+            .put("retries", 3)
+            .put("extractor_retries", 3)
+            .put("fragment_retries", 3)
             .put("noplaylist", !flat)
             .put("extract_flat", flat)
     }
